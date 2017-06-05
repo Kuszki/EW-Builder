@@ -6,12 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>333</height>
+    <width>600</width>
+    <height>450</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>EW-Builder</string>
+  </property>
+  <property name="windowIcon">
+   <iconset theme="system-run">
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -99,8 +103,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>382</width>
-         <height>118</height>
+         <width>582</width>
+         <height>187</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="valuesLayout"/>
@@ -117,7 +121,23 @@
        </widget>
       </item>
       <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Minimum</enum>
+        </property>
+       </spacer>
+      </item>
+      <item>
        <widget class="QPushButton" name="Exec">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Proceed</string>
         </property>
@@ -168,6 +188,9 @@
    <addaction name="actionAbout"/>
   </widget>
   <action name="actionAbout">
+   <property name="icon">
+    <iconset theme="help-about"/>
+   </property>
    <property name="text">
     <string>About</string>
    </property>
@@ -176,6 +199,9 @@
    </property>
   </action>
   <action name="actionConnect">
+   <property name="icon">
+    <iconset theme="network-wired"/>
+   </property>
    <property name="text">
     <string>Connect</string>
    </property>
@@ -184,6 +210,9 @@
    </property>
   </action>
   <action name="actionDisconnect">
+   <property name="icon">
+    <iconset theme="network-offline"/>
+   </property>
    <property name="text">
     <string>Disconnect</string>
    </property>
