@@ -113,6 +113,20 @@ void MainWindow::connectActionClicked(void)
 	connect(Driver, &DatabaseDriver::onError, Dialog, &ConnectDialog::refused);
 }
 
+void MainWindow::proceedActionClicked(void)
+{
+	QHash<int, QVariant> Values; lockUi(BUSY);
+
+	for (int i = 0; i < ui->valuesLayout->count(); ++i)
+		if (auto W = qobject_cast<UpdateWidget*>(ui->valuesLayout->itemAt(i)->widget()))
+			if (W->isChecked()) Values.insert(W->getIndex(), W->getValue());
+
+	emit onExecRequest(Values, ui->Class->currentData().toString(),
+				    ui->Line->currentData().toInt(),
+				    ui->Point->currentData().toInt(),
+				    ui->Text->currentData().toInt());
+}
+
 void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common, const QHash<QString, QHash<int, QString>>& Lines, const QHash<QString, QHash<int, QString>>& Points, const QHash<QString, QHash<int, QString>>& Texts)
 {
 	lineLayers = Lines; textLayers = Texts; pointLayers = Points; classesData = Classes; commonCount = Common;
@@ -140,9 +154,9 @@ void MainWindow::classIndexChanged(int Index)
 	const auto& Lines = lineLayers[Class]; ui->Line->clear();
 	const auto& Points = pointLayers[Class]; ui->Point->clear();
 
-	for (int i = 0; i < ui->valuesLayout->count(); ++i)
+	while (ui->valuesLayout->count())
 	{
-		ui->valuesLayout->itemAt(0)->widget()->deleteLater();
+		ui->valuesLayout->takeAt(0)->widget()->deleteLater();
 	}
 
 	for (auto i = Texts.constBegin(); i != Texts.constEnd(); ++i)
@@ -164,7 +178,7 @@ void MainWindow::classIndexChanged(int Index)
 
 	for (int i = 0; i < Fields.size(); ++i)
 	{
-		//ui->valuesLayout->addWidget(new UpdateWidget(i, Fields[i], this));
+		ui->valuesLayout->addWidget(new UpdateWidget(i, Fields[i], this));
 	}
 
 	ui->Text->model()->sort(0);

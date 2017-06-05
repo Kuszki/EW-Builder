@@ -75,6 +75,7 @@ class MainWindow : public QMainWindow
 	private slots:
 
 		void connectActionClicked(void);
+		void proceedActionClicked(void);
 
 		void databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common,
 						   const QHash<QString, QHash<int, QString>>& Lines,
@@ -88,6 +89,11 @@ class MainWindow : public QMainWindow
 		void databaseLogin(bool OK);
 
 		void loginAttempt(void);
+
+	signals:
+
+		void onExecRequest(const QHash<int, QVariant>&,
+					    const QString&, int, int, int);
 
 };
 
