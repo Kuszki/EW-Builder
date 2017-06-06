@@ -51,9 +51,14 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(Driver, &DatabaseDriver::onDisconnect, this, &MainWindow::databaseDisconnected);
 	connect(Driver, &DatabaseDriver::onLogin, this, &MainWindow::databaseLogin);
 
+	connect(this, &MainWindow::onExecRequest, Driver, &DatabaseDriver::proceedClass);
+	connect(Driver, &DatabaseDriver::onProceedEnd, this, &MainWindow::execProcessEnd);
+
 	connect(ui->actionConnect, &QAction::triggered, this, &MainWindow::connectActionClicked);
 	connect(ui->actionDisconnect, &QAction::triggered, Driver, &DatabaseDriver::closeDatabase);
 	connect(ui->actionAbout, &QAction::triggered, About, &AboutDialog::open);
+
+	connect(ui->Exec, &QPushButton::clicked, this, &MainWindow::proceedActionClicked);
 }
 
 MainWindow::~MainWindow(void)
@@ -121,7 +126,8 @@ void MainWindow::proceedActionClicked(void)
 		if (auto W = qobject_cast<UpdateWidget*>(ui->valuesLayout->itemAt(i)->widget()))
 			if (W->isChecked()) Values.insert(W->getIndex(), W->getValue());
 
-	emit onExecRequest(Values, ui->Class->currentData().toString(),
+	emit onExecRequest(Values, ui->Pattern->text(),
+				    ui->Class->currentData().toString(),
 				    ui->Line->currentData().toInt(),
 				    ui->Point->currentData().toInt(),
 				    ui->Text->currentData().toInt());
@@ -192,6 +198,11 @@ void MainWindow::classIndexChanged(int Index)
 	ui->Text->setEnabled(ui->Text->count());
 	ui->Point->setEnabled(ui->Point->count());
 	ui->Line->setEnabled(ui->Line->count());
+}
+
+void MainWindow::execProcessEnd(int Count)
+{
+	qDebug() << Count;
 }
 
 void MainWindow::databaseLogin(bool OK)
