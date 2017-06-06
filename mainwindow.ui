@@ -19,6 +19,12 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="1">
+     <widget class="QComboBox" name="Class"/>
+    </item>
+    <item row="1" column="1">
+     <widget class="QComboBox" name="Line"/>
+    </item>
     <item row="0" column="0">
      <widget class="QLabel" name="classLabel">
       <property name="sizePolicy">
@@ -32,9 +38,6 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QComboBox" name="Class"/>
-    </item>
     <item row="1" column="0">
      <widget class="QLabel" name="lineLabel">
       <property name="sizePolicy">
@@ -45,42 +48,6 @@
       </property>
       <property name="text">
        <string>Line layer</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="QComboBox" name="Line"/>
-    </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="pointLabel">
-      <property name="text">
-       <string>Point layer</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1">
-     <widget class="QComboBox" name="Point"/>
-    </item>
-    <item row="3" column="0">
-     <widget class="QLabel" name="textLabel">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>Text layer</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1">
-     <widget class="QComboBox" name="Text"/>
-    </item>
-    <item row="4" column="0">
-     <widget class="QLabel" name="labelPattern">
-      <property name="text">
-       <string>Label pattern</string>
       </property>
      </widget>
     </item>
@@ -104,46 +71,58 @@
          <x>0</x>
          <y>0</y>
          <width>582</width>
-         <height>187</height>
+         <height>189</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="valuesLayout"/>
       </widget>
      </widget>
     </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="pointLabel">
+      <property name="text">
+       <string>Point layer</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QLabel" name="labelPattern">
+      <property name="text">
+       <string>Label pattern</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QLabel" name="textLabel">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>Text layer</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="1">
+     <widget class="QComboBox" name="Text"/>
+    </item>
+    <item row="2" column="1">
+     <widget class="QComboBox" name="Point"/>
+    </item>
     <item row="6" column="0" colspan="2">
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QProgressBar" name="Progress">
-        <property name="value">
-         <number>24</number>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Minimum</enum>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QPushButton" name="Exec">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Proceed</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QProgressBar" name="Progress">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="value">
+       <number>24</number>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -165,6 +144,8 @@
    </attribute>
    <addaction name="actionConnect"/>
    <addaction name="actionDisconnect"/>
+   <addaction name="separator"/>
+   <addaction name="actionProceed"/>
   </widget>
   <widget class="QToolBar" name="supportTool">
    <property name="windowTitle">
@@ -189,7 +170,8 @@
   </widget>
   <action name="actionAbout">
    <property name="icon">
-    <iconset theme="help-about"/>
+    <iconset theme="help-about">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>About</string>
@@ -200,7 +182,8 @@
   </action>
   <action name="actionConnect">
    <property name="icon">
-    <iconset theme="network-wired"/>
+    <iconset theme="network-wired">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Connect</string>
@@ -211,13 +194,25 @@
   </action>
   <action name="actionDisconnect">
    <property name="icon">
-    <iconset theme="network-offline"/>
+    <iconset theme="network-offline">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Disconnect</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionProceed">
+   <property name="icon">
+    <iconset theme="system-run"/>
+   </property>
+   <property name="text">
+    <string>Proceed</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
    </property>
   </action>
  </widget>

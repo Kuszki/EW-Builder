@@ -56,9 +56,9 @@ MainWindow::MainWindow(QWidget *Parent)
 
 	connect(ui->actionConnect, &QAction::triggered, this, &MainWindow::connectActionClicked);
 	connect(ui->actionDisconnect, &QAction::triggered, Driver, &DatabaseDriver::closeDatabase);
+	connect(ui->actionProceed, &QAction::triggered, this, &MainWindow::proceedActionClicked);
 	connect(ui->actionAbout, &QAction::triggered, About, &AboutDialog::open);
 
-	connect(ui->Exec, &QPushButton::clicked, this, &MainWindow::proceedActionClicked);
 }
 
 MainWindow::~MainWindow(void)
@@ -85,20 +85,20 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->centralWidget->setEnabled(true);
 			ui->actionConnect->setEnabled(false);
 			ui->actionDisconnect->setEnabled(true);
+			ui->actionProceed->setEnabled(true);
 		break;
 		case DISCONNECTED:
 			ui->centralWidget->setEnabled(false);
 			ui->actionConnect->setEnabled(true);
 			ui->actionDisconnect->setEnabled(false);
+			ui->actionProceed->setEnabled(false);
 		break;
 		case BUSY:
-			ui->Exec->setEnabled(false);
-			ui->Exec->setVisible(false);
+			ui->actionProceed->setEnabled(false);
 			ui->actionDisconnect->setEnabled(false);
 		break;
 		case DONE:
-			ui->Exec->setEnabled(true);
-			ui->Exec->setVisible(true);
+			ui->actionProceed->setEnabled(true);
 			ui->actionDisconnect->setEnabled(true);
 		break;
 	}
