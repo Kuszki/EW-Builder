@@ -41,12 +41,34 @@ class DatabaseDriver : public QObject
 
 		Q_OBJECT
 
-	public: struct POINT
+	struct POINT
 	{
-		int ID;
+		int ID, IDK, Match;
 
-		double X;
-		double Y;
+		double X, Y, L;
+
+		QString Text;
+	};
+
+	struct LINE
+	{
+		int ID, IDK, Label;
+
+		double X1, Y1;
+		double X2, Y2;
+
+		int Style;
+
+		double Len = NAN;
+	};
+
+	struct OBJECT
+	{
+		QHash<int, QVariant> Values;
+		QList<int> Geometry;
+
+		QString Label;
+		int IDK = 0;
 	};
 
 	public: enum TYPE
@@ -78,7 +100,7 @@ class DatabaseDriver : public QObject
 		QString Label;
 		QString Data;
 
-		bool Point;
+		int Flags;
 
 		QList<FIELD> Fields;
 		QList<int> Indexes;
@@ -116,12 +138,22 @@ class DatabaseDriver : public QObject
 		QHash<QString, QHash<int, QString>> loadPointLayers(const QList<TABLE>& Tabs);
 		QHash<QString, QHash<int, QString>> loadTextLayers(const QList<TABLE>& Tabs);
 
+		QHash<int, LINE> loadLines(int Layer, int Flags = 0);
+		QHash<int, POINT> loadPoints(int Layer, int Type = -1);
+
+		QList<OBJECT> proceedLines(int Line, int Text);
+
 	public slots:
 
 		bool openDatabase(const QString& Server, const QString& Base,
 					   const QString& User, const QString& Pass);
 
 		bool closeDatabase(void);
+
+		void proceedClass(const QHash<int, QVariant>& Values,
+					   const QString& Pattern,
+					   const QString& Class,
+					   int Line, int Point, int Text);
 
 	signals:
 
@@ -138,6 +170,8 @@ class DatabaseDriver : public QObject
 		void onSetupProgress(int, int);
 		void onUpdateProgress(int);
 		void onEndProgress(void);
+
+		void onProceedEnd(int);
 
 };
 

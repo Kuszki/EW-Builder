@@ -86,6 +86,8 @@ class MainWindow : public QMainWindow
 
 		void classIndexChanged(int Index);
 
+		void execProcessEnd(int Count);
+
 		void databaseLogin(bool OK);
 
 		void loginAttempt(void);
@@ -93,7 +95,9 @@ class MainWindow : public QMainWindow
 	signals:
 
 		void onExecRequest(const QHash<int, QVariant>&,
-					    const QString&, int, int, int);
+					    const QString&,
+					    const QString&,
+					    int, int, int);
 
 };
 

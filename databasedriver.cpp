@@ -120,7 +120,7 @@ QList<DatabaseDriver::TABLE> DatabaseDriver::loadTables(bool Emit)
 			Table,
 			Query.value(1).toString(),
 			Query.value(2).toString(),
-			(Query.value(3).toInt() & 356) == 356
+			Query.value(3).toInt()
 		});
 
 		auto& Tabref = getItemByField(List, Table, &TABLE::Name);
@@ -282,6 +282,8 @@ QStringList DatabaseDriver::normalizeHeaders(QList<DatabaseDriver::TABLE>& Tabs,
 
 QHash<QString, QHash<int, QString> > DatabaseDriver::loadLineLayers(const QList<DatabaseDriver::TABLE>& Tabs)
 {
+	if (!Database.isOpen()) return QHash<QString, QHash<int, QString>>();
+
 	QSqlQuery Query(Database); Query.setForwardOnly(true);
 	QHash<QString, QHash<int, QString>> lineLayers;
 
@@ -496,6 +498,260 @@ QHash<QString, QHash<int, QString>> DatabaseDriver::loadTextLayers(const QList<T
 	return textLayers;
 }
 
+QHash<int, DatabaseDriver::LINE> DatabaseDriver::loadLines(int Layer, int Flags)
+{
+	if (!Database.isOpen()) return QHash<int, LINE>(); QHash<int, LINE> Lines;
+
+	QSqlQuery Query(Database); Query.setForwardOnly(true);
+
+	Query.prepare(
+		"SELECT "
+			"P.ID, P.OPERAT, "
+			"P.P0_X, P.P0_Y,"
+			"P.P1_X, P.P1_Y, "
+			"P.TYP_LINII "
+		"FROM "
+			"EW_POLYLINE P "
+		"WHERE "
+			"P.STAN_ZMIANY = 0 AND "
+			"P.ID_WARSTWY = :layer AND "
+			"P.P1_FLAGS = :flag AND "
+			"P.ID NOT IN ("
+				"SELECT "
+					"E.IDE "
+				"FROM "
+					"EW_OB_ELEMENTY E "
+				"WHERE "
+					"E.TYP = 0)");
+
+	Query.bindValue(":layer", Layer);
+	Query.bindValue(":flag", Flags);
+
+	if (Query.exec()) while (Query.next()) Lines.insert(Query.value(0).toInt(),
+	{
+		Query.value(0).toInt(),
+		Query.value(1).toInt(),
+		0,
+		Query.value(2).toDouble(),
+		Query.value(3).toDouble(),
+		Query.value(4).toDouble(),
+		Query.value(5).toDouble(),
+		Query.value(6).toInt()
+	});
+
+	QtConcurrent::blockingMap(Lines, [] (LINE& Line) -> void
+	{
+		const double dx = Line.X1 - Line.X2;
+		const double dy = Line.Y1 - Line.Y2;
+
+		Line.Len = qSqrt(dx * dx + dy * dy);
+	});
+
+	return Lines;
+}
+
+QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, int Type)
+{
+	if (!Database.isOpen()) return QHash<int, POINT>(); QHash<int, POINT> Points;
+
+	QSqlQuery Query(Database); Query.setForwardOnly(true);
+
+	Query.prepare(
+		"SELECT "
+			"P.ID, P.OPERAT, "
+			"P.POS_X + ODN_X, "
+			"P.POS_Y + ODN_Y, "
+			"P.TEXT, P.TYP "
+		"FROM "
+			"EW_TEXT P "
+		"WHERE "
+			"P.STAN_ZMIANY = 0 AND "
+			"P.ID_WARSTWY = :layer AND "
+			"P.ID NOT IN ("
+				"SELECT "
+					"E.IDE "
+				"FROM "
+					"EW_OB_ELEMENTY E "
+				"WHERE "
+					"E.TYP = 0)");
+
+	Query.bindValue(":layer", Layer);
+
+	if (Query.exec()) while (Query.next()) if (Type == -1 || Query.value(5).toInt() == Type) Points.insert(Query.value(0).toInt(),
+	{
+		Query.value(0).toInt(),
+		Query.value(1).toInt(),
+		0,
+		Query.value(2).toDouble(),
+		Query.value(3).toDouble(),
+		NAN,
+		Query.value(4).toString()
+	});
+
+	return Points;
+}
+
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
+{
+	if (!Database.isOpen()) return QList<OBJECT>();
+
+	QHash<int, LINE> Lines; QHash<int, POINT> Points;
+	QList<QPointF> Cuts; QList<OBJECT> Objects;
+	QSet<int> Used;
+
+	const auto getCuts = [&Lines, &Cuts] (void) -> void
+	{
+		const static auto append = [] (const QPointF& P, QList<QPointF>& Cords, QList<int>& Count, QList<QPointF>& Cuts) -> void
+		{
+			int i = Cords.indexOf(P);
+
+			if (i == -1)
+			{
+				Cords.append(P);
+				Count.append(1);
+			}
+			else if (++Count[i] == 3)
+			{
+				Cuts.append(P);
+			}
+		};
+
+		QList<QPointF> Cords; QList<int> Count;
+
+		for (const auto& Line : Lines)
+		{
+			const QPointF A(Line.X1, Line.Y1);
+			const QPointF B(Line.X2, Line.Y2);
+
+			append(A, Cords, Count, Cuts);
+			append(B, Cords, Count, Cuts);
+		}
+	};
+
+	const auto getPairs = [&Lines] (POINT& P) -> void
+	{
+		for (const auto& L : Lines)
+		{
+			QLineF l1(P.X, P.Y, L.X1, L.Y1);
+			QLineF l2(P.X, P.Y, L.X2, L.Y2);
+
+			bool Continue = false;
+
+			const double a = l1.length();
+			const double b = l2.length();
+
+			if (L.Len > a && L.Len > b) Continue = L.Len * L.Len < a * a + b * b;
+			if (a > L.Len && a > b) Continue = a * a < L.Len * L.Len + b * b;
+			if (b > a && b > L.Len) Continue = b * b < a * a + L.Len * L.Len;
+
+			if (Continue)
+			{
+				const double p = 0.5 * (L.Len + a + b);
+				const double h = 2.0 * qSqrt(p * (p - a) * (p - b) * (p - L.Len)) / L.Len;
+
+				if (qIsNaN(P.L) || h < P.L) { P.L = h; P.Match = L.ID; };
+			}
+		}
+	};
+
+	const auto getLabel = [&Points] (LINE& L) -> void
+	{
+		for (const auto& P : Points) if (P.Match == L.ID)
+		{
+			if (!L.IDK && P.IDK) L.IDK = P.IDK;
+
+			L.Label = P.ID; return;
+		}
+	};
+
+	for (const auto& L : loadLines(Line, 0)) Lines.insert(L.ID, L);
+	for (const auto& L : loadLines(Line, 2)) Lines.insert(L.ID, L);
+	for (const auto& P : loadPoints(Text)) Points.insert(P.ID, P);
+
+	QFutureSynchronizer<void> Synchronizer;
+
+	Synchronizer.addFuture(QtConcurrent::run(getCuts));
+	Synchronizer.addFuture(QtConcurrent::map(Points, getPairs));
+
+	Synchronizer.waitForFinished();
+
+	Synchronizer.addFuture(QtConcurrent::map(Lines, getLabel));
+
+	Synchronizer.waitForFinished();
+
+	for (const auto& p : Points) qDebug() << p.ID << p.Match << p.L;
+
+	for (const auto& S : Lines) if (!Used.contains(S.ID))
+	{
+		const static auto append = [] (const LINE& L, OBJECT& O, const QHash<int, POINT>& P, QSet<int>& U) -> void
+		{
+			if (!O.IDK && L.IDK) O.IDK = L.IDK;
+
+			if (L.Label)
+			{
+				if (!O.IDK && P[L.Label].IDK) O.IDK = P[L.Label].IDK;
+
+				if (O.Label.isEmpty())
+				{
+					O.Label = P[L.Label].Text;
+				}
+
+				O.Geometry.append(L.Label);
+				U.insert(L.Label);
+			}
+
+			O.Geometry.append(L.ID);
+			U.insert(L.ID);
+		};
+
+		OBJECT O; bool Continue = true;
+
+		QPointF P1(S.X1, S.Y1);
+		QPointF P2(S.X2, S.Y2);
+
+		append(S, O, Points, Used);
+
+		while (Continue)
+		{
+			const int oldSize = O.Geometry.size();
+
+			for (const auto& L : Lines) if (!Used.contains(L.ID))
+			{
+				const QString Label = L.Label ? Points[L.Label].Text : QString();
+
+				if ((S.Style == L.Style) && (!L.IDK || S.IDK == L.IDK))
+				{
+					QPointF L1(L.X1, L.Y1), L2(L.X2, L.Y2);
+
+					int T(0); if (P1 == L1 && !Cuts.contains(P1)) T = 1;
+					else if (P1 == L2 && !Cuts.contains(P1)) T = 2;
+					else if (P2 == L1 && !Cuts.contains(P2)) T = 3;
+					else if (P2 == L2 && !Cuts.contains(P2)) T = 4;
+
+					if (T && (O.Label.isEmpty() || O.Label == Label))
+					{
+						switch (T)
+						{
+							case 1: P1 = L2; break;
+							case 2: P1 = L1; break;
+							case 3: P2 = L2; break;
+							case 4: P2 = L1; break;
+						}
+
+						append(L, O, Points, Used);
+					}
+				}
+			}
+
+			Continue = oldSize != O.Geometry.size();
+		}
+
+		Objects.append(O);
+	}
+
+	return Objects;
+}
+
 bool DatabaseDriver::openDatabase(const QString& Server, const QString& Base, const QString& User, const QString& Pass)
 {
 	if (Database.isOpen()) Database.close();
@@ -540,6 +796,94 @@ bool DatabaseDriver::closeDatabase(void)
 	{
 		emit onError(tr("Database is not opened")); return false;
 	}
+}
+
+void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text)
+{
+	if (!Database.open()) { emit onProceedEnd(0); return; } QMap<int, QList<OBJECT>> List;
+
+	const auto getValues = [&Values, &Pattern] (OBJECT& O) -> void
+	{
+		QRegExp Exp(Pattern); Exp.setMinimal(true); O.Values = Values;
+
+		if (!Pattern.isEmpty() && Exp.indexIn(O.Label) != 0) for (int i = 1; i < Exp.captureCount(); ++i)
+		{
+			const QRegExp Var = QRegExp(QString("\\$%1\\b").arg(i));
+
+			for (auto& V : O.Values) if (V.type() == QVariant::String)
+			{
+				V = V.toString().replace(Var, Exp.capturedTexts()[i]);
+			}
+		}
+	};
+
+	const auto& Table = getItemByField(Tables, Class, &TABLE::Name);
+
+	List.insert(2, proceedLines(Line, Text));
+
+	QFutureSynchronizer<void> Synchronizer; QStringList Labels;
+
+	if ((Table.Flags & 103) == 103) {} // TODO proceed surfaces
+
+	if ((Table.Flags & 109) == 109) Synchronizer.addFuture(QtConcurrent::map(List[2], getValues));
+
+	if ((Table.Flags & 357) == 357) {} // TODO proceed points
+
+	Synchronizer.waitForFinished();
+
+	for (auto i = Values.constBegin(); i != Values.constEnd(); ++i)
+	{
+		Labels.append(Table.Fields[i.key()].Name);
+	}
+
+	for (auto i = List.constBegin(); i != List.constEnd(); ++i) for (const auto O : i.value())
+	{
+		QSqlQuery objectQuery(Database), geometryQuery(Database); QStringList Set; int n = 0;
+
+		for (const auto& V : O.Values) Set.append(V.toString());
+
+		objectQuery.exec("SELECT GEN_ID(EW_OBIEKTY_UID_GEN, 1) FROM RDB$DATABASE");
+
+		QVariant ID = objectQuery.next() ? objectQuery.value(0) : QVariant();
+
+		objectQuery.exec(QString(
+			"INSERT INTO "
+				"EW_OBIEKTY (UID, IDKATALOG, KOD, RODZAJ, OPERAT, OSOU, OSOW, DTU, DTW, STATUS)"
+			"VALUES "
+				"(%1, 1, '%2', %3, %4, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)")
+					  .arg(ID.toInt())
+					  .arg(Table.Name)
+					  .arg(i.key())
+					  .arg(O.IDK));
+
+		objectQuery.exec(QString(
+			"INSERT INTO "
+				"%1 (UIDO, %2)"
+			"VALUES "
+				"('%3', '%4')")
+					  .arg(Table.Data)
+					  .arg(Labels.join(", "))
+					  .arg(ID.toInt())
+					  .arg(Set.join("', '")));
+
+		geometryQuery.prepare(
+			"INSERT INTO "
+				"EW_OB_ELEMENTY (UIDO, N, TYP, IDE) "
+			"VALUES"
+				"(:id, :n, 0, :ide)");
+
+		geometryQuery.bindValue(":id", ID);
+
+		for (const auto& IDE : O.Geometry)
+		{
+			geometryQuery.bindValue(":n", n++);
+			geometryQuery.bindValue(":ide", IDE);
+
+			geometryQuery.exec();
+		}
+	}
+
+	emit onProceedEnd(List[2].size());
 }
 
 bool operator == (const DatabaseDriver::FIELD& One, const DatabaseDriver::FIELD& Two)
