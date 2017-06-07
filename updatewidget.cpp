@@ -36,7 +36,7 @@ UpdateWidget::~UpdateWidget(void)
 
 QVariant UpdateWidget::getValue(void) const
 {
-	if (Simple) return Simple->text();
+	if (Simple && ui->exprButton->isChecked()) return Simple->text();
 
 	if (auto W = dynamic_cast<QComboBox*>(Widget))
 	{

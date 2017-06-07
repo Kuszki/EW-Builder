@@ -21,6 +21,7 @@
 #ifndef MAINWINDOW_HPP
 #define MAINWINDOW_HPP
 
+#include <QProgressBar>
 #include <QMainWindow>
 
 #include "databasedriver.hpp"
@@ -59,6 +60,7 @@ class MainWindow : public QMainWindow
 		DatabaseDriver* Driver;
 		AboutDialog* About;
 
+		QProgressBar* Progress;
 		QThread Thread;
 
 		unsigned commonCount = 0;

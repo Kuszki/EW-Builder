@@ -27,25 +27,27 @@ MainWindow::MainWindow(QWidget *Parent)
 	ui->setupUi(this); lockUi(DISCONNECTED);
 
 	Driver = new DatabaseDriver(nullptr);
-
-	QSettings Settings("EW-Database");
 	About = new AboutDialog(this);
+	Progress = new QProgressBar(this);
 
-	ui->Progress->hide();
+	Progress->hide();
 	Driver->moveToThread(&Thread);
 	Thread.start();
 
 	ui->valuesLayout->setAlignment(Qt::AlignTop);
+	ui->statusBar->addPermanentWidget(Progress);
+
+	QSettings Settings("EW-Database");
 
 	Settings.beginGroup("Builder");
 	restoreGeometry(Settings.value("geometry").toByteArray());
 	restoreState(Settings.value("state").toByteArray());
 	Settings.endGroup();
 
-	connect(Driver, &DatabaseDriver::onBeginProgress, ui->Progress, &QProgressBar::show);
-	connect(Driver, &DatabaseDriver::onSetupProgress, ui->Progress, &QProgressBar::setRange);
-	connect(Driver, &DatabaseDriver::onUpdateProgress, ui->Progress, &QProgressBar::setValue);
-	connect(Driver, &DatabaseDriver::onEndProgress, ui->Progress, &QProgressBar::hide);
+	connect(Driver, &DatabaseDriver::onBeginProgress, Progress, &QProgressBar::show);
+	connect(Driver, &DatabaseDriver::onSetupProgress, Progress, &QProgressBar::setRange);
+	connect(Driver, &DatabaseDriver::onUpdateProgress, Progress, &QProgressBar::setValue);
+	connect(Driver, &DatabaseDriver::onEndProgress, Progress, &QProgressBar::hide);
 
 	connect(Driver, &DatabaseDriver::onConnect, this, &MainWindow::databaseConnected);
 	connect(Driver, &DatabaseDriver::onDisconnect, this, &MainWindow::databaseDisconnected);
@@ -59,6 +61,8 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(ui->actionProceed, &QAction::triggered, this, &MainWindow::proceedActionClicked);
 	connect(ui->actionAbout, &QAction::triggered, About, &AboutDialog::open);
 
+	connect(Driver, SIGNAL(onBeginProgress(QString)), ui->statusBar, SLOT(showMessage(QString)));
+	connect(Driver, SIGNAL(onError(QString)), ui->statusBar, SLOT(showMessage(QString)));
 }
 
 MainWindow::~MainWindow(void)
@@ -202,7 +206,7 @@ void MainWindow::classIndexChanged(int Index)
 
 void MainWindow::execProcessEnd(int Count)
 {
-	qDebug() << Count;
+	qDebug() << Count; lockUi(DONE);
 }
 
 void MainWindow::databaseLogin(bool OK)

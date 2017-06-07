@@ -19,25 +19,6 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="1">
-     <widget class="QComboBox" name="Class"/>
-    </item>
-    <item row="1" column="1">
-     <widget class="QComboBox" name="Line"/>
-    </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="classLabel">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>Class</string>
-      </property>
-     </widget>
-    </item>
     <item row="1" column="0">
      <widget class="QLabel" name="lineLabel">
       <property name="sizePolicy">
@@ -51,8 +32,12 @@
       </property>
      </widget>
     </item>
-    <item row="4" column="1">
-     <widget class="QLineEdit" name="Pattern"/>
+    <item row="4" column="0">
+     <widget class="QLabel" name="labelPattern">
+      <property name="text">
+       <string>Label pattern</string>
+      </property>
+     </widget>
     </item>
     <item row="5" column="0" colspan="2">
      <widget class="QScrollArea" name="scrollArea">
@@ -71,24 +56,45 @@
          <x>0</x>
          <y>0</y>
          <width>582</width>
-         <height>189</height>
+         <height>231</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="valuesLayout"/>
       </widget>
      </widget>
     </item>
+    <item row="2" column="1">
+     <widget class="QComboBox" name="Point"/>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="classLabel">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>Class</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="1">
+     <widget class="QLineEdit" name="Pattern"/>
+    </item>
+    <item row="3" column="1">
+     <widget class="QComboBox" name="Text"/>
+    </item>
+    <item row="0" column="1">
+     <widget class="QComboBox" name="Class"/>
+    </item>
+    <item row="1" column="1">
+     <widget class="QComboBox" name="Line"/>
+    </item>
     <item row="2" column="0">
      <widget class="QLabel" name="pointLabel">
       <property name="text">
        <string>Point layer</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="0">
-     <widget class="QLabel" name="labelPattern">
-      <property name="text">
-       <string>Label pattern</string>
       </property>
      </widget>
     </item>
@@ -102,25 +108,6 @@
       </property>
       <property name="text">
        <string>Text layer</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1">
-     <widget class="QComboBox" name="Text"/>
-    </item>
-    <item row="2" column="1">
-     <widget class="QComboBox" name="Point"/>
-    </item>
-    <item row="6" column="0" colspan="2">
-     <widget class="QProgressBar" name="Progress">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="value">
-       <number>24</number>
       </property>
      </widget>
     </item>
@@ -168,6 +155,7 @@
    </attribute>
    <addaction name="actionAbout"/>
   </widget>
+  <widget class="QStatusBar" name="statusBar"/>
   <action name="actionAbout">
    <property name="icon">
     <iconset theme="help-about">
@@ -206,7 +194,8 @@
   </action>
   <action name="actionProceed">
    <property name="icon">
-    <iconset theme="system-run"/>
+    <iconset theme="system-run">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Proceed</string>

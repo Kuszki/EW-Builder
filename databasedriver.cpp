@@ -559,8 +559,8 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, int Type
 	Query.prepare(
 		"SELECT "
 			"P.ID, P.OPERAT, "
-			"P.POS_X + ODN_X, "
-			"P.POS_Y + ODN_Y, "
+			"IIF(ODN_X IS NULL, P.POS_X, P.POS_X + ODN_X), "
+			"IIF(ODN_Y IS NULL, P.POS_Y, P.POS_Y + ODN_Y), "
 			"P.TEXT, P.TYP "
 		"FROM "
 			"EW_TEXT P "
@@ -630,21 +630,21 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 
 	const auto getPairs = [&Lines] (POINT& P) -> void
 	{
+		static const auto length = [] (double x1, double y1, double x2, double y2)
+		{
+			const double dx = x1 - x2;
+			const double dy = y1 - y2;
+
+			return qSqrt(dx * dx + dy * dy);
+		};
+
 		for (const auto& L : Lines)
 		{
-			QLineF l1(P.X, P.Y, L.X1, L.Y1);
-			QLineF l2(P.X, P.Y, L.X2, L.Y2);
+			const double a = length(P.X, P.Y, L.X1, L.Y1);
+			const double b = length(P.X, P.Y, L.X2, L.Y2);
 
-			bool Continue = false;
-
-			const double a = l1.length();
-			const double b = l2.length();
-
-			if (L.Len > a && L.Len > b) Continue = L.Len * L.Len < a * a + b * b;
-			if (a > L.Len && a > b) Continue = a * a < L.Len * L.Len + b * b;
-			if (b > a && b > L.Len) Continue = b * b < a * a + L.Len * L.Len;
-
-			if (Continue)
+			if ((a * a < L.Len * L.Len + b * b) &&
+			    (b * b < a * a + L.Len * L.Len))
 			{
 				const double p = 0.5 * (L.Len + a + b);
 				const double h = 2.0 * qSqrt(p * (p - a) * (p - b) * (p - L.Len)) / L.Len;
@@ -668,6 +668,8 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 	for (const auto& L : loadLines(Line, 2)) Lines.insert(L.ID, L);
 	for (const auto& P : loadPoints(Text)) Points.insert(P.ID, P);
 
+	if (Lines.isEmpty()) return QList<OBJECT>();
+
 	QFutureSynchronizer<void> Synchronizer;
 
 	Synchronizer.addFuture(QtConcurrent::run(getCuts));
@@ -678,8 +680,6 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 	Synchronizer.addFuture(QtConcurrent::map(Lines, getLabel));
 
 	Synchronizer.waitForFinished();
-
-	for (const auto& p : Points) qDebug() << p.ID << p.Match << p.L;
 
 	for (const auto& S : Lines) if (!Used.contains(S.ID))
 	{
@@ -728,7 +728,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 					else if (P2 == L1 && !Cuts.contains(P2)) T = 3;
 					else if (P2 == L2 && !Cuts.contains(P2)) T = 4;
 
-					if (T && (O.Label.isEmpty() || O.Label == Label))
+					if (T && (O.Label.isEmpty() || Label.isEmpty() || O.Label == Label))
 					{
 						switch (T)
 						{
@@ -804,15 +804,15 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 	const auto getValues = [&Values, &Pattern] (OBJECT& O) -> void
 	{
-		QRegExp Exp(Pattern); Exp.setMinimal(true); O.Values = Values;
+		QRegExp Exp(Pattern); O.Values = Values;
 
-		if (!Pattern.isEmpty() && Exp.indexIn(O.Label) != 0) for (int i = 1; i < Exp.captureCount(); ++i)
-		{
-			const QRegExp Var = QRegExp(QString("\\$%1\\b").arg(i));
+		if (!Pattern.isEmpty() && Exp.indexIn(O.Label) != -1) for (int i = 0; i < Exp.captureCount(); ++i)
+		{			
+			const QRegExp Var = QRegExp(QString("\\$%1\\b").arg(i + 1));
 
 			for (auto& V : O.Values) if (V.type() == QVariant::String)
 			{
-				V = V.toString().replace(Var, Exp.capturedTexts()[i]);
+				V = V.toString().replace(Var, Exp.capturedTexts()[i + 1]);
 			}
 		}
 	};
@@ -829,18 +829,18 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 	if ((Table.Flags & 357) == 357) {} // TODO proceed points
 
-	Synchronizer.waitForFinished();
-
 	for (auto i = Values.constBegin(); i != Values.constEnd(); ++i)
 	{
-		Labels.append(Table.Fields[i.key()].Name);
+		Labels.append(Table.Fields[i.key()].Name); Labels.last().remove("EW_DATA.");
 	}
+
+	Synchronizer.waitForFinished();
 
 	for (auto i = List.constBegin(); i != List.constEnd(); ++i) for (const auto O : i.value())
 	{
 		QSqlQuery objectQuery(Database), geometryQuery(Database); QStringList Set; int n = 0;
 
-		for (const auto& V : O.Values) Set.append(V.toString());
+		for (const auto& V : O.Values) Set.append(V.toString().remove(QRegExp("\\$\\d+\\b")));
 
 		objectQuery.exec("SELECT GEN_ID(EW_OBIEKTY_UID_GEN, 1) FROM RDB$DATABASE");
 
@@ -848,7 +848,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 		objectQuery.exec(QString(
 			"INSERT INTO "
-				"EW_OBIEKTY (UID, IDKATALOG, KOD, RODZAJ, OPERAT, OSOU, OSOW, DTU, DTW, STATUS)"
+				"EW_OBIEKTY (UID, IDKATALOG, KOD, RODZAJ, OPERAT, OSOU, OSOW, DTU, DTW, STATUS) "
 			"VALUES "
 				"(%1, 1, '%2', %3, %4, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)")
 					  .arg(ID.toInt())
@@ -858,7 +858,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 		objectQuery.exec(QString(
 			"INSERT INTO "
-				"%1 (UIDO, %2)"
+				"%1 (UIDO, %2) "
 			"VALUES "
 				"('%3', '%4')")
 					  .arg(Table.Data)
