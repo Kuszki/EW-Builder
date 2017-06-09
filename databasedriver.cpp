@@ -597,7 +597,6 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 
 	QHash<int, LINE> Lines; QHash<int, POINT> Points;
 	QList<QPointF> Cuts; QList<OBJECT> Objects;
-	QSet<int> Used;
 
 	const auto getCuts = [&Lines, &Cuts] (void) -> void
 	{
@@ -658,30 +657,11 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 	{
 		for (const auto& P : Points) if (P.Match == L.ID)
 		{
-			if (!L.IDK && P.IDK) L.IDK = P.IDK;
-
-			L.Label = P.ID; return;
+			if (!L.IDK && P.IDK) L.IDK = P.IDK; L.Label = P.ID; return;
 		}
 	};
 
-	for (const auto& L : loadLines(Line, 0)) Lines.insert(L.ID, L);
-	for (const auto& L : loadLines(Line, 2)) Lines.insert(L.ID, L);
-	for (const auto& P : loadPoints(Text)) Points.insert(P.ID, P);
-
-	if (Lines.isEmpty()) return QList<OBJECT>();
-
-	QFutureSynchronizer<void> Synchronizer;
-
-	Synchronizer.addFuture(QtConcurrent::run(getCuts));
-	Synchronizer.addFuture(QtConcurrent::map(Points, getPairs));
-
-	Synchronizer.waitForFinished();
-
-	Synchronizer.addFuture(QtConcurrent::map(Lines, getLabel));
-
-	Synchronizer.waitForFinished();
-
-	for (const auto& S : Lines) if (!Used.contains(S.ID))
+	const auto getObjects = [&Lines, &Points, &Cuts, &Objects] (void) -> void
 	{
 		const static auto append = [] (const LINE& L, OBJECT& O, const QHash<int, POINT>& P, QSet<int>& U) -> void
 		{
@@ -704,50 +684,74 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 			U.insert(L.ID);
 		};
 
-		OBJECT O; bool Continue = true;
-
-		QPointF P1(S.X1, S.Y1);
-		QPointF P2(S.X2, S.Y2);
-
-		append(S, O, Points, Used);
-
-		while (Continue)
+		QSet<int> Used; for (const auto& S : Lines) if (!Used.contains(S.ID))
 		{
-			const int oldSize = O.Geometry.size();
+			OBJECT O; bool Continue = true;
 
-			for (const auto& L : Lines) if (!Used.contains(L.ID))
+			QPointF P1(S.X1, S.Y1);
+			QPointF P2(S.X2, S.Y2);
+
+			append(S, O, Points, Used);
+
+			while (Continue)
 			{
-				const QString Label = L.Label ? Points[L.Label].Text : QString();
+				const int oldSize = O.Geometry.size();
 
-				if ((S.Style == L.Style) && (!L.IDK || S.IDK == L.IDK))
+				for (const auto& L : Lines) if (!Used.contains(L.ID))
 				{
-					QPointF L1(L.X1, L.Y1), L2(L.X2, L.Y2);
+					const QString Label = L.Label ? Points[L.Label].Text : QString();
 
-					int T(0); if (P1 == L1 && !Cuts.contains(P1)) T = 1;
-					else if (P1 == L2 && !Cuts.contains(P1)) T = 2;
-					else if (P2 == L1 && !Cuts.contains(P2)) T = 3;
-					else if (P2 == L2 && !Cuts.contains(P2)) T = 4;
-
-					if (T && (O.Label.isEmpty() || Label.isEmpty() || O.Label == Label))
+					if ((S.Style == L.Style) && (!L.IDK || S.IDK == L.IDK))
 					{
-						switch (T)
-						{
-							case 1: P1 = L2; break;
-							case 2: P1 = L1; break;
-							case 3: P2 = L2; break;
-							case 4: P2 = L1; break;
-						}
+						QPointF L1(L.X1, L.Y1), L2(L.X2, L.Y2);
 
-						append(L, O, Points, Used);
+						int T(0); if (P1 == L1 && !Cuts.contains(P1)) T = 1;
+						else if (P1 == L2 && !Cuts.contains(P1)) T = 2;
+						else if (P2 == L1 && !Cuts.contains(P2)) T = 3;
+						else if (P2 == L2 && !Cuts.contains(P2)) T = 4;
+
+						if (T && (O.Label.isEmpty() || Label.isEmpty() || O.Label == Label))
+						{
+							switch (T)
+							{
+								case 1: P1 = L2; break;
+								case 2: P1 = L1; break;
+								case 3: P2 = L2; break;
+								case 4: P2 = L1; break;
+							}
+
+							append(L, O, Points, Used);
+						}
 					}
 				}
+
+				Continue = oldSize != O.Geometry.size();
 			}
 
-			Continue = oldSize != O.Geometry.size();
+			Objects.append(O);
 		}
+	};
 
-		Objects.append(O);
-	}
+	for (const auto& L : loadLines(Line, 0)) Lines.insert(L.ID, L);
+	for (const auto& L : loadLines(Line, 2)) Lines.insert(L.ID, L);
+	for (const auto& P : loadPoints(Text)) Points.insert(P.ID, P);
+
+	if (Lines.isEmpty()) return QList<OBJECT>();
+
+	QFutureSynchronizer<void> Synchronizer;
+
+	Synchronizer.addFuture(QtConcurrent::run(getCuts));
+	Synchronizer.addFuture(QtConcurrent::map(Points, getPairs));
+
+	Synchronizer.waitForFinished();
+
+	Synchronizer.addFuture(QtConcurrent::map(Lines, getLabel));
+
+	Synchronizer.waitForFinished();
+
+	Synchronizer.addFuture(QtConcurrent::run(getObjects));
+
+	Synchronizer.waitForFinished();
 
 	return Objects;
 }
