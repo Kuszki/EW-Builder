@@ -663,7 +663,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 
 	const auto getObjects = [&Lines, &Points, &Cuts, &Objects] (void) -> void
 	{
-		const static auto append = [] (const LINE& L, OBJECT& O, const QHash<int, POINT>& P, QSet<int>& U) -> void
+		const static auto append = [] (const LINE& L, OBJECT& O, const QHash<int, POINT>& P, QSet<int>& U, bool First) -> void
 		{
 			if (!O.IDK && L.IDK) O.IDK = L.IDK;
 
@@ -676,22 +676,24 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 					O.Label = P[L.Label].Text;
 				}
 
-				O.Geometry.append(L.Label);
+				if (First) O.Geometry.push_front(L.Label);
+				else O.Geometry.push_back(L.Label);
+
 				U.insert(L.Label);
 			}
 
-			O.Geometry.append(L.ID);
+			if (First) O.Geometry.push_front(L.ID);
+			else O.Geometry.push_back(L.ID);
+
 			U.insert(L.ID);
 		};
 
 		QSet<int> Used; for (const auto& S : Lines) if (!Used.contains(S.ID))
 		{
+			QPointF P1(S.X1, S.Y1), P2(S.X2, S.Y2);
 			OBJECT O; bool Continue = true;
 
-			QPointF P1(S.X1, S.Y1);
-			QPointF P2(S.X2, S.Y2);
-
-			append(S, O, Points, Used);
+			append(S, O, Points, Used, false);
 
 			while (Continue)
 			{
@@ -714,13 +716,11 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 						{
 							switch (T)
 							{
-								case 1: P1 = L2; break;
-								case 2: P1 = L1; break;
-								case 3: P2 = L2; break;
-								case 4: P2 = L1; break;
+								case 1: P1 = L2; append(L, O, Points, Used, true); break;
+								case 2: P1 = L1; append(L, O, Points, Used, true); break;
+								case 3: P2 = L2; append(L, O, Points, Used, false); break;
+								case 4: P2 = L1; append(L, O, Points, Used, false); break;
 							}
-
-							append(L, O, Points, Used);
 						}
 					}
 				}
