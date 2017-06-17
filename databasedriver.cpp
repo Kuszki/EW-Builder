@@ -642,11 +642,10 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 			const double a = length(P.X, P.Y, L.X1, L.Y1);
 			const double b = length(P.X, P.Y, L.X2, L.Y2);
 
-			if ((a * a < L.Len * L.Len + b * b) &&
-			    (b * b < a * a + L.Len * L.Len))
+			if ((a * a <= L.Len * L.Len + b * b) &&
+			    (b * b <= a * a + L.Len * L.Len))
 			{
-				const double p = 0.5 * (L.Len + a + b);
-				const double h = 2.0 * qSqrt(p * (p - a) * (p - b) * (p - L.Len)) / L.Len;
+				const double h = (a + b) / L.Len;
 
 				if (qIsNaN(P.L) || h < P.L) { P.L = h; P.Match = L.ID; };
 			}
@@ -811,7 +810,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 		QRegExp Exp(Pattern); O.Values = Values;
 
 		if (!Pattern.isEmpty() && Exp.indexIn(O.Label) != -1) for (int i = 0; i < Exp.captureCount(); ++i)
-		{			
+		{
 			const QRegExp Var = QRegExp(QString("\\$%1\\b").arg(i + 1));
 
 			for (auto& V : O.Values) if (V.type() == QVariant::String)
