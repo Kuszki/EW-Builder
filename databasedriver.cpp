@@ -559,8 +559,8 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, int Type
 	Query.prepare(
 		"SELECT "
 			"P.ID, P.OPERAT, "
-			"IIF(ODN_X IS NULL, P.POS_X, P.POS_X + ODN_X), "
-			"IIF(ODN_Y IS NULL, P.POS_Y, P.POS_Y + ODN_Y), "
+			"IIF(P.ODN_X IS NULL, P.POS_X, P.POS_X + P.ODN_X), "
+			"IIF(P.ODN_Y IS NULL, P.POS_Y, P.POS_Y + P.ODN_Y), "
 			"P.TEXT, P.TYP "
 		"FROM "
 			"EW_TEXT P "
