@@ -66,6 +66,7 @@ class DatabaseDriver : public QObject
 	{
 		QHash<int, QVariant> Values;
 		QList<int> Geometry;
+		QList<int> Labels;
 
 		QString Label;
 		int IDK = 0;

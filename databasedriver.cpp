@@ -675,8 +675,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 					O.Label = P[L.Label].Text;
 				}
 
-				if (First) O.Geometry.push_front(L.Label);
-				else O.Geometry.push_back(L.Label);
+				O.Labels.append(L.Label);
 
 				U.insert(L.Label);
 			}
@@ -878,6 +877,14 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 		geometryQuery.bindValue(":id", ID);
 
 		for (const auto& IDE : O.Geometry)
+		{
+			geometryQuery.bindValue(":n", n++);
+			geometryQuery.bindValue(":ide", IDE);
+
+			geometryQuery.exec();
+		}
+
+		for (const auto& IDE : O.Labels)
 		{
 			geometryQuery.bindValue(":n", n++);
 			geometryQuery.bindValue(":ide", IDE);
