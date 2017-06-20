@@ -206,7 +206,7 @@ void MainWindow::classIndexChanged(int Index)
 
 void MainWindow::execProcessEnd(int Count)
 {
-	qDebug() << Count; lockUi(DONE);
+	lockUi(DONE); ui->statusBar->showMessage(tr("Created %n item(s)", nullptr, Count));
 }
 
 void MainWindow::databaseLogin(bool OK)

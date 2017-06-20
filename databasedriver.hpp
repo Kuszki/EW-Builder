@@ -60,6 +60,7 @@ class DatabaseDriver : public QObject
 		int Style;
 
 		double Len = NAN;
+		double Odn = NAN;
 	};
 
 	struct OBJECT
@@ -146,7 +147,7 @@ class DatabaseDriver : public QObject
 		QHash<int, LINE> loadLines(int Layer, int Flags = 0);
 		QHash<int, POINT> loadPoints(int Layer, int Type = -1);
 
-		QList<OBJECT> proceedLines(int Line, int Text);
+		QList<OBJECT> proceedLines(int Line, int Text, const QString& Expr = QString());
 
 		bool isTerminated(void) const;
 

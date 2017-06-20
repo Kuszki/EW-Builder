@@ -591,7 +591,7 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, int Type
 	return Points;
 }
 
-QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, const QString& Expr)
 {
 	if (!Database.isOpen()) return QList<OBJECT>();
 
@@ -627,7 +627,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 		}
 	};
 
-	const auto getPairs = [&Lines] (POINT& P) -> void
+	const auto getPairs = [&Lines, &Expr] (POINT& P) -> void
 	{
 		static const auto length = [] (double x1, double y1, double x2, double y2)
 		{
@@ -636,6 +636,8 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 
 			return qSqrt(dx * dx + dy * dy);
 		};
+
+		if (!Expr.isEmpty()) if (QRegExp(Expr).indexIn(P.Text) == -1) return;
 
 		for (const auto& L : Lines)
 		{
@@ -654,9 +656,9 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 
 	const auto getLabel = [&Points] (LINE& L) -> void
 	{
-		for (const auto& P : Points) if (P.Match == L.ID)
-		{
-			if (!L.IDK && P.IDK) L.IDK = P.IDK; L.Label = P.ID; return;
+		for (const auto& P : Points) if (P.Match == L.ID && (qIsNaN(L.Odn) || L.Odn > P.L))
+		{			
+			if (!L.IDK && P.IDK) L.IDK = P.IDK; L.Label = P.ID;
 		}
 	};
 
@@ -668,16 +670,12 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 
 			if (L.Label)
 			{
-				if (!O.IDK && P[L.Label].IDK) O.IDK = P[L.Label].IDK;
-
 				if (O.Label.isEmpty())
 				{
 					O.Label = P[L.Label].Text;
 				}
 
 				O.Labels.append(L.Label);
-
-				U.insert(L.Label);
 			}
 
 			if (First) O.Geometry.push_front(L.ID);
@@ -732,7 +730,8 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text)
 
 	for (const auto& L : loadLines(Line, 0)) Lines.insert(L.ID, L);
 	for (const auto& L : loadLines(Line, 2)) Lines.insert(L.ID, L);
-	for (const auto& P : loadPoints(Text)) Points.insert(P.ID, P);
+
+	if (Text) Points = loadPoints(Text);
 
 	if (Lines.isEmpty()) return QList<OBJECT>();
 
@@ -841,11 +840,11 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 	const auto& Table = getItemByField(Tables, Class, &TABLE::Name);
 
-	if ((Table.Flags & 103) == 103) {} // TODO proceed surfaces
+	if (Line && (Table.Flags & 103) == 103) {} // TODO proceed surfaces
 
-	if ((Table.Flags & 109) == 109) List.insert(2, proceedLines(Line, Text));
+	if (Line && (Table.Flags & 109) == 109) List.insert(2, proceedLines(Line, Text, Pattern));
 
-	if ((Table.Flags & 357) == 357) {} // TODO proceed points
+	if (Point && (Table.Flags & 357) == 357) {} // TODO proceed points
 
 	emit onBeginProgress(tr("Preparing attributes"));
 	emit onSetupProgress(0, 0);
@@ -887,25 +886,28 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 	for (auto i = List.constBegin(); i != List.constEnd(); ++i) for (const auto& O : i.value()) if (!isTerminated())
 	{
-		if (!indexQuery.exec() || !indexQuery.next()) continue; int n(0);
+		if (!indexQuery.exec() || !indexQuery.next()) continue;
 
-		QVariantList Numbers, Indexes, Geometry;
-		const QVariant ID = indexQuery.value(0);
-
-		for (const auto& IDE : O.Geometry) { Indexes << ID; Numbers << n++; Geometry << IDE; }
-		for (const auto& IDE : O.Labels) { Indexes << ID; Numbers << n++; Geometry << IDE; }
+		const QVariant ID = indexQuery.value(0); int n(0);
 
 		objectQuery.addBindValue(ID);
 		objectQuery.addBindValue(i.key());
 		objectQuery.addBindValue(O.IDK);
 
-		dataQuery.addBindValue(ID); for (const auto& V : O.Values) dataQuery.addBindValue(V);
+		dataQuery.addBindValue(ID);
 
-		geometryQuery.addBindValue(Indexes);
-		geometryQuery.addBindValue(Numbers);
-		geometryQuery.addBindValue(Geometry);
+		for (const auto& V : O.Values) dataQuery.addBindValue(V);
 
-		objectQuery.exec(); dataQuery.exec(); geometryQuery.execBatch();
+		objectQuery.exec(); dataQuery.exec();
+
+		for (const auto& IDE : QList<int>() << O.Geometry << O.Labels)
+		{
+			geometryQuery.addBindValue(ID);
+			geometryQuery.addBindValue(n++);
+			geometryQuery.addBindValue(IDE);
+
+			geometryQuery.exec();
+		}
 
 		emit onUpdateProgress(++Step);
 	}

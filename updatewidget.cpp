@@ -190,6 +190,8 @@ void UpdateWidget::setParameters(int ID, const DatabaseDriver::FIELD& Field)
 
 			Spin->setSingleStep(1);
 			Spin->setRange(0, 10000);
+
+			Simple = new QLineEdit(this);
 		}
 		break;
 		case DatabaseDriver::BOOL:
@@ -207,6 +209,8 @@ void UpdateWidget::setParameters(int ID, const DatabaseDriver::FIELD& Field)
 
 			Spin->setSingleStep(1.0);
 			Spin->setRange(0.0, 10000.0);
+
+			Simple = new QLineEdit(this);
 		}
 		break;
 		case DatabaseDriver::DATE:
@@ -234,8 +238,6 @@ void UpdateWidget::setParameters(int ID, const DatabaseDriver::FIELD& Field)
 		break;
 	}
 
-	if (!dynamic_cast<QLineEdit*>(Widget)) Simple = new QLineEdit(this);
-
 	if (Widget)
 	{
 		Widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -251,6 +253,14 @@ void UpdateWidget::setParameters(int ID, const DatabaseDriver::FIELD& Field)
 		Simple->setClearButtonEnabled(true);
 
 		ui->horizontalLayout->insertWidget(1, Simple);
+
+		ui->exprButton->setVisible(true);
+		ui->exprButton->setEnabled(true);
+	}
+	else
+	{
+		ui->exprButton->setVisible(false);
+		ui->exprButton->setEnabled(false);
 	}
 
 	setObjectName(Field.Name); toggleFunction(ui->exprButton->isChecked());
