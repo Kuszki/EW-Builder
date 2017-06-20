@@ -110,12 +110,16 @@ class DatabaseDriver : public QObject
 
 	private:
 
+		mutable QMutex Terminator;
+
 		QSqlDatabase Database;
 		QStringList Headers;
 
 		QList<TABLE> Tables;
 		QList<FIELD> Fields;
 		QList<FIELD> Common;
+
+		bool Terminated = false;
 
 	public:
 
@@ -144,6 +148,8 @@ class DatabaseDriver : public QObject
 
 		QList<OBJECT> proceedLines(int Line, int Text);
 
+		bool isTerminated(void) const;
+
 	public slots:
 
 		bool openDatabase(const QString& Server, const QString& Base,
@@ -155,6 +161,8 @@ class DatabaseDriver : public QObject
 					   const QString& Pattern,
 					   const QString& Class,
 					   int Line, int Point, int Text);
+
+		void terminate(void);
 
 	signals:
 
