@@ -645,7 +645,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 			const double b = length(P.X, P.Y, L.X2, L.Y2);
 
 			if ((a * a <= L.Len * L.Len + b * b) &&
-			    (b * b <= a * a + L.Len * L.Len))
+			    (b * b <= L.Len * L.Len + a * a))
 			{
 				const double h = (a + b) / L.Len;
 
