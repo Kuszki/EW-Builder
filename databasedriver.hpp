@@ -148,6 +148,7 @@ class DatabaseDriver : public QObject
 		QHash<int, POINT> loadPoints(int Layer, int Type = -1);
 
 		QList<OBJECT> proceedLines(int Line, int Text, const QString& Expr = QString());
+		QList<OBJECT> proceedPoints(int Symbol, int Text, const QString& Expr = QString());
 
 		bool isTerminated(void) const;
 

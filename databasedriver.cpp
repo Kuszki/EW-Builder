@@ -756,6 +756,86 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 	return Objects;
 }
 
+
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text, const QString& Expr)
+{
+	if (!Database.isOpen()) return QList<OBJECT>();
+
+	QHash<int, POINT> Symbols, Texts;
+	QList<OBJECT> Objects;
+
+	const auto getPairs = [&Symbols, &Expr] (POINT& P) -> void
+	{
+		static const auto length = [] (double x1, double y1, double x2, double y2)
+		{
+			const double dx = x1 - x2;
+			const double dy = y1 - y2;
+
+			return qSqrt(dx * dx + dy * dy);
+		};
+
+		if (!Expr.isEmpty()) if (QRegExp(Expr).indexIn(P.Text) == -1) return;
+
+		for (const auto& S : Symbols)
+		{
+			const double l = length(S.X, S.Y, P.X, P.Y);
+
+			if (qIsNaN(P.L) || l < P.L)
+			{
+				P.L = l; P.Match = S.ID;
+			};
+		}
+	};
+
+	const auto getLabel = [&Texts] (POINT& S) -> void
+	{
+		for (const auto& P : Texts) if (P.Match == S.ID && (qIsNaN(S.L) || S.L > P.L))
+		{
+			if (!S.IDK && P.IDK) S.IDK = P.IDK; S.Match = P.ID; S.L = P.L;
+		}
+	};
+
+	const auto getObjects = [&Symbols, &Texts, &Objects] (void) -> void
+	{
+		for (const auto& S : Symbols)
+		{
+			OBJECT O;
+
+			O.IDK = S.IDK;
+			O.Geometry.append(S.ID);
+
+			if (S.Match)
+			{
+				O.Label = Texts[S.Match].Text;
+				O.Labels.append(S.Match);
+			}
+
+			Objects.append(O);
+		}
+	};
+
+	Symbols = loadPoints(Symbol, 4);
+
+	if (Symbols.isEmpty()) return QList<OBJECT>();
+	else if (Text) Texts = loadPoints(Text);
+
+	QFutureSynchronizer<void> Synchronizer;
+
+	Synchronizer.addFuture(QtConcurrent::map(Texts, getPairs));
+
+	Synchronizer.waitForFinished();
+
+	Synchronizer.addFuture(QtConcurrent::map(Symbols, getLabel));
+
+	Synchronizer.waitForFinished();
+
+	Synchronizer.addFuture(QtConcurrent::run(getObjects));
+
+	Synchronizer.waitForFinished();
+
+	return Objects;
+}
+
 bool DatabaseDriver::isTerminated(void) const
 {
 	QMutexLocker Locker(&Terminator); return Terminated;
@@ -847,7 +927,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 	if (Line && (Table.Flags & 109) == 109) List.insert(2, proceedLines(Line, Text, Pattern));
 
-	if (Point && (Table.Flags & 357) == 357) {} // TODO proceed points
+	if (Point && (Table.Flags & 357) == 357) List.insert(4, proceedPoints(Point, Text, Pattern));
 
 	emit onBeginProgress(tr("Preparing attributes"));
 	emit onSetupProgress(0, 0);
