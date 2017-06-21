@@ -644,12 +644,15 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 			const double a = length(P.X, P.Y, L.X1, L.Y1);
 			const double b = length(P.X, P.Y, L.X2, L.Y2);
 
-			if ((a * a <= L.Len * L.Len + b * b) &&
-			    (b * b <= L.Len * L.Len + a * a))
+			if ((1.2 * a * a <= L.Len * L.Len + b * b) &&
+			    (1.2 * b * b <= L.Len * L.Len + a * a))
 			{
 				const double h = (a + b) / L.Len;
 
-				if (qIsNaN(P.L) || h < P.L) { P.L = h; P.Match = L.ID; };
+				if (qIsNaN(P.L) || h < P.L)
+				{
+					P.L = h; P.Match = L.ID;
+				};
 			}
 		}
 	};
@@ -658,7 +661,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 	{
 		for (const auto& P : Points) if (P.Match == L.ID && (qIsNaN(L.Odn) || L.Odn > P.L))
 		{			
-			if (!L.IDK && P.IDK) L.IDK = P.IDK; L.Label = P.ID;
+			if (!L.IDK && P.IDK) L.IDK = P.IDK; L.Label = P.ID; L.Odn = P.L;
 		}
 	};
 
@@ -849,7 +852,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 	emit onBeginProgress(tr("Preparing attributes"));
 	emit onSetupProgress(0, 0);
 
-	for (auto& C : List) { Synchronizer.addFuture(QtConcurrent::map(C, getValues)); Count += C.size(); }
+	for (auto& C : List) { Count += C.size(); Synchronizer.addFuture(QtConcurrent::map(C, getValues)); }
 
 	for (auto i = Values.constBegin(); i != Values.constEnd(); ++i)
 	{
@@ -886,28 +889,39 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 	for (auto i = List.constBegin(); i != List.constEnd(); ++i) for (const auto& O : i.value()) if (!isTerminated())
 	{
-		if (!indexQuery.exec() || !indexQuery.next()) continue;
-
-		const QVariant ID = indexQuery.value(0); int n(0);
-
-		objectQuery.addBindValue(ID);
-		objectQuery.addBindValue(i.key());
-		objectQuery.addBindValue(O.IDK);
-
-		dataQuery.addBindValue(ID);
-
-		for (const auto& V : O.Values) dataQuery.addBindValue(V);
-
-		objectQuery.exec(); dataQuery.exec();
-
-		for (const auto& IDE : QList<int>() << O.Geometry << O.Labels)
+		if (indexQuery.exec() && indexQuery.next())
 		{
-			geometryQuery.addBindValue(ID);
-			geometryQuery.addBindValue(n++);
-			geometryQuery.addBindValue(IDE);
+			const QVariant ID = indexQuery.value(0); int n(0);
 
-			geometryQuery.exec();
+			objectQuery.addBindValue(ID);
+			objectQuery.addBindValue(i.key());
+			objectQuery.addBindValue(O.IDK);
+
+			dataQuery.addBindValue(ID);
+
+			for (const auto& V : O.Values) dataQuery.addBindValue(V);
+
+			objectQuery.exec(); dataQuery.exec();
+
+			for (const auto& IDE : O.Geometry)
+			{
+				geometryQuery.addBindValue(ID);
+				geometryQuery.addBindValue(n++);
+				geometryQuery.addBindValue(IDE);
+
+				geometryQuery.exec();
+			}
+
+			for (const auto& IDE : O.Labels)
+			{
+				geometryQuery.addBindValue(ID);
+				geometryQuery.addBindValue(n++);
+				geometryQuery.addBindValue(IDE);
+
+				geometryQuery.exec();
+			}
 		}
+		else --Count;
 
 		emit onUpdateProgress(++Step);
 	}
