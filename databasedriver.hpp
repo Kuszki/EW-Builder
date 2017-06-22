@@ -59,6 +59,7 @@ class DatabaseDriver : public QObject
 
 		int Style;
 
+		double Rad = NAN;
 		double Len = NAN;
 		double Odn = NAN;
 	};
@@ -149,6 +150,7 @@ class DatabaseDriver : public QObject
 
 		QList<OBJECT> proceedLines(int Line, int Text, const QString& Expr = QString());
 		QList<OBJECT> proceedPoints(int Symbol, int Text, const QString& Expr = QString());
+		QList<OBJECT> proceedSurfaces(int Line, int Text, const QString& Expr = QString());
 
 		bool isTerminated(void) const;
 

@@ -539,7 +539,16 @@ QHash<int, DatabaseDriver::LINE> DatabaseDriver::loadLines(int Layer, int Flags)
 		Query.value(6).toInt()
 	});
 
-	QtConcurrent::blockingMap(Lines, [] (LINE& Line) -> void
+	if (Flags == 4) QtConcurrent::blockingMap(Lines, [] (LINE& Line) -> void
+	{
+		const double nX = (Line.X1 - Line.X2) / 2.0;
+		const double nY = (Line.Y1 - Line.Y2) / 2.0;
+
+		Line.Rad = qAbs(Line.X1 - nX);
+		Line.X1 = Line.X2 = nX;
+		Line.Y1 = Line.Y2 = nY;
+	});
+	else QtConcurrent::blockingMap(Lines, [] (LINE& Line) -> void
 	{
 		const double dx = Line.X1 - Line.X2;
 		const double dy = Line.Y1 - Line.Y2;
@@ -836,6 +845,218 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text
 	return Objects;
 }
 
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text, const QString& Expr)
+{
+	if (!Database.isOpen()) return QList<OBJECT>();
+
+	QHash<int, LINE> Lines, Circles; QHash<int, POINT> Points;
+	QList<LINE> Sorted; QList<OBJECT> Objects;
+
+	const auto sortLines = [] (const QHash<int, LINE>& Lines) -> QList<LINE>
+	{
+		QMap<int, QList<LINE>> Groups; QList<LINE> Sorted;
+		QList<QPointF> Points; QList<int> Counts;
+
+		for (const auto& L : Lines)
+		{
+			QPointF P1(L.X1, L.Y1), P2(L.X2, L.Y2);
+
+			const int N1 = Points.indexOf(P1);
+
+			if (N1 != -1) ++Counts[N1];
+			else
+			{
+				Points.append(P1);
+				Counts.append(1);
+			}
+
+			const int N2 = Points.indexOf(P2);
+
+			if (N2 != -1) ++Counts[N2];
+			else
+			{
+				Points.append(P2);
+				Counts.append(1);
+			}
+		}
+
+		for (const auto& L : Lines)
+		{
+			QPointF P1(L.X1, L.Y1), P2(L.X2, L.Y2);
+
+			const int N1 = Points.indexOf(P1);
+			const int N2 = Points.indexOf(P2);
+
+			const int N = Counts[N1] * Counts[N2];
+
+			if (!Groups.contains(N)) Groups.insert(N, QList<LINE>());
+
+			Groups[N].append(L);
+		}
+
+		QList<int> Keys = Groups.keys(); qSort(Keys);
+
+		for (const auto& K : Keys) Sorted.append(Groups[K]);
+
+		return Sorted;
+	};
+
+	const auto getPairs = [&Sorted, &Expr] (POINT& P) -> void
+	{
+		static const auto length = [] (double x1, double y1, double x2, double y2)
+		{
+			const double dx = x1 - x2;
+			const double dy = y1 - y2;
+
+			return qSqrt(dx * dx + dy * dy);
+		};
+
+		if (!Expr.isEmpty()) if (QRegExp(Expr).indexIn(P.Text) == -1) return;
+
+		for (const auto& L : Sorted)
+		{
+			double h = NAN; if (qIsNaN(L.Rad))
+			{
+				const double a = length(P.X, P.Y, L.X1, L.Y1);
+				const double b = length(P.X, P.Y, L.X2, L.Y2);
+
+				if ((1.2 * a * a <= L.Len * L.Len + b * b) &&
+				    (1.2 * b * b <= L.Len * L.Len + a * a))
+				{
+					h = (a + b) / L.Len;
+				}
+			}
+			else h = length(P.X, P.Y, L.X1, L.Y1) - L.Rad;
+
+			if (!qIsNaN(h) && (qIsNaN(P.L) || h < P.L))
+			{
+				P.L = h; P.Match = L.ID;
+			};
+		}
+	};
+
+	const auto getLabel = [&Points] (LINE& L) -> void
+	{
+		for (const auto& P : Points) if (P.Match == L.ID && (qIsNaN(L.Odn) || L.Odn > P.L))
+		{
+			if (!L.IDK && P.IDK) L.IDK = P.IDK; L.Label = P.ID; L.Odn = P.L;
+		}
+	};
+
+	const auto getObjects = [&Sorted, &Points, &Objects] (void) -> void
+	{
+		const static auto append = [] (const LINE& L, OBJECT& O, const QHash<int, POINT>& P, QSet<int>& U, QList<QPointF>& G, int T) -> void
+		{
+			if (!O.IDK && L.IDK) O.IDK = L.IDK;
+
+			if (L.Label)
+			{
+				if (O.Label.isEmpty())
+				{
+					O.Label = P[L.Label].Text;
+				}
+
+				O.Labels.append(L.Label);
+			}
+
+			switch (T)
+			{
+				case 3:
+					G.push_back(QPointF(L.X1, L.Y1));
+				break;
+				case 4:
+					G.push_back(QPointF(L.X2, L.Y2));
+				break;
+				default:
+					G.append(QPointF(L.X2, L.Y2));
+			}
+
+			O.Geometry.append(L.ID);
+			U.insert(L.ID);
+		};
+
+		QSet<int> Used; QList<int> Unused; for (const auto& S : Sorted) if (!Used.contains(S.ID))
+		{
+			QPointF P1(S.X1, S.Y1), P2(S.X2, S.Y2);
+			OBJECT O; bool Continue = true;
+			QList<QPointF> Geometry;
+
+			append(S, O, Points, Used, Geometry, 0);
+
+			while (Continue)
+			{
+				const int oldSize = O.Geometry.size();
+
+				for (const auto& L : Sorted) if (!Used.contains(L.ID))
+				{
+					const QString Label = L.Label ? Points[L.Label].Text : QString();
+
+					if ((S.Style == L.Style) && (!L.IDK || !S.IDK || S.IDK == L.IDK))
+					{
+						QPointF L1(L.X1, L.Y1), L2(L.X2, L.Y2);
+
+						int T(0); if (P2 == L1) T = 3; else if (P2 == L2) T = 4;
+
+						int C(0); if (T) switch (T)
+						{
+							case 3: C = Geometry.indexOf(L2); break;
+							case 4: C = Geometry.indexOf(L1); break;
+						}
+
+						if (T && C == -1 && (O.Label.isEmpty() || Label.isEmpty() || O.Label == Label))
+						{
+							append(L, O, Points, Used, Geometry, T); switch (T)
+							{
+								case 3: P2 = L2; break; case 4: P2 = L1; break;
+							}
+						}
+
+						if (T && C != -1) for (int i = 0, l = Geometry.size(); i < l - C; ++i)
+						{
+							Unused.append(O.Geometry.takeLast()); Geometry.removeLast();
+						}
+					}
+				}
+
+				Continue = oldSize != O.Geometry.size() && P1 != P2;
+			}
+
+			if (P1 == P2) Objects.append(O);
+			else
+			{
+				for (const auto& I : O.Geometry) Used.remove(I);
+			}
+
+			while (Unused.size()) Used.remove(Unused.takeLast());
+		}
+	};
+
+	for (const auto& L : loadLines(Line, 0)) Lines.insert(L.ID, L);
+	for (const auto& L : loadLines(Line, 2)) Lines.insert(L.ID, L);
+	for (const auto& L : loadLines(Line, 4)) Lines.insert(L.ID, L);
+
+	Sorted = sortLines(Lines);
+
+	if (Sorted.isEmpty()) return QList<OBJECT>();
+	else if (Text) Points = loadPoints(Text);
+
+	QFutureSynchronizer<void> Synchronizer;
+
+	Synchronizer.addFuture(QtConcurrent::map(Points, getPairs));
+
+	Synchronizer.waitForFinished();
+
+	Synchronizer.addFuture(QtConcurrent::map(Sorted, getLabel));
+
+	Synchronizer.waitForFinished();
+
+	Synchronizer.addFuture(QtConcurrent::run(getObjects));
+
+	Synchronizer.waitForFinished();
+
+	return Objects;
+}
+
 bool DatabaseDriver::isTerminated(void) const
 {
 	QMutexLocker Locker(&Terminator); return Terminated;
@@ -923,11 +1144,11 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 	const auto& Table = getItemByField(Tables, Class, &TABLE::Name);
 
-	if (Line && (Table.Flags & 103) == 103) {} // TODO proceed surfaces
+	if (Line && (Table.Flags & 0x002)) List.insert(3, proceedSurfaces(Line, Text, Pattern));
 
-	if (Line && (Table.Flags & 109) == 109) List.insert(2, proceedLines(Line, Text, Pattern));
+	if (Point && (Table.Flags & 0x100)) List.insert(4, proceedPoints(Point, Text, Pattern));
 
-	if (Point && (Table.Flags & 357) == 357) List.insert(4, proceedPoints(Point, Text, Pattern));
+	if (Line && (Table.Flags & 0x008)) List.insert(2, proceedLines(Line, Text, Pattern));
 
 	emit onBeginProgress(tr("Preparing attributes"));
 	emit onSetupProgress(0, 0);
@@ -950,7 +1171,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 			"(?, 1, '%1', ?, ?, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)")
 					.arg(Table.Name));
 
-	dataQuery.prepare(QString(
+	if (Values.size()) dataQuery.prepare(QString(
 		"INSERT INTO %1 (UIDO, %2) VALUES (?%3)")
 				   .arg(Table.Data)
 				   .arg(Labels.join(", "))
@@ -977,11 +1198,16 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 			objectQuery.addBindValue(i.key());
 			objectQuery.addBindValue(O.IDK);
 
-			dataQuery.addBindValue(ID);
+			objectQuery.exec();
 
-			for (const auto& V : O.Values) dataQuery.addBindValue(V);
+			if (O.Values.size())
+			{
+				dataQuery.addBindValue(ID);
 
-			objectQuery.exec(); dataQuery.exec();
+				for (const auto& V : O.Values) dataQuery.addBindValue(V);
+
+				dataQuery.exec();
+			}
 
 			for (const auto& IDE : O.Geometry)
 			{
