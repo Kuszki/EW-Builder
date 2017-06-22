@@ -78,6 +78,7 @@ class MainWindow : public QMainWindow
 
 		void connectActionClicked(void);
 		void proceedActionClicked(void);
+		void cancelActionClicked(void);
 
 		void databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common,
 						   const QHash<QString, QHash<int, QString>>& Lines,

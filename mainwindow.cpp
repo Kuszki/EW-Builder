@@ -100,10 +100,12 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 		case BUSY:
 			ui->actionProceed->setEnabled(false);
 			ui->actionDisconnect->setEnabled(false);
+			ui->actionCancel->setEnabled(true);
 		break;
 		case DONE:
 			ui->actionProceed->setEnabled(true);
 			ui->actionDisconnect->setEnabled(true);
+			ui->actionCancel->setEnabled(false);
 		break;
 	}
 }
@@ -135,6 +137,11 @@ void MainWindow::proceedActionClicked(void)
 				    ui->Line->currentData().toInt(),
 				    ui->Point->currentData().toInt(),
 				    ui->Text->currentData().toInt());
+}
+
+void MainWindow::cancelActionClicked(void)
+{
+	Driver->terminate();
 }
 
 void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common, const QHash<QString, QHash<int, QString>>& Lines, const QHash<QString, QHash<int, QString>>& Points, const QHash<QString, QHash<int, QString>>& Texts)
