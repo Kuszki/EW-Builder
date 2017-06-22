@@ -90,12 +90,14 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionConnect->setEnabled(false);
 			ui->actionDisconnect->setEnabled(true);
 			ui->actionProceed->setEnabled(true);
+			ui->actionCancel->setEnabled(false);
 		break;
 		case DISCONNECTED:
 			ui->centralWidget->setEnabled(false);
 			ui->actionConnect->setEnabled(true);
 			ui->actionDisconnect->setEnabled(false);
 			ui->actionProceed->setEnabled(false);
+			ui->actionCancel->setEnabled(false);
 		break;
 		case BUSY:
 			ui->actionProceed->setEnabled(false);
