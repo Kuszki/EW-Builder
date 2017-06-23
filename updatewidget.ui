@@ -44,6 +44,9 @@
    </item>
    <item>
     <widget class="QToolButton" name="exprButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="text">
       <string>Expression</string>
      </property>
@@ -85,6 +88,22 @@
     <hint type="destinationlabel">
      <x>546</x>
      <y>173</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>Field</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>exprButton</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>69</x>
+     <y>14</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>327</x>
+     <y>14</y>
     </hint>
    </hints>
   </connection>

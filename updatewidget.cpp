@@ -24,7 +24,7 @@
 UpdateWidget::UpdateWidget(int ID, const DatabaseDriver::FIELD& Field, QWidget* Parent)
 : QWidget(Parent), ui(new Ui::UpdateWidget)
 {
-	ui->setupUi(this); setParameters(ID, Field);
+	ui->setupUi(this); setParameters(ID, Field); toggleWidget();
 
 	connect(ui->Field, &QCheckBox::toggled, this, &UpdateWidget::onStatusChanged);
 }
@@ -255,7 +255,7 @@ void UpdateWidget::setParameters(int ID, const DatabaseDriver::FIELD& Field)
 		ui->horizontalLayout->insertWidget(1, Simple);
 
 		ui->exprButton->setVisible(true);
-		ui->exprButton->setEnabled(true);
+		ui->exprButton->setEnabled(ui->Field->isChecked());
 	}
 	else
 	{

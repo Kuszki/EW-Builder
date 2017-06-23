@@ -379,6 +379,35 @@ QHash<QString, QHash<int, QString> > DatabaseDriver::loadPointLayers(const QList
 					"G.ID = O.ID_WARSTWY "
 				"WHERE "
 					"O.KOD = '%1' AND "
+					"T.NAZWA = O.KOD AND "
+					"G.NAZWA NOT LIKE '%_E'"
+				"ORDER BY "
+					"G.NAZWA_L")
+					    .arg(Table.Name));
+
+			if (Query.exec()) while (Query.next())
+			{
+				P.insert(Query.value(0).toInt(), Query.value(1).toString());
+			}
+		}
+
+		if (P.isEmpty())
+		{
+			Query.prepare(QString(
+				"SELECT "
+					"T.ID, G.NAZWA_L "
+				"FROM "
+					"EW_WARSTWA_TEXTOWA T "
+				"INNER JOIN "
+					"EW_GRUPY_WARSTW G "
+				"ON "
+					"T.ID_GRUPY = G.ID "
+				"INNER JOIN "
+					"EW_OB_KODY_OPISY O "
+				"ON "
+					"G.ID = O.ID_WARSTWY "
+				"WHERE "
+					"O.KOD = '%1' AND "
 					"T.NAZWA LIKE (O.KOD || '_%') "
 				"ORDER BY "
 					"G.NAZWA_L")
@@ -423,7 +452,8 @@ QHash<QString, QHash<int, QString>> DatabaseDriver::loadTextLayers(const QList<T
 					"G.ID = O.ID_WARSTWY "
 				"WHERE "
 					"O.KOD = '%1' AND "
-					"T.NAZWA = O.KOD "
+					"T.NAZWA = O.KOD AND "
+					"G.NAZWA LIKE '%_E'"
 				"ORDER BY "
 					"G.NAZWA_L")
 					    .arg(Table.Name));
@@ -653,8 +683,8 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 			const double a = length(P.X, P.Y, L.X1, L.Y1);
 			const double b = length(P.X, P.Y, L.X2, L.Y2);
 
-			if ((1.2 * a * a <= L.Len * L.Len + b * b) &&
-			    (1.2 * b * b <= L.Len * L.Len + a * a))
+			if ((1.1 * a * a <= L.Len * L.Len + b * b) &&
+			    (1.1 * b * b <= L.Len * L.Len + a * a))
 			{
 				const double h = (a + b) / L.Len;
 
@@ -849,7 +879,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 {
 	if (!Database.isOpen()) return QList<OBJECT>();
 
-	QHash<int, LINE> Lines, Circles; QHash<int, POINT> Points;
+	QHash<int, LINE> Lines; QHash<int, POINT> Points;
 	QList<LINE> Sorted; QList<OBJECT> Objects;
 
 	const auto sortLines = [] (const QHash<int, LINE>& Lines) -> QList<LINE>
@@ -915,13 +945,13 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 		for (const auto& L : Sorted)
 		{
-			double h = NAN; if (qIsNaN(L.Rad))
+			double h(NAN); if (qIsNaN(L.Rad))
 			{
 				const double a = length(P.X, P.Y, L.X1, L.Y1);
 				const double b = length(P.X, P.Y, L.X2, L.Y2);
 
-				if ((1.2 * a * a <= L.Len * L.Len + b * b) &&
-				    (1.2 * b * b <= L.Len * L.Len + a * a))
+				if ((1.1 * a * a <= L.Len * L.Len + b * b) &&
+				    (1.1 * b * b <= L.Len * L.Len + a * a))
 				{
 					h = (a + b) / L.Len;
 				}
@@ -983,7 +1013,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 			append(S, O, Points, Used, Geometry, 0);
 
-			while (Continue)
+			if (qIsNaN(S.Rad)) while (Continue)
 			{
 				const int oldSize = O.Geometry.size();
 
@@ -1166,9 +1196,9 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 	objectQuery.prepare(QString(
 		"INSERT INTO "
-			"EW_OBIEKTY (UID, IDKATALOG, KOD, RODZAJ, OPERAT, OSOU, OSOW, DTU, DTW, STATUS) "
+			"EW_OBIEKTY (UID, NUMER, IDKATALOG, KOD, RODZAJ, OPERAT, OSOU, OSOW, DTU, DTW, STATUS) "
 		"VALUES "
-			"(?, 1, '%1', ?, ?, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)")
+			"(?, 'OB_ID_' || ?, 1, '%1', ?, ?, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)")
 					.arg(Table.Name));
 
 	if (Values.size()) dataQuery.prepare(QString(
@@ -1194,6 +1224,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 		{
 			const QVariant ID = indexQuery.value(0); int n(0);
 
+			objectQuery.addBindValue(ID);
 			objectQuery.addBindValue(ID);
 			objectQuery.addBindValue(i.key());
 			objectQuery.addBindValue(O.IDK);
