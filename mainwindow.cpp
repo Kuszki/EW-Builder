@@ -59,6 +59,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(ui->actionConnect, &QAction::triggered, this, &MainWindow::connectActionClicked);
 	connect(ui->actionDisconnect, &QAction::triggered, Driver, &DatabaseDriver::closeDatabase);
 	connect(ui->actionProceed, &QAction::triggered, this, &MainWindow::proceedActionClicked);
+	connect(ui->actionCancel, &QAction::triggered, this, &MainWindow::cancelActionClicked);
 	connect(ui->actionAbout, &QAction::triggered, About, &AboutDialog::open);
 
 	connect(Driver, SIGNAL(onBeginProgress(QString)), ui->statusBar, SLOT(showMessage(QString)));

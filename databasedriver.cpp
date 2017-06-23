@@ -1162,7 +1162,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 		}
 	};
 
-	QStringList Labels; int Count(0), Step(0);
+	QStringList Labels; int Count(0), Step(0), Added(0);
 	QFutureSynchronizer<void> Synchronizer;
 
 	Terminator.lock();
@@ -1257,14 +1257,15 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 				geometryQuery.exec();
 			}
+
+			Added += 1;
 		}
-		else --Count;
 
 		emit onUpdateProgress(++Step);
 	}
 
 	emit onEndProgress();
-	emit onProceedEnd(Count);
+	emit onProceedEnd(Added);
 }
 
 void DatabaseDriver::terminate(void)
