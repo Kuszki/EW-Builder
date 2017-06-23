@@ -154,6 +154,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionCancel"/>
+   <addaction name="separator"/>
    <addaction name="actionAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
