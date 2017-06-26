@@ -56,7 +56,7 @@
          <x>0</x>
          <y>0</y>
          <width>582</width>
-         <height>231</height>
+         <height>198</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="valuesLayout"/>
@@ -207,6 +207,9 @@
    </property>
   </action>
   <action name="actionCancel">
+   <property name="icon">
+    <iconset theme="stop"/>
+   </property>
    <property name="text">
     <string>Cancel</string>
    </property>
