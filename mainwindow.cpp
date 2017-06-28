@@ -151,18 +151,24 @@ void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, 
 {
 	lineLayers = Lines; textLayers = Texts; pointLayers = Points; classesData = Classes; commonCount = Common;
 
-	ui->Class->blockSignals(true); ui->Class->clear();
+	ui->Class->blockSignals(true);
+
+	ui->Class->clear();
 
 	for (const auto& Code : Classes) ui->Class->addItem(Code.Label, Code.Name);
 
-	ui->Class->model()->sort(0); ui->Class->blockSignals(false);
+	ui->Class->model()->sort(0);
 
-	ui->Class->setCurrentIndex(0); lockUi(CONNECTED);
+	ui->Class->blockSignals(false);
+
+	ui->Class->setCurrentIndex(0);
+
+	lockUi(CONNECTED); ui->statusBar->showMessage(tr("Database connected"));
 }
 
 void MainWindow::databaseDisconnected(void)
 {
-	lockUi(DISCONNECTED);
+	lockUi(DISCONNECTED); ui->statusBar->showMessage(tr("Database disconnected"));
 }
 
 void MainWindow::classIndexChanged(int Index)
