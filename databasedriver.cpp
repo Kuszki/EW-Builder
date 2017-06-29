@@ -683,8 +683,8 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 			const double a = length(P.X, P.Y, L.X1, L.Y1);
 			const double b = length(P.X, P.Y, L.X2, L.Y2);
 
-			if ((1.1 * a * a <= L.Len * L.Len + b * b) &&
-			    (1.1 * b * b <= L.Len * L.Len + a * a))
+			if ((0.9 * a * a <= L.Len * L.Len + b * b) &&
+			    (0.9 * b * b <= L.Len * L.Len + a * a))
 			{
 				const double h = (a + b) / L.Len;
 
@@ -950,8 +950,8 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 				const double a = length(P.X, P.Y, L.X1, L.Y1);
 				const double b = length(P.X, P.Y, L.X2, L.Y2);
 
-				if ((1.1 * a * a <= L.Len * L.Len + b * b) &&
-				    (1.1 * b * b <= L.Len * L.Len + a * a))
+				if ((0.9 * a * a <= L.Len * L.Len + b * b) &&
+				    (0.9 * b * b <= L.Len * L.Len + a * a))
 				{
 					h = (a + b) / L.Len;
 				}
