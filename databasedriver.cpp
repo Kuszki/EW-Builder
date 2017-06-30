@@ -1021,7 +1021,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 				{
 					const QString Label = L.Label ? Points[L.Label].Text : QString();
 
-					if ((S.Style == L.Style) && (!L.IDK || !S.IDK || S.IDK == L.IDK))
+					if (!L.IDK || !S.IDK || S.IDK == L.IDK)
 					{
 						QPointF L1(L.X1, L.Y1), L2(L.X2, L.Y2);
 
