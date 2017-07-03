@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	Maxlength->setRange(0.0, 10.0);
 	Maxlength->setSingleStep(0.1);
 	Maxlength->setDecimals(2);
-	Maxlength->setSpecialValueText("Unlimited label distance");
+	Maxlength->setSpecialValueText(tr("Unlimited label distance"));
 	Maxlength->setPrefix(tr("Maximum label distance "));
 	Maxlength->setSuffix(tr(" m"));
 	Maxlength->setEnabled(false);
