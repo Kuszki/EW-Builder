@@ -56,7 +56,7 @@
          <x>0</x>
          <y>0</y>
          <width>582</width>
-         <height>198</height>
+         <height>231</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="valuesLayout"/>
@@ -133,6 +133,7 @@
    <addaction name="actionDisconnect"/>
    <addaction name="separator"/>
    <addaction name="actionProceed"/>
+   <addaction name="separator"/>
   </widget>
   <widget class="QToolBar" name="supportTool">
    <property name="windowTitle">
@@ -208,7 +209,8 @@
   </action>
   <action name="actionCancel">
    <property name="icon">
-    <iconset theme="stop"/>
+    <iconset theme="stop">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Cancel</string>

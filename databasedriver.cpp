@@ -630,7 +630,7 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, int Type
 	return Points;
 }
 
-QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, const QString& Expr)
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, const QString& Expr, double Length)
 {
 	if (!Database.isOpen()) return QList<OBJECT>();
 
@@ -796,14 +796,14 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 }
 
 
-QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text, const QString& Expr)
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text, const QString& Expr, double Length)
 {
 	if (!Database.isOpen()) return QList<OBJECT>();
 
 	QHash<int, POINT> Symbols, Texts;
 	QList<OBJECT> Objects;
 
-	const auto getPairs = [&Symbols, &Expr] (POINT& P) -> void
+	const auto getPairs = [&Symbols, &Expr, Length] (POINT& P) -> void
 	{
 		static const auto length = [] (double x1, double y1, double x2, double y2)
 		{
@@ -819,7 +819,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text
 		{
 			const double l = length(S.X, S.Y, P.X, P.Y);
 
-			if (qIsNaN(P.L) || l < P.L)
+			if (l <= Length && (qIsNaN(P.L) || l < P.L))
 			{
 				P.L = l; P.Match = S.ID;
 			};
@@ -875,7 +875,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text
 	return Objects;
 }
 
-QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text, const QString& Expr)
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text, const QString& Expr, double Length)
 {
 	if (!Database.isOpen()) return QList<OBJECT>();
 
@@ -926,12 +926,12 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 		QList<int> Keys = Groups.keys(); qSort(Keys);
 
-		for (const auto& K : Keys) Sorted.append(Groups[K]);
+		for (const auto& K : Keys) if (K > 1) Sorted.append(Groups[K]);
 
 		return Sorted;
 	};
 
-	const auto getPairs = [&Sorted, &Expr] (POINT& P) -> void
+	const auto getPairs = [&Sorted, &Expr, Length] (POINT& P) -> void
 	{
 		static const auto length = [] (double x1, double y1, double x2, double y2)
 		{
@@ -956,7 +956,12 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 					h = (a + b) / L.Len;
 				}
 			}
-			else h = length(P.X, P.Y, L.X1, L.Y1) - L.Rad;
+			else
+			{
+				h = length(P.X, P.Y, L.X1, L.Y1) - L.Rad;
+
+				if (h > Length) h = NAN;
+			}
 
 			if (!qIsNaN(h) && (qIsNaN(P.L) || h < P.L))
 			{
@@ -1138,7 +1143,7 @@ bool DatabaseDriver::closeDatabase(void)
 	}
 }
 
-void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text)
+void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text, double Length)
 {
 	if (!Database.open()) { emit onProceedEnd(0); return; } QMap<int, QList<OBJECT>> List;
 

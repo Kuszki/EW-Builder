@@ -148,9 +148,9 @@ class DatabaseDriver : public QObject
 		QHash<int, LINE> loadLines(int Layer, int Flags = 0);
 		QHash<int, POINT> loadPoints(int Layer, int Type = -1);
 
-		QList<OBJECT> proceedLines(int Line, int Text, const QString& Expr = QString());
-		QList<OBJECT> proceedPoints(int Symbol, int Text, const QString& Expr = QString());
-		QList<OBJECT> proceedSurfaces(int Line, int Text, const QString& Expr = QString());
+		QList<OBJECT> proceedLines(int Line, int Text, const QString& Expr = QString(), double Length = qInf());
+		QList<OBJECT> proceedPoints(int Symbol, int Text, const QString& Expr = QString(), double Length = qInf());
+		QList<OBJECT> proceedSurfaces(int Line, int Text, const QString& Expr = QString(), double Length = qInf());
 
 		bool isTerminated(void) const;
 
@@ -162,9 +162,8 @@ class DatabaseDriver : public QObject
 		bool closeDatabase(void);
 
 		void proceedClass(const QHash<int, QVariant>& Values,
-					   const QString& Pattern,
-					   const QString& Class,
-					   int Line, int Point, int Text);
+					   const QString& Pattern, const QString& Class,
+					   int Line, int Point, int Text, double Length);
 
 		void terminate(void);
 

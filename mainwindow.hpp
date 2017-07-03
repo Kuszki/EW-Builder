@@ -21,6 +21,7 @@
 #ifndef MAINWINDOW_HPP
 #define MAINWINDOW_HPP
 
+#include <QDoubleSpinBox>
 #include <QProgressBar>
 #include <QMainWindow>
 
@@ -55,12 +56,14 @@ class MainWindow : public QMainWindow
 
 		QList<DatabaseDriver::TABLE> classesData;
 
+		DatabaseDriver* Driver = nullptr;
+		AboutDialog* About = nullptr;
+
+		QDoubleSpinBox* Maxlength = nullptr;
+		QProgressBar* Progress = nullptr;
+
 		Ui::MainWindow* ui;
 
-		DatabaseDriver* Driver;
-		AboutDialog* About;
-
-		QProgressBar* Progress;
 		QThread Thread;
 
 		unsigned commonCount = 0;
@@ -98,9 +101,8 @@ class MainWindow : public QMainWindow
 	signals:
 
 		void onExecRequest(const QHash<int, QVariant>&,
-					    const QString&,
-					    const QString&,
-					    int, int, int);
+					    const QString&, const QString&,
+					    int, int, int, double);
 
 };
 

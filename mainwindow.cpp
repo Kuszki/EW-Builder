@@ -29,6 +29,15 @@ MainWindow::MainWindow(QWidget *Parent)
 	Driver = new DatabaseDriver(nullptr);
 	About = new AboutDialog(this);
 	Progress = new QProgressBar(this);
+	Maxlength = new QDoubleSpinBox(this);
+
+	Maxlength->setRange(0.0, 10.0);
+	Maxlength->setSingleStep(0.1);
+	Maxlength->setDecimals(2);
+	Maxlength->setSpecialValueText("Unlimited label distance");
+	Maxlength->setPrefix(tr("Maximum label distance "));
+	Maxlength->setSuffix(tr(" m"));
+	Maxlength->setEnabled(false);
 
 	Progress->hide();
 	Driver->moveToThread(&Thread);
@@ -36,6 +45,7 @@ MainWindow::MainWindow(QWidget *Parent)
 
 	ui->valuesLayout->setAlignment(Qt::AlignTop);
 	ui->statusBar->addPermanentWidget(Progress);
+	ui->mainTool->addWidget(Maxlength);
 
 	QSettings Settings("EW-Database");
 
@@ -92,6 +102,8 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionDisconnect->setEnabled(true);
 			ui->actionProceed->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
+
+			if (Maxlength) Maxlength->setEnabled(true);
 		break;
 		case DISCONNECTED:
 			ui->centralWidget->setEnabled(false);
@@ -99,6 +111,8 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionDisconnect->setEnabled(false);
 			ui->actionProceed->setEnabled(false);
 			ui->actionCancel->setEnabled(false);
+
+			if (Maxlength) Maxlength->setEnabled(false);
 		break;
 		case BUSY:
 			ui->actionProceed->setEnabled(false);
@@ -135,11 +149,14 @@ void MainWindow::proceedActionClicked(void)
 		if (auto W = qobject_cast<UpdateWidget*>(ui->valuesLayout->itemAt(i)->widget()))
 			if (W->isChecked()) Values.insert(W->getIndex(), W->getValue());
 
+	const double Length = Maxlength->value();
+
 	emit onExecRequest(Values, ui->Pattern->text(),
 				    ui->Class->currentData().toString(),
 				    ui->Line->currentData().toInt(),
 				    ui->Point->currentData().toInt(),
-				    ui->Text->currentData().toInt());
+				    ui->Text->currentData().toInt(),
+				    Length == 0.0 ? qInf() : Length);
 }
 
 void MainWindow::cancelActionClicked(void)
