@@ -61,6 +61,7 @@ class MainWindow : public QMainWindow
 
 		QDoubleSpinBox* Maxlength = nullptr;
 		QProgressBar* Progress = nullptr;
+		QComboBox* Strategy = nullptr;
 
 		Ui::MainWindow* ui;
 
@@ -102,7 +103,7 @@ class MainWindow : public QMainWindow
 
 		void onExecRequest(const QHash<int, QVariant>&,
 					    const QString&, const QString&,
-					    int, int, int, double);
+					    int, int, int, double, bool);
 
 };
 

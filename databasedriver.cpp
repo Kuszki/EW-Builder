@@ -630,7 +630,7 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, int Type
 	return Points;
 }
 
-QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, const QString& Expr, double Length)
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, const QString& Expr, double Length, bool Keep)
 {
 	if (!Database.isOpen()) return QList<OBJECT>();
 
@@ -666,7 +666,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 		}
 	};
 
-	const auto getPairs = [&Lines, &Expr] (POINT& P) -> void
+	const auto getPairs = [&Lines, &Expr, Length] (POINT& P) -> void
 	{
 		static const auto length = [] (double x1, double y1, double x2, double y2)
 		{
@@ -683,12 +683,15 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 			const double a = length(P.X, P.Y, L.X1, L.Y1);
 			const double b = length(P.X, P.Y, L.X2, L.Y2);
 
-			if ((0.9 * a * a <= L.Len * L.Len + b * b) &&
-			    (0.9 * b * b <= L.Len * L.Len + a * a))
+			if ((a * a <= L.Len * L.Len + b * b) &&
+			    (b * b <= L.Len * L.Len + a * a))
 			{
-				const double h = (a + b) / L.Len;
+				const double A = P.X - L.X1; const double B = P.Y - L.Y1;
+				const double C = L.X2 - L.X1; const double D = L.Y2 - L.Y1;
 
-				if (qIsNaN(P.L) || h < P.L)
+				const double h = qAbs(A * D - C * B) / qSqrt(C * C + D * D);
+
+				if (h <= Length && (qIsNaN(P.L) || h < P.L))
 				{
 					P.L = h; P.Match = L.ID;
 				};
@@ -704,7 +707,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 		}
 	};
 
-	const auto getObjects = [&Lines, &Points, &Cuts, &Objects] (void) -> void
+	const auto getObjects = [&Lines, &Points, &Cuts, &Objects, Keep] (void) -> void
 	{
 		const static auto append = [] (const LINE& L, OBJECT& O, const QHash<int, POINT>& P, QSet<int>& U, bool First) -> void
 		{
@@ -766,7 +769,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 				Continue = oldSize != O.Geometry.size();
 			}
 
-			Objects.append(O);
+			if (Keep || P1 != P2) Objects.append(O);
 		}
 	};
 
@@ -1143,7 +1146,7 @@ bool DatabaseDriver::closeDatabase(void)
 	}
 }
 
-void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text, double Length)
+void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text, double Length, bool Keep)
 {
 	if (!Database.open()) { emit onProceedEnd(0); return; } QMap<int, QList<OBJECT>> List;
 
@@ -1179,11 +1182,11 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 	const auto& Table = getItemByField(Tables, Class, &TABLE::Name);
 
-	if (Line && (Table.Flags & 0x002)) List.insert(3, proceedSurfaces(Line, Text, Pattern));
+	if (Line && (Table.Flags & 0x002)) List.insert(3, proceedSurfaces(Line, Text, Pattern, Length));
 
-	if (Point && (Table.Flags & 0x100)) List.insert(4, proceedPoints(Point, Text, Pattern));
+	if (Point && (Table.Flags & 0x100)) List.insert(4, proceedPoints(Point, Text, Pattern, Length));
 
-	if (Line && (Table.Flags & 0x008)) List.insert(2, proceedLines(Line, Text, Pattern));
+	if (Line && (Table.Flags & 0x008)) List.insert(2, proceedLines(Line, Text, Pattern, Length, Keep));
 
 	emit onBeginProgress(tr("Preparing attributes"));
 	emit onSetupProgress(0, 0);

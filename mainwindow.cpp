@@ -30,6 +30,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	About = new AboutDialog(this);
 	Progress = new QProgressBar(this);
 	Maxlength = new QDoubleSpinBox(this);
+	Strategy = new QComboBox(this);
 
 	Maxlength->setRange(0.0, 10.0);
 	Maxlength->setSingleStep(0.1);
@@ -39,6 +40,10 @@ MainWindow::MainWindow(QWidget *Parent)
 	Maxlength->setSuffix(tr(" m"));
 	Maxlength->setEnabled(false);
 
+	Strategy->addItem(tr("Skip closed lines"));
+	Strategy->addItem(tr("Keep closed lines"));
+	Strategy->setEnabled(false);
+
 	Progress->hide();
 	Driver->moveToThread(&Thread);
 	Thread.start();
@@ -46,6 +51,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	ui->valuesLayout->setAlignment(Qt::AlignTop);
 	ui->statusBar->addPermanentWidget(Progress);
 	ui->mainTool->addWidget(Maxlength);
+	ui->mainTool->addWidget(Strategy);
 
 	QSettings Settings("EW-Database");
 
@@ -104,6 +110,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionCancel->setEnabled(false);
 
 			if (Maxlength) Maxlength->setEnabled(true);
+			if (Strategy) Strategy->setEnabled(true);
 		break;
 		case DISCONNECTED:
 			ui->centralWidget->setEnabled(false);
@@ -113,6 +120,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionCancel->setEnabled(false);
 
 			if (Maxlength) Maxlength->setEnabled(false);
+			if (Strategy) Strategy->setEnabled(false);
 		break;
 		case BUSY:
 			ui->actionProceed->setEnabled(false);
@@ -156,7 +164,8 @@ void MainWindow::proceedActionClicked(void)
 				    ui->Line->currentData().toInt(),
 				    ui->Point->currentData().toInt(),
 				    ui->Text->currentData().toInt(),
-				    Length == 0.0 ? qInf() : Length);
+				    Length == 0.0 ? qInf() : Length,
+				    Strategy->currentIndex());
 }
 
 void MainWindow::cancelActionClicked(void)
