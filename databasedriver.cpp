@@ -953,10 +953,13 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 				const double a = length(P.X, P.Y, L.X1, L.Y1);
 				const double b = length(P.X, P.Y, L.X2, L.Y2);
 
-				if ((0.9 * a * a <= L.Len * L.Len + b * b) &&
-				    (0.9 * b * b <= L.Len * L.Len + a * a))
+				if ((a * a <= L.Len * L.Len + b * b) &&
+				    (b * b <= L.Len * L.Len + a * a))
 				{
-					h = (a + b) / L.Len;
+					const double A = P.X - L.X1; const double B = P.Y - L.Y1;
+					const double C = L.X2 - L.X1; const double D = L.Y2 - L.Y1;
+
+					h = qAbs(A * D - C * B) / qSqrt(C * C + D * D);
 				}
 			}
 			else
