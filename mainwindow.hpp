@@ -61,7 +61,9 @@ class MainWindow : public QMainWindow
 
 		QDoubleSpinBox* Maxlength = nullptr;
 		QProgressBar* Progress = nullptr;
-		QComboBox* Strategy = nullptr;
+		QComboBox* Linestr = nullptr;
+		QComboBox* Pointstr = nullptr;
+		QLineEdit* Symbol = nullptr;
 
 		Ui::MainWindow* ui;
 
@@ -93,6 +95,8 @@ class MainWindow : public QMainWindow
 
 		void classIndexChanged(int Index);
 
+		void pointStrategyChanged(int Index);
+
 		void execProcessEnd(int Count);
 
 		void databaseLogin(bool OK);
@@ -103,7 +107,8 @@ class MainWindow : public QMainWindow
 
 		void onExecRequest(const QHash<int, QVariant>&,
 					    const QString&, const QString&,
-					    int, int, int, double, bool);
+					    int, int, int, double, bool,
+					    const QString&);
 
 };
 

@@ -1098,6 +1098,22 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 	return Objects;
 }
 
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, const QString& Expr)
+{
+	if (!Database.isOpen()) return QList<OBJECT>();
+
+	QHash<int, POINT> Texts = loadPoints(Text);
+	QList<OBJECT> Objects; QRegExp Checker(Expr);
+
+	for (const auto Text : Texts) if (Checker.indexIn(Text.Text) != -1) Objects.append(
+	{
+		QHash<int, QVariant>(), QList<int>(),
+		{ Text.ID }, Text.Text, Text.IDK
+	});
+
+	return Objects;
+}
+
 bool DatabaseDriver::isTerminated(void) const
 {
 	QMutexLocker Locker(&Terminator); return Terminated;
@@ -1149,9 +1165,16 @@ bool DatabaseDriver::closeDatabase(void)
 	}
 }
 
-void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text, double Length, bool Keep)
+void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text, double Length, bool Keep, const QString& Insert)
 {
 	if (!Database.open()) { emit onProceedEnd(0); return; } QMap<int, QList<OBJECT>> List;
+
+	QSqlQuery indexQuery(Database), objectQuery(Database), dataQuery(Database),
+			geometryQuery(Database), symbolQuery(Database), insertQuery(Database);
+
+	QStringList Labels; int Count(0), Step(0), Added(0);
+
+	Terminator.lock(); Terminated = false; Terminator.unlock();
 
 	const auto getValues = [&Values, &Pattern] (OBJECT& O) -> void
 	{
@@ -1173,35 +1196,87 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 		}
 	};
 
-	QStringList Labels; int Count(0), Step(0), Added(0);
-	QFutureSynchronizer<void> Synchronizer;
+	const auto insertObjects = [&] (const QList<OBJECT>& List, int Type) -> void
+	{
+		emit onBeginProgress(tr("Creating objects"));
+		emit onSetupProgress(0, List.size()); Step = 0;
 
-	Terminator.lock();
-	Terminated = false;
-	Terminator.unlock();
+		for (const auto& O : List) if (!isTerminated())
+		{
+			if (indexQuery.exec() && indexQuery.next())
+			{
+				const QVariant ID = indexQuery.value(0); int n(0);
 
-	emit onBeginProgress(tr("Preparing geometry"));
-	emit onSetupProgress(0, 0);
+				objectQuery.addBindValue(ID);
+				objectQuery.addBindValue(ID);
+				objectQuery.addBindValue(Type);
+				objectQuery.addBindValue(O.IDK);
+
+				objectQuery.exec();
+
+				if (O.Values.size())
+				{
+					dataQuery.addBindValue(ID);
+
+					for (const auto& V : O.Values) dataQuery.addBindValue(V);
+
+					dataQuery.exec();
+				}
+
+				for (const auto& IDE : O.Geometry)
+				{
+					geometryQuery.addBindValue(ID);
+					geometryQuery.addBindValue(n++);
+					geometryQuery.addBindValue(IDE);
+
+					geometryQuery.exec();
+				}
+
+				for (const auto& IDE : O.Labels)
+				{
+					geometryQuery.addBindValue(ID);
+					geometryQuery.addBindValue(n++);
+					geometryQuery.addBindValue(IDE);
+
+					geometryQuery.exec();
+				}
+
+				if (Type == 4 && O.Geometry.isEmpty() && O.Labels.size() == 1 && !Insert.isEmpty())
+				{
+					if (symbolQuery.exec() && symbolQuery.next())
+					{
+						const int UID = symbolQuery.value(0).toInt();
+						const int IDE = symbolQuery.value(1).toInt();
+						const int TID = O.Labels.first();
+
+						insertQuery.addBindValue(UID);
+						insertQuery.addBindValue(IDE);
+						insertQuery.addBindValue(TID);
+						insertQuery.addBindValue(TID);
+
+						insertQuery.exec();
+
+						geometryQuery.addBindValue(ID);
+						geometryQuery.addBindValue(n++);
+						geometryQuery.addBindValue(IDE);
+
+						geometryQuery.exec();
+					}
+				}
+
+				Added += 1;
+			}
+
+			emit onUpdateProgress(++Step);
+		}
+	};
 
 	const auto& Table = getItemByField(Tables, Class, &TABLE::Name);
-
-	if (Line && (Table.Flags & 0x002)) List.insert(3, proceedSurfaces(Line, Text, Pattern, Length));
-
-	if (Point && (Table.Flags & 0x100)) List.insert(4, proceedPoints(Point, Text, Pattern, Length));
-
-	if (Line && (Table.Flags & 0x008)) List.insert(2, proceedLines(Line, Text, Pattern, Length, Keep));
-
-	emit onBeginProgress(tr("Preparing attributes"));
-	emit onSetupProgress(0, 0);
-
-	for (auto& C : List) { Count += C.size(); Synchronizer.addFuture(QtConcurrent::map(C, getValues)); }
 
 	for (auto i = Values.constBegin(); i != Values.constEnd(); ++i)
 	{
 		Labels.append(Table.Fields[i.key()].Name); Labels.last().remove("EW_DATA.");
 	}
-
-	QSqlQuery indexQuery(Database), objectQuery(Database), dataQuery(Database), geometryQuery(Database);
 
 	indexQuery.prepare("SELECT GEN_ID(EW_OBIEKTY_UID_GEN, 1) FROM RDB$DATABASE");
 
@@ -1221,58 +1296,69 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 	geometryQuery.prepare(
 		"INSERT INTO "
 			"EW_OB_ELEMENTY (UIDO, N, TYP, IDE) "
-		"VALUES"
+		"VALUES "
 			"(?, ?, 0, ?)");
 
-	Synchronizer.waitForFinished();
+	symbolQuery.prepare("SELECT GEN_ID(EW_ELEMENT_UID_GEN, 1), GEN_ID(EW_ELEMENT_ID_GEN, 1) FROM RDB$DATABASE");
 
-	emit onBeginProgress(tr("Creating objects"));
-	emit onSetupProgress(0, Count);
+	insertQuery.prepare(QString(
+		"INSERT INTO "
+			"EW_TEXT (UID, ID, ID_WARSTWY, STAN_ZMIANY, TYP, TEXT, CREATE_TS, MODIFY_TS, POS_X, POS_Y) "
+		"VALUES "
+			"(?, ?, %1, 0, 4, '%2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ("
+			"SELECT FIRST 1 "
+				"IIF(ODN_X IS NULL, POS_X, POS_X + ODN_X) "
+			"FROM "
+				"EW_TEXT "
+			"WHERE "
+				"ID = ?), ("
+			"SELECT FIRST 1 "
+				"IIF(ODN_Y IS NULL, POS_Y, POS_Y + ODN_Y) "
+			"FROM "
+				"EW_TEXT "
+			"WHERE "
+				"ID = ?))")
+					.arg(Point)
+					.arg(Insert));
 
-	for (auto i = List.constBegin(); i != List.constEnd(); ++i) for (const auto& O : i.value()) if (!isTerminated())
+	if (Line && (Table.Flags & 0x002))
 	{
-		if (indexQuery.exec() && indexQuery.next())
-		{
-			const QVariant ID = indexQuery.value(0); int n(0);
+		emit onBeginProgress(tr("Preparing surfaces"));
+		emit onSetupProgress(0, 0);
 
-			objectQuery.addBindValue(ID);
-			objectQuery.addBindValue(ID);
-			objectQuery.addBindValue(i.key());
-			objectQuery.addBindValue(O.IDK);
+		auto Objects = proceedSurfaces(Line, Text, Pattern, Length);
 
-			objectQuery.exec();
+		QtConcurrent::blockingMap(Objects, getValues); insertObjects(Objects, 3);
+	}
 
-			if (O.Values.size())
-			{
-				dataQuery.addBindValue(ID);
+	if (Point && (Table.Flags & 0x100))
+	{
+		emit onBeginProgress(tr("Preparing points"));
+		emit onSetupProgress(0, 0);
 
-				for (const auto& V : O.Values) dataQuery.addBindValue(V);
+		auto Objects = proceedPoints(Point, Text, Pattern, Length);
 
-				dataQuery.exec();
-			}
+		QtConcurrent::blockingMap(Objects, getValues); insertObjects(Objects, 4);
+	}
 
-			for (const auto& IDE : O.Geometry)
-			{
-				geometryQuery.addBindValue(ID);
-				geometryQuery.addBindValue(n++);
-				geometryQuery.addBindValue(IDE);
+	if (Line && (Table.Flags & 0x008))
+	{
+		emit onBeginProgress(tr("Preparing lines"));
+		emit onSetupProgress(0, 0);
 
-				geometryQuery.exec();
-			}
+		auto Objects = proceedLines(Line, Text, Pattern, Length);
 
-			for (const auto& IDE : O.Labels)
-			{
-				geometryQuery.addBindValue(ID);
-				geometryQuery.addBindValue(n++);
-				geometryQuery.addBindValue(IDE);
+		QtConcurrent::blockingMap(Objects, getValues); insertObjects(Objects, 2);
+	}
 
-				geometryQuery.exec();
-			}
+	if (Text && !Insert.isEmpty() && (Table.Flags & 0x100))
+	{
+		emit onBeginProgress(tr("Preparing texts"));
+		emit onSetupProgress(0, 0);
 
-			Added += 1;
-		}
+		auto Objects = proceedTexts(Text, Pattern);
 
-		emit onUpdateProgress(++Step);
+		QtConcurrent::blockingMap(Objects, getValues); insertObjects(Objects, 4);
 	}
 
 	emit onEndProgress();

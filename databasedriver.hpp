@@ -161,6 +161,8 @@ class DatabaseDriver : public QObject
 								const QString& Expr = QString(),
 								double Length = qInf());
 
+		QList<OBJECT> proceedTexts(int Text, const QString& Expr = QString());
+
 		bool isTerminated(void) const;
 
 	public slots:
@@ -173,7 +175,8 @@ class DatabaseDriver : public QObject
 		void proceedClass(const QHash<int, QVariant>& Values,
 					   const QString& Pattern, const QString& Class,
 					   int Line, int Point, int Text,
-					   double Length, bool Keep);
+					   double Length, bool Keep,
+					   const QString& Insert);
 
 		void terminate(void);
 

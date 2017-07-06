@@ -30,7 +30,9 @@ MainWindow::MainWindow(QWidget *Parent)
 	About = new AboutDialog(this);
 	Progress = new QProgressBar(this);
 	Maxlength = new QDoubleSpinBox(this);
-	Strategy = new QComboBox(this);
+	Linestr = new QComboBox(this);
+	Pointstr = new QComboBox(this);
+	Symbol = new QLineEdit(this);
 
 	Maxlength->setRange(0.0, 10.0);
 	Maxlength->setSingleStep(0.1);
@@ -40,9 +42,15 @@ MainWindow::MainWindow(QWidget *Parent)
 	Maxlength->setSuffix(tr(" m"));
 	Maxlength->setEnabled(false);
 
-	Strategy->addItem(tr("Skip closed lines"));
-	Strategy->addItem(tr("Keep closed lines"));
-	Strategy->setEnabled(false);
+	Linestr->addItem(tr("Skip closed lines"));
+	Linestr->addItem(tr("Keep closed lines"));
+	Linestr->setEnabled(false);
+
+	Pointstr->addItem(tr("Skip text without symbol"));
+	Pointstr->addItem(tr("Add new symbol"));
+	Pointstr->setEnabled(false);
+
+	Symbol->setEnabled(false);
 
 	Progress->hide();
 	Driver->moveToThread(&Thread);
@@ -51,7 +59,9 @@ MainWindow::MainWindow(QWidget *Parent)
 	ui->valuesLayout->setAlignment(Qt::AlignTop);
 	ui->statusBar->addPermanentWidget(Progress);
 	ui->mainTool->addWidget(Maxlength);
-	ui->mainTool->addWidget(Strategy);
+	ui->mainTool->addWidget(Linestr);
+	ui->mainTool->addWidget(Pointstr);
+	ui->mainTool->addWidget(Symbol);
 
 	QSettings Settings("EW-Database");
 
@@ -77,6 +87,8 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(ui->actionProceed, &QAction::triggered, this, &MainWindow::proceedActionClicked);
 	connect(ui->actionCancel, &QAction::triggered, this, &MainWindow::cancelActionClicked);
 	connect(ui->actionAbout, &QAction::triggered, About, &AboutDialog::open);
+
+	connect(Pointstr, SIGNAL(currentIndexChanged(int)), this, SLOT(pointStrategyChanged(int)));
 
 	connect(Driver, SIGNAL(onBeginProgress(QString)), ui->statusBar, SLOT(showMessage(QString)));
 	connect(Driver, SIGNAL(onError(QString)), ui->statusBar, SLOT(showMessage(QString)));
@@ -110,7 +122,9 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionCancel->setEnabled(false);
 
 			if (Maxlength) Maxlength->setEnabled(true);
-			if (Strategy) Strategy->setEnabled(true);
+			if (Linestr) Linestr->setEnabled(true);
+			if (Pointstr) Pointstr->setEnabled(true);
+			if (Symbol) Symbol->setEnabled(Pointstr && Pointstr->currentIndex());
 		break;
 		case DISCONNECTED:
 			ui->centralWidget->setEnabled(false);
@@ -120,7 +134,9 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionCancel->setEnabled(false);
 
 			if (Maxlength) Maxlength->setEnabled(false);
-			if (Strategy) Strategy->setEnabled(false);
+			if (Linestr) Linestr->setEnabled(false);
+			if (Pointstr) Pointstr->setEnabled(false);
+			if (Symbol) Symbol->setEnabled(false);
 		break;
 		case BUSY:
 			ui->actionProceed->setEnabled(false);
@@ -157,6 +173,7 @@ void MainWindow::proceedActionClicked(void)
 		if (auto W = qobject_cast<UpdateWidget*>(ui->valuesLayout->itemAt(i)->widget()))
 			if (W->isChecked()) Values.insert(W->getIndex(), W->getValue());
 
+	const QString& Insert = Pointstr->currentIndex() ? Symbol->text() : QString();
 	const double Length = Maxlength->value();
 
 	emit onExecRequest(Values, ui->Pattern->text(),
@@ -165,7 +182,7 @@ void MainWindow::proceedActionClicked(void)
 				    ui->Point->currentData().toInt(),
 				    ui->Text->currentData().toInt(),
 				    Length == 0.0 ? qInf() : Length,
-				    Strategy->currentIndex());
+				    Linestr->currentIndex(), Insert);
 }
 
 void MainWindow::cancelActionClicked(void)
@@ -244,6 +261,11 @@ void MainWindow::classIndexChanged(int Index)
 	ui->Text->setEnabled(ui->Text->count());
 	ui->Point->setEnabled(ui->Point->count());
 	ui->Line->setEnabled(ui->Line->count());
+}
+
+void MainWindow::pointStrategyChanged(int Index)
+{
+	if (Symbol) Symbol->setEnabled(Index == 1);
 }
 
 void MainWindow::execProcessEnd(int Count)
