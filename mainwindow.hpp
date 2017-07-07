@@ -24,6 +24,7 @@
 #include <QDoubleSpinBox>
 #include <QProgressBar>
 #include <QMainWindow>
+#include <QFileDialog>
 
 #include "databasedriver.hpp"
 #include "connectdialog.hpp"
@@ -84,6 +85,7 @@ class MainWindow : public QMainWindow
 
 		void connectActionClicked(void);
 		void proceedActionClicked(void);
+		void jobsActionClicked(void);
 		void cancelActionClicked(void);
 
 		void databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common,
@@ -109,6 +111,8 @@ class MainWindow : public QMainWindow
 					    const QString&, const QString&,
 					    int, int, int, double, bool,
 					    const QString&);
+
+		void onJobsRequest(const QString&);
 
 };
 

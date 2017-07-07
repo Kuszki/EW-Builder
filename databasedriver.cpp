@@ -1382,7 +1382,11 @@ void DatabaseDriver::proceedJobs(const QString& Path)
 
 	while (!Stream.atEnd())
 	{
-		DATA Item; Stream >> Item.X >> Item.Y >> Item.Kerg; Data.append(Item);
+		DATA Item; Stream >> Item.Kerg >> Item.X >> Item.Y;
+
+		Item.Kerg.truncate(Item.Kerg.lastIndexOf('-'));
+
+		Data.append(Item);
 	}
 
 	emit onBeginProgress(tr("Loading items"));
@@ -1475,7 +1479,8 @@ void DatabaseDriver::proceedJobs(const QString& Path)
 
 			if (Get.exec() && Get.next()) UID = Get.value(0).toInt(); else continue;
 
-			Get.prepare("INSERT INTO EW_OPERATY (UID, NUMER) VALUES (?, ?)");
+			Get.prepare("INSERT INTO EW_OPERATY (UID, NUMER, TYP, DTU, DTW) "
+					  "VALUES (?, ?, 7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 
 			Get.addBindValue(UID);
 			Get.addBindValue(Item.Kerg);

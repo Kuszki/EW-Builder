@@ -80,11 +80,13 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(Driver, &DatabaseDriver::onLogin, this, &MainWindow::databaseLogin);
 
 	connect(this, &MainWindow::onExecRequest, Driver, &DatabaseDriver::proceedClass);
+	connect(this, &MainWindow::onJobsRequest, Driver, &DatabaseDriver::proceedJobs);
 	connect(Driver, &DatabaseDriver::onProceedEnd, this, &MainWindow::execProcessEnd);
 
 	connect(ui->actionConnect, &QAction::triggered, this, &MainWindow::connectActionClicked);
 	connect(ui->actionDisconnect, &QAction::triggered, Driver, &DatabaseDriver::closeDatabase);
 	connect(ui->actionProceed, &QAction::triggered, this, &MainWindow::proceedActionClicked);
+	connect(ui->actionJobs, &QAction::triggered, this, &MainWindow::jobsActionClicked);
 	connect(ui->actionCancel, &QAction::triggered, this, &MainWindow::cancelActionClicked);
 	connect(ui->actionAbout, &QAction::triggered, About, &AboutDialog::open);
 
@@ -119,6 +121,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionConnect->setEnabled(false);
 			ui->actionDisconnect->setEnabled(true);
 			ui->actionProceed->setEnabled(true);
+			ui->actionJobs->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
 
 			if (Maxlength) Maxlength->setEnabled(true);
@@ -131,6 +134,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionConnect->setEnabled(true);
 			ui->actionDisconnect->setEnabled(false);
 			ui->actionProceed->setEnabled(false);
+			ui->actionJobs->setEnabled(false);
 			ui->actionCancel->setEnabled(false);
 
 			if (Maxlength) Maxlength->setEnabled(false);
@@ -140,11 +144,13 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 		break;
 		case BUSY:
 			ui->actionProceed->setEnabled(false);
+			ui->actionJobs->setEnabled(false);
 			ui->actionDisconnect->setEnabled(false);
 			ui->actionCancel->setEnabled(true);
 		break;
 		case DONE:
 			ui->actionProceed->setEnabled(true);
+			ui->actionJobs->setEnabled(true);
 			ui->actionDisconnect->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
 		break;
@@ -183,6 +189,13 @@ void MainWindow::proceedActionClicked(void)
 				    ui->Text->currentData().toInt(),
 				    Length == 0.0 ? qInf() : Length,
 				    Linestr->currentIndex(), Insert);
+}
+
+void MainWindow::jobsActionClicked(void)
+{
+	const QString Path = QFileDialog::getOpenFileName(this, tr("Open data file"));
+
+	if (!Path.isEmpty()) { lockUi(BUSY); emit onJobsRequest(Path); }
 }
 
 void MainWindow::cancelActionClicked(void)
