@@ -1365,6 +1365,188 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 	emit onProceedEnd(Added);
 }
 
+void DatabaseDriver::proceedJobs(const QString& Path)
+{
+	if (!Database.open()) { emit onProceedEnd(0); return; }
+
+	QFile File(Path); File.open(QFile::ReadOnly | QFile::Text);
+
+	if (!File.isOpen()) { emit onProceedEnd(0); return; }
+
+	struct DATA { double X, Y; QString Kerg; int ID = 0; };
+
+	QTextStream Stream(&File); QList<DATA> Data;
+
+	emit onBeginProgress(tr("Loading file"));
+	emit onSetupProgress(0, 0);
+
+	while (!Stream.atEnd())
+	{
+		DATA Item; Stream >> Item.X >> Item.Y >> Item.Kerg; Data.append(Item);
+	}
+
+	emit onBeginProgress(tr("Loading items"));
+	emit onSetupProgress(0, 0);
+
+	QSqlQuery Query(Database); Query.setForwardOnly(true);
+
+	QHash<int, QString> Kergs; int Step(0), Updates(0);
+	QList<POINT> Points; QList<LINE> Lines; QMutex Locker;
+
+	Query.prepare(
+		"SELECT "
+			"P.ID, "
+			"ROUND(IIF(P.ODN_X IS NULL, P.POS_X, P.POS_X + P.ODN_X), 2), "
+			"ROUND(IIF(P.ODN_Y IS NULL, P.POS_Y, P.POS_Y + P.ODN_Y), 2) "
+		"FROM "
+			"EW_TEXT P "
+		"WHERE "
+			"(P.OPERAT IS NULL OR P.OPERAT = 0) AND "
+			"P.STAN_ZMIANY = 0 AND "
+			"P.TYP = 4 AND "
+			"P.ID NOT IN ("
+				"SELECT "
+					"E.IDE "
+				"FROM "
+					"EW_OB_ELEMENTY E "
+				"WHERE "
+					"E.TYP = 0)");
+
+	if (Query.exec()) while (Query.next()) Points.append(
+	{
+		Query.value(0).toInt(),
+		0, 0,
+		Query.value(1).toDouble(),
+		Query.value(2).toDouble(),
+		NAN, QString()
+	});
+
+	Query.prepare(
+		"SELECT "
+			"P.ID, "
+			"ROUND(P.P0_X, 2), "
+			"ROUND(P.P0_Y, 2), "
+			"ROUND(P.P1_X, 2), "
+			"ROUND(P.P1_Y, 2) "
+		"FROM "
+			"EW_POLYLINE P "
+		"WHERE "
+			"(P.OPERAT IS NULL OR P.OPERAT = 0) AND "
+			"P.STAN_ZMIANY = 0 AND "
+			"P.ID NOT IN ("
+				"SELECT "
+					"E.IDE "
+				"FROM "
+					"EW_OB_ELEMENTY E "
+				"WHERE "
+					"E.TYP = 0)");
+
+	if (Query.exec()) while (Query.next()) Lines.append(
+	{
+		Query.value(0).toInt(),
+		0, 0,
+		Query.value(1).toDouble(),
+		Query.value(2).toDouble(),
+		Query.value(3).toDouble(),
+		Query.value(4).toDouble(),
+		0
+	});
+
+	Query.prepare("SELECT K.UID, K.NUMER FROM EW_OPERATY K");
+
+	if (Query.exec()) while (Query.next()) Kergs.insert(Query.value(0).toInt(),
+											  Query.value(1).toString());
+
+	emit onBeginProgress(tr("Preparing jobs"));
+	emit onSetupProgress(0, Data.size()); Step = 0;
+
+	for (auto& Item : Data)
+	{
+		for (auto i = Kergs.constBegin(); i != Kergs.constEnd(); ++i) if (!Item.ID)
+		{
+			if (Item.Kerg == i.value()) Item.ID = i.key();
+		}
+
+		if (Item.ID == 0)
+		{
+			QSqlQuery Get(Database); Get.setForwardOnly(true); int UID(0);
+
+			Get.prepare("SELECT GEN_ID(EW_OPERATY_UID_GEN, 1) FROM RDB$DATABASE");
+
+			if (Get.exec() && Get.next()) UID = Get.value(0).toInt(); else continue;
+
+			Get.prepare("INSERT INTO EW_OPERATY (UID, NUMER) VALUES (?, ?)");
+
+			Get.addBindValue(UID);
+			Get.addBindValue(Item.Kerg);
+
+			if (Get.exec()) { Item.ID = UID; Kergs.insert(UID, Item.Kerg); }
+		}
+
+		emit onUpdateProgress(++Step);
+	}
+
+	emit onBeginProgress(tr("Processing items")); Step = 0;
+	emit onSetupProgress(0, Lines.size() + Points.size());
+
+	QtConcurrent::blockingMap(Points, [this, &Data, &Updates, &Locker, &Step] (POINT& Point) -> void
+	{
+		bool OK(false); for (const auto& Item : Data) if (!OK) if (Item.X == Point.X && Item.Y == Point.Y)
+		{
+			QSqlQuery Update(Database); Update.setForwardOnly(true);
+
+			Update.prepare("UPDATE EW_TEXT SET OPERAT = ? WHERE ID = ?");
+
+			Update.addBindValue(Point.ID);
+			Update.addBindValue(Item.ID);
+
+			Update.exec();
+
+			Locker.lock();
+			Updates += 1;
+			Locker.unlock();
+
+			OK = true;
+		}
+
+		Locker.lock(); emit onUpdateProgress(++Step); Locker.unlock();
+	});
+
+	QtConcurrent::blockingMap(Lines, [this, &Data, &Updates, &Locker, &Step] (LINE& Line) -> void
+	{
+		QSet<int> One, Two; int UID(0);
+
+		for (const auto& Item : Data)
+		{
+			if (Item.X == Line.X1 && Item.Y == Line.Y1) One.insert(Item.ID);
+			else if (Item.X == Line.X2 && Item.Y == Line.Y2) Two.insert(Item.ID);
+		}
+
+		auto And = One & Two; if (And.size()) UID = *And.begin();
+
+		if (UID != 0)
+		{
+			QSqlQuery Update(Database); Update.setForwardOnly(true);
+
+			Update.prepare("UPDATE EW_TEXT SET OPERAT = ? WHERE ID = ?");
+
+			Update.addBindValue(Line.ID);
+			Update.addBindValue(UID);
+
+			Update.exec();
+
+			Locker.lock();
+			Updates += 1;
+			Locker.unlock();
+		}
+
+		Locker.lock(); emit onUpdateProgress(++Step); Locker.unlock();
+	});
+
+	emit onEndProgress();
+	emit onProceedEnd(Updates);
+}
+
 void DatabaseDriver::terminate(void)
 {
 	Terminator.lock();

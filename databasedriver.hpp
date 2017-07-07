@@ -178,6 +178,8 @@ class DatabaseDriver : public QObject
 					   double Length, bool Keep,
 					   const QString& Insert);
 
+		void proceedJobs(const QString& Path);
+
 		void terminate(void);
 
 	signals:

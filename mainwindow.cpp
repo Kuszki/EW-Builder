@@ -270,7 +270,7 @@ void MainWindow::pointStrategyChanged(int Index)
 
 void MainWindow::execProcessEnd(int Count)
 {
-	lockUi(DONE); ui->statusBar->showMessage(tr("Created %n item(s)", nullptr, Count));
+	lockUi(DONE); ui->statusBar->showMessage(tr("Processed %n item(s)", nullptr, Count));
 }
 
 void MainWindow::databaseLogin(bool OK)
