@@ -133,9 +133,8 @@
    <addaction name="actionDisconnect"/>
    <addaction name="separator"/>
    <addaction name="actionProceed"/>
-   <addaction name="separator"/>
    <addaction name="actionJobs"/>
-   <addaction name="separator"/>
+   <addaction name="actionGeometry"/>
   </widget>
   <widget class="QToolBar" name="supportTool">
    <property name="windowTitle">
@@ -224,6 +223,11 @@
   <action name="actionJobs">
    <property name="text">
     <string>Update jobs</string>
+   </property>
+  </action>
+  <action name="actionGeometry">
+   <property name="text">
+    <string>Fit geometry</string>
    </property>
   </action>
  </widget>

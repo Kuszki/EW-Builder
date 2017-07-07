@@ -97,6 +97,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionDisconnect->setEnabled(true);
 			ui->actionProceed->setEnabled(true);
 			ui->actionJobs->setEnabled(true);
+			ui->actionGeometry->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
 		break;
 		case DISCONNECTED:
@@ -105,17 +106,20 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionDisconnect->setEnabled(false);
 			ui->actionProceed->setEnabled(false);
 			ui->actionJobs->setEnabled(false);
+			ui->actionGeometry->setEnabled(false);
 			ui->actionCancel->setEnabled(false);
 		break;
 		case BUSY:
 			ui->actionProceed->setEnabled(false);
 			ui->actionJobs->setEnabled(false);
+			ui->actionGeometry->setEnabled(false);
 			ui->actionDisconnect->setEnabled(false);
 			ui->actionCancel->setEnabled(true);
 		break;
 		case DONE:
 			ui->actionProceed->setEnabled(true);
 			ui->actionJobs->setEnabled(true);
+			ui->actionDisconnect->setEnabled(true);
 			ui->actionDisconnect->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
 		break;

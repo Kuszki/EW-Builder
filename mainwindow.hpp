@@ -85,8 +85,7 @@ class MainWindow : public QMainWindow
 		void jobsActionClicked(void);
 		void cancelActionClicked(void);
 
-		void proceedRequest(double Length, bool Line,
-						const QString& Symbol);
+		void proceedRequest(double Length, bool Line, const QString& Symbol);
 
 		void databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common,
 						   const QHash<QString, QHash<int, QString>>& Lines,
