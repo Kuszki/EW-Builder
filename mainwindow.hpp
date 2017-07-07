@@ -28,6 +28,7 @@
 
 #include "databasedriver.hpp"
 #include "connectdialog.hpp"
+#include "proceeddialog.hpp"
 #include "updatewidget.hpp"
 #include "aboutdialog.hpp"
 
@@ -59,12 +60,9 @@ class MainWindow : public QMainWindow
 
 		DatabaseDriver* Driver = nullptr;
 		AboutDialog* About = nullptr;
+		ProceedDialog* Proceed = nullptr;
 
-		QDoubleSpinBox* Maxlength = nullptr;
 		QProgressBar* Progress = nullptr;
-		QComboBox* Linestr = nullptr;
-		QComboBox* Pointstr = nullptr;
-		QLineEdit* Symbol = nullptr;
 
 		Ui::MainWindow* ui;
 
@@ -84,9 +82,11 @@ class MainWindow : public QMainWindow
 	private slots:
 
 		void connectActionClicked(void);
-		void proceedActionClicked(void);
 		void jobsActionClicked(void);
 		void cancelActionClicked(void);
+
+		void proceedRequest(double Length, bool Line,
+						const QString& Symbol);
 
 		void databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common,
 						   const QHash<QString, QHash<int, QString>>& Lines,
@@ -96,8 +96,6 @@ class MainWindow : public QMainWindow
 		void databaseDisconnected(void);
 
 		void classIndexChanged(int Index);
-
-		void pointStrategyChanged(int Index);
 
 		void execProcessEnd(int Count);
 
