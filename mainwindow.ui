@@ -56,7 +56,7 @@
          <x>0</x>
          <y>0</y>
          <width>582</width>
-         <height>231</height>
+         <height>198</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="valuesLayout"/>
@@ -221,11 +221,17 @@
    </property>
   </action>
   <action name="actionJobs">
+   <property name="icon">
+    <iconset theme="view-refresh"/>
+   </property>
    <property name="text">
     <string>Update jobs</string>
    </property>
   </action>
   <action name="actionGeometry">
+   <property name="icon">
+    <iconset theme="view-fullscreen"/>
+   </property>
    <property name="text">
     <string>Fit geometry</string>
    </property>
