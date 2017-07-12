@@ -1365,7 +1365,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 	emit onProceedEnd(Added);
 }
 
-void DatabaseDriver::proceedJobs(const QString& Path)
+void DatabaseDriver::proceedJobs(const QString& Path, const QString& Sep, int xPos, int yPos, int jobPos)
 {
 	if (!Database.open()) { emit onProceedEnd(0); return; }
 
@@ -1377,16 +1377,26 @@ void DatabaseDriver::proceedJobs(const QString& Path)
 
 	QTextStream Stream(&File); QList<DATA> Data;
 
+	const bool CSV = (QFileInfo(File).suffix() == "csv");
+
+	const QRegExp Exp(CSV ? "," : "\\s+");
+
 	emit onBeginProgress(tr("Loading file"));
 	emit onSetupProgress(0, 0);
 
 	while (!Stream.atEnd())
 	{
-		DATA Item; Stream >> Item.Kerg >> Item.X >> Item.Y;
+		DATA Item; const QStringList Items = Stream.readLine().split(Exp, QString::SkipEmptyParts);
 
-		Item.Kerg.truncate(Item.Kerg.lastIndexOf('-'));
+		if (Items.size() == 3)
+		{
+			Item.Kerg = Items[jobPos];
+			Item.X = Items[xPos].toDouble();
+			Item.Y = Items[yPos].toDouble();
+		}
+		else continue;
 
-		Data.append(Item);
+		if (!Sep.isEmpty()) Item.Kerg.truncate(Item.Kerg.lastIndexOf(Sep)); Data.append(Item);
 	}
 
 	emit onBeginProgress(tr("Loading items"));

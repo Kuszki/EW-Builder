@@ -31,6 +31,7 @@
 #include "proceeddialog.hpp"
 #include "updatewidget.hpp"
 #include "aboutdialog.hpp"
+#include "jobsdialog.hpp"
 
 namespace Ui
 {
@@ -61,6 +62,7 @@ class MainWindow : public QMainWindow
 		DatabaseDriver* Driver = nullptr;
 		AboutDialog* About = nullptr;
 		ProceedDialog* Proceed = nullptr;
+		JobsDialog* Jobs = nullptr;
 
 		QProgressBar* Progress = nullptr;
 
@@ -82,10 +84,12 @@ class MainWindow : public QMainWindow
 	private slots:
 
 		void connectActionClicked(void);
-		void jobsActionClicked(void);
 		void cancelActionClicked(void);
 
 		void proceedRequest(double Length, bool Line, const QString& Symbol);
+
+		void jobsRequest(const QString& Path, const QString& Sep,
+					  int xPos, int yPos, int jobPos);
 
 		void databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common,
 						   const QHash<QString, QHash<int, QString>>& Lines,
@@ -109,7 +113,9 @@ class MainWindow : public QMainWindow
 					    int, int, int, double, bool,
 					    const QString&);
 
-		void onJobsRequest(const QString&);
+		void onJobsRequest(const QString&,
+					    const QString&,
+					    int, int, int);
 
 };
 

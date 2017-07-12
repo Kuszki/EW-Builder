@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	Driver = new DatabaseDriver(nullptr);
 	About = new AboutDialog(this);
 	Proceed = new ProceedDialog(this);
+	Jobs = new JobsDialog(this);
 	Progress = new QProgressBar(this);
 
 	Progress->hide();
@@ -61,7 +62,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(ui->actionConnect, &QAction::triggered, this, &MainWindow::connectActionClicked);
 	connect(ui->actionDisconnect, &QAction::triggered, Driver, &DatabaseDriver::closeDatabase);
 	connect(ui->actionProceed, &QAction::triggered, Proceed, &ProceedDialog::open);
-	connect(ui->actionJobs, &QAction::triggered, this, &MainWindow::jobsActionClicked);
+	connect(ui->actionJobs, &QAction::triggered, Jobs, &JobsDialog::open);
 	connect(ui->actionCancel, &QAction::triggered, this, &MainWindow::cancelActionClicked);
 	connect(ui->actionAbout, &QAction::triggered, About, &AboutDialog::open);
 
@@ -140,13 +141,6 @@ void MainWindow::connectActionClicked(void)
 	connect(Driver, &DatabaseDriver::onError, Dialog, &ConnectDialog::refused);
 }
 
-void MainWindow::jobsActionClicked(void)
-{
-	const QString Path = QFileDialog::getOpenFileName(this, tr("Open data file"));
-
-	if (!Path.isEmpty()) { lockUi(BUSY); emit onJobsRequest(Path); }
-}
-
 void MainWindow::cancelActionClicked(void)
 {
 	Driver->terminate();
@@ -166,6 +160,11 @@ void MainWindow::proceedRequest(double Length, bool Line, const QString& Symbol)
 				    ui->Point->currentData().toInt(),
 				    ui->Text->currentData().toInt(),
 				    Length, Line, Symbol);
+}
+
+void MainWindow::jobsRequest(const QString& Path, const QString& Sep, int xPos, int yPos, int jobPos)
+{
+	lockUi(BUSY); emit onJobsRequest(Path, Sep, xPos, yPos, jobPos);
 }
 
 void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common, const QHash<QString, QHash<int, QString>>& Lines, const QHash<QString, QHash<int, QString>>& Points, const QHash<QString, QHash<int, QString>>& Texts)

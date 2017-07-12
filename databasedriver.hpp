@@ -28,6 +28,7 @@
 #include <QSqlError>
 #include <QPolygonF>
 #include <QSettings>
+#include <QFileInfo>
 #include <QVariant>
 #include <QObject>
 #include <QHash>
@@ -178,7 +179,8 @@ class DatabaseDriver : public QObject
 					   double Length, bool Keep,
 					   const QString& Insert);
 
-		void proceedJobs(const QString& Path);
+		void proceedJobs(const QString& Path, const QString& Sep,
+					  int xPos, int yPos, int jobPos);
 
 		void terminate(void);
 
