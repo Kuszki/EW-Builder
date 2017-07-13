@@ -1263,7 +1263,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, int Point, 
 			"EW_POLYLINE F "
 		"WHERE "
 			"F.STAN_ZMIANY = 0 AND "
-			"F.TYP <> 4 "
+			"F.P1_FLAGS <> 4 "
 		"UNION "
 		"SELECT "
 			"L.P1_X, L.P1_Y "
@@ -1271,7 +1271,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, int Point, 
 			"EW_POLYLINE L "
 		"WHERE "
 			"L.STAN_ZMIANY = 0 AND "
-			"L.TYP <> 4 "
+			"L.P1_FLAGS <> 4 "
 		"UNION "
 		"SELECT "
 			"(C.P0_X + C.P1_X) / 2.0, "
@@ -1280,7 +1280,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, int Point, 
 			"EW_POLYLINE C "
 		"WHERE "
 			"C.STAN_ZMIANY = 0 AND "
-			"C.TYP = 4");
+			"C.P1_FLAGS = 4");
 
 	if (Fit == 2 && pointsQuery.exec()) while (pointsQuery.next()) Points.append(
 	{
