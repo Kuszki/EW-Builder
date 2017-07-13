@@ -146,7 +146,7 @@ void MainWindow::cancelActionClicked(void)
 	Driver->terminate();
 }
 
-void MainWindow::proceedRequest(double Length, bool Line, bool Job, const QString& Symbol)
+void MainWindow::proceedRequest(double Length, bool Line, bool Job, int Point, const QString& Symbol)
 {
 	QHash<int, QVariant> Values; lockUi(BUSY);
 
@@ -159,7 +159,7 @@ void MainWindow::proceedRequest(double Length, bool Line, bool Job, const QStrin
 				    ui->Line->currentData().toInt(),
 				    ui->Point->currentData().toInt(),
 				    ui->Text->currentData().toInt(),
-				    Length, Line, Job, Symbol);
+				    Length, Line, Job, Point, Symbol);
 }
 
 void MainWindow::jobsRequest(const QString& Path, const QString& Sep, int xPos, int yPos, int jobPos)

@@ -683,7 +683,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 
 		for (const auto& L : Lines) if (!L.Label && (!Job || !P.IDK || P.IDK == L.IDK || !L.IDK))
 		{
-			double dtg = qTan(Points[L.Label].FI) + (L.X1 - L.X2) / (L.Y1 - L.Y2);
+			double dtg = qTan(P.FI) + (L.X1 - L.X2) / (L.Y1 - L.Y2);
 
 			while (dtg > 3.1415) dtg -= 3.1415; if (qAbs(dtg) > 0.15) continue;
 
@@ -1179,18 +1179,130 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 	return Objects;
 }
 
-QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, const QString& Expr)
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, int Point, const QString& Expr, int Fit, double Length, const QString& Symbol)
 {
-	if (!Database.isOpen()) return QList<OBJECT>();
+	if (!Database.isOpen()) return QList<OBJECT>(); QMutex Locker; QList<QPointF> Points;
 
-	QHash<int, POINT> Texts = loadPoints(Text);
-	QList<OBJECT> Objects; QRegExp Checker(Expr);
+	QHash<int, POINT> Texts = loadPoints(Text); QList<OBJECT> Objects; QList<POINT> Symbols;
 
-	for (const auto Text : Texts) if (Checker.indexIn(Text.Text) != -1) Objects.append(
+	QSqlQuery symbolQuery(Database), insertQuery(Database), pointsQuery(Database);
+
+	const auto getSymbols = [&Expr, &Symbol, &Symbols, &Points, &Locker, Fit, Length] (POINT& P) -> void
 	{
-		QHash<int, QVariant>(), QList<int>(),
-		{ Text.ID }, Text.Text, Text.IDK
+		if (QRegExp(Expr).indexIn(P.Text) == -1) return;
+
+		QPointF Found; if (Fit == 2)
+		{
+			double L = NAN; const QPointF T(P.X, P.Y);
+
+			for (const auto S : Points)
+			{
+				const double l = QLineF(T, S).length();
+
+				if (l < Length && (qIsNaN(L) || l < L))
+				{
+					Found = S; L = l;
+				}
+			}
+		}
+		else if (Fit == 1) Found = QPointF(P.X, P.Y);
+
+		if (Found != QPointF())
+		{
+			Locker.lock();
+			Symbols.append(
+			{
+				0, P.IDK, P.ID,
+				Found.x(), Found.y(),
+				NAN, NAN, Symbol
+			});
+			Locker.unlock();
+		}
+	};
+
+	const auto getObjects = [&Texts, &Objects, &Locker] (POINT& S) -> void
+	{
+		for (const auto& T : Texts) if (S.Match == T.ID)
+		{
+			Locker.lock();
+			Objects.append(
+			{
+				QHash<int, QVariant>(),
+				QList<int>() << S.ID,
+				QList<int>() << T.ID,
+				T.Text, S.IDK
+			});
+			Locker.unlock();
+
+			return;
+		}
+	};
+
+	symbolQuery.prepare("SELECT GEN_ID(EW_ELEMENT_UID_GEN, 1), GEN_ID(EW_ELEMENT_ID_GEN, 1) FROM RDB$DATABASE");
+
+	insertQuery.prepare(QString(
+		"INSERT INTO "
+			"EW_TEXT (UID, ID, ID_WARSTWY, STAN_ZMIANY, TYP, TEXT, CREATE_TS, MODIFY_TS, POS_X, POS_Y) "
+		"VALUES "
+			"(?, ?, %1, 0, 4, '%2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?, ?)")
+				  .arg(Point)
+				  .arg(Symbol));
+
+	pointsQuery.prepare(
+		"SELECT "
+			"T.POS_X, T.POS_Y "
+		"FROM "
+			"EW_TEXT T "
+		"WHERE "
+			"T.STAN_ZMIANY = 0 AND "
+			"T.TYP = 4 "
+		"UNION "
+		"SELECT "
+			"F.P0_X, F.P0_Y "
+		"FROM "
+			"EW_POLYLINE F "
+		"WHERE "
+			"F.STAN_ZMIANY = 0 AND "
+			"F.TYP <> 4 "
+		"UNION "
+		"SELECT "
+			"L.P1_X, L.P1_Y "
+		"FROM "
+			"EW_POLYLINE L "
+		"WHERE "
+			"L.STAN_ZMIANY = 0 AND "
+			"L.TYP <> 4 "
+		"UNION "
+		"SELECT "
+			"(C.P0_X + C.P1_X) / 2.0, "
+			"(C.P0_Y + C.P1_Y) / 2.0 "
+		"FROM "
+			"EW_POLYLINE C "
+		"WHERE "
+			"C.STAN_ZMIANY = 0 AND "
+			"C.TYP = 4");
+
+	if (Fit == 2 && pointsQuery.exec()) while (pointsQuery.next()) Points.append(
+	{
+		pointsQuery.value(0).toDouble(), pointsQuery.value(1).toDouble()
 	});
+
+	QtConcurrent::blockingMap(Texts, getSymbols);
+
+	for (auto& S : Symbols) if (symbolQuery.exec() && symbolQuery.next())
+	{
+		const int UID = symbolQuery.value(0).toInt();
+		const int IDE = symbolQuery.value(1).toInt();
+
+		insertQuery.addBindValue(UID);
+		insertQuery.addBindValue(IDE);
+		insertQuery.addBindValue(S.X);
+		insertQuery.addBindValue(S.Y);
+
+		if (insertQuery.exec()) S.ID = IDE;
+	}
+
+	QtConcurrent::blockingMap(Symbols, getObjects);
 
 	return Objects;
 }
@@ -1246,14 +1358,11 @@ bool DatabaseDriver::closeDatabase(void)
 	}
 }
 
-void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text, double Length, bool Keep, bool Job, const QString& Insert)
+void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text, double Length, bool Keep, bool Job, int Snap, const QString& Insert)
 {
-	if (!Database.open()) { emit onProceedEnd(0); return; }
+	if (!Database.open()) { emit onProceedEnd(0); return; } QStringList Labels; int Step(0), Added(0);
 
-	QSqlQuery indexQuery(Database), objectQuery(Database), dataQuery(Database),
-			geometryQuery(Database), symbolQuery(Database), insertQuery(Database);
-
-	QStringList Labels; int Step(0), Added(0);
+	QSqlQuery indexQuery(Database), objectQuery(Database), dataQuery(Database), geometryQuery(Database);
 
 	Terminator.lock(); Terminated = false; Terminator.unlock();
 
@@ -1322,29 +1431,6 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 					geometryQuery.exec();
 				}
 
-				if (Type == 4 && O.Geometry.isEmpty() && O.Labels.size() == 1 && !Insert.isEmpty())
-				{
-					if (symbolQuery.exec() && symbolQuery.next())
-					{
-						const int UID = symbolQuery.value(0).toInt();
-						const int IDE = symbolQuery.value(1).toInt();
-						const int TID = O.Labels.first();
-
-						insertQuery.addBindValue(UID);
-						insertQuery.addBindValue(IDE);
-						insertQuery.addBindValue(TID);
-						insertQuery.addBindValue(TID);
-
-						insertQuery.exec();
-
-						geometryQuery.addBindValue(ID);
-						geometryQuery.addBindValue(n++);
-						geometryQuery.addBindValue(IDE);
-
-						geometryQuery.exec();
-					}
-				}
-
 				Added += 1;
 			}
 
@@ -1380,28 +1466,6 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 		"VALUES "
 			"(?, ?, 0, ?)");
 
-	symbolQuery.prepare("SELECT GEN_ID(EW_ELEMENT_UID_GEN, 1), GEN_ID(EW_ELEMENT_ID_GEN, 1) FROM RDB$DATABASE");
-
-	insertQuery.prepare(QString(
-		"INSERT INTO "
-			"EW_TEXT (UID, ID, ID_WARSTWY, STAN_ZMIANY, TYP, TEXT, CREATE_TS, MODIFY_TS, POS_X, POS_Y) "
-		"VALUES "
-			"(?, ?, %1, 0, 4, '%2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ("
-			"SELECT FIRST 1 "
-				"IIF(ODN_X IS NULL, POS_X, POS_X + ODN_X) "
-			"FROM "
-				"EW_TEXT "
-			"WHERE "
-				"ID = ?), ("
-			"SELECT FIRST 1 "
-				"IIF(ODN_Y IS NULL, POS_Y, POS_Y + ODN_Y) "
-			"FROM "
-				"EW_TEXT "
-			"WHERE "
-				"ID = ?))")
-					.arg(Point)
-					.arg(Insert));
-
 	if (Line && (Table.Flags & 0x002))
 	{
 		emit onBeginProgress(tr("Preparing surfaces"));
@@ -1432,12 +1496,12 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 		QtConcurrent::blockingMap(Objects, getValues); insertObjects(Objects, 2);
 	}
 
-	if (Text && !Insert.isEmpty() && (Table.Flags & 0x100))
+	if (Text && Snap && (Table.Flags & 0x100))
 	{
 		emit onBeginProgress(tr("Preparing texts"));
 		emit onSetupProgress(0, 0);
 
-		auto Objects = proceedTexts(Text, Pattern);
+		auto Objects = proceedTexts(Text, Point, Pattern, Snap, Length, Insert);
 
 		QtConcurrent::blockingMap(Objects, getValues); insertObjects(Objects, 4);
 	}

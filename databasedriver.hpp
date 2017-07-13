@@ -167,7 +167,8 @@ class DatabaseDriver : public QObject
 								double Length = qInf(),
 								bool Job = false);
 
-		QList<OBJECT> proceedTexts(int Text, const QString& Expr = QString());
+		QList<OBJECT> proceedTexts(int Text, int Point, const QString& Expr = QString(), int Fit = 0,
+							  double Length = qInf(), const QString& Symbol = QString());
 
 		bool isTerminated(void) const;
 
@@ -180,8 +181,8 @@ class DatabaseDriver : public QObject
 
 		void proceedClass(const QHash<int, QVariant>& Values,
 					   const QString& Pattern, const QString& Class,
-					   int Line, int Point, int Text,
-					   double Length, bool Keep, bool Job,
+					   int Line, int Point, int Text, double Length,
+					   bool Keep, bool Job, int Snap,
 					   const QString& Insert);
 
 		void proceedJobs(const QString& Path, const QString& Sep,

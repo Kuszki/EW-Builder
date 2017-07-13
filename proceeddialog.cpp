@@ -49,6 +49,9 @@ void ProceedDialog::accept(void)
 	const QString Symbol = ui->pointCombo->currentIndex() ? ui->symbolEdit->text() : QString();
 	const double Length = ui->distanceSpin->value() == 0.0 ? qInf() : ui->distanceSpin->value();
 
-	QDialog::accept(); emit onProceedRequest(Length, ui->lineCombo->currentIndex(),
-									 ui->jobCheck->isChecked(), Symbol);
+	QDialog::accept(); emit onProceedRequest(Length,
+									 ui->lineCombo->currentIndex(),
+									 ui->jobCheck->isChecked(),
+									 ui->pointCombo->currentIndex(),
+									 Symbol);
 }

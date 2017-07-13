@@ -56,7 +56,7 @@ class ProceedDialog : public QDialog
 
 	signals:
 
-		void onProceedRequest(double, bool, bool, const QString&);
+		void onProceedRequest(double, bool, bool, int, const QString&);
 
 };
 
