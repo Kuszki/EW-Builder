@@ -683,9 +683,12 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 
 		for (const auto& L : Lines) if (!L.Label && (!Job || !P.IDK || P.IDK == L.IDK || !L.IDK))
 		{
-			double dtg = qTan(P.FI) + (L.X1 - L.X2) / (L.Y1 - L.Y2);
+			double dtg = P.FI + qAtan2(L.X1 - L.X2, L.Y1 - L.Y2);
 
-			while (dtg > 3.1415) dtg -= 3.1415; if (qAbs(dtg) > 0.15) continue;
+			while (dtg > 3.1415) dtg -= 3.1415;
+			while (dtg < 0.0) dtg += 3.1415;
+
+			if (qAbs(dtg) > 0.15) continue;
 
 			const double a = length(P.X, P.Y, L.X1, L.Y1);
 			const double b = length(P.X, P.Y, L.X2, L.Y2);
