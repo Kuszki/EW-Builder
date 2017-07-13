@@ -46,7 +46,7 @@ class DatabaseDriver : public QObject
 	{
 		int ID, IDK, Match;
 
-		double X, Y, L;
+		double X, Y, L, FI;
 
 		QString Text;
 	};
@@ -54,6 +54,8 @@ class DatabaseDriver : public QObject
 	struct LINE
 	{
 		int ID, IDK, Label;
+
+		QSet<int> Labels;
 
 		double X1, Y1;
 		double X2, Y2;
@@ -152,15 +154,18 @@ class DatabaseDriver : public QObject
 		QList<OBJECT> proceedLines(int Line, int Text,
 							  const QString& Expr = QString(),
 							  double Length = qInf(),
+							  bool Job = false,
 							  bool Keep = false);
 
 		QList<OBJECT> proceedPoints(int Symbol, int Text,
 							   const QString& Expr = QString(),
-							   double Length = qInf());
+							   double Length = qInf(),
+							   bool Job = false);
 
 		QList<OBJECT> proceedSurfaces(int Line, int Text,
 								const QString& Expr = QString(),
-								double Length = qInf());
+								double Length = qInf(),
+								bool Job = false);
 
 		QList<OBJECT> proceedTexts(int Text, const QString& Expr = QString());
 
@@ -176,7 +181,7 @@ class DatabaseDriver : public QObject
 		void proceedClass(const QHash<int, QVariant>& Values,
 					   const QString& Pattern, const QString& Class,
 					   int Line, int Point, int Text,
-					   double Length, bool Keep,
+					   double Length, bool Keep, bool Job,
 					   const QString& Insert);
 
 		void proceedJobs(const QString& Path, const QString& Sep,

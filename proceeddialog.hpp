@@ -21,6 +21,8 @@
 #ifndef PROCEEDDIALOG_HPP
 #define PROCEEDDIALOG_HPP
 
+#include <QDialogButtonBox>
+#include <QPushButton>
 #include <QDialog>
 
 namespace Ui
@@ -44,6 +46,8 @@ class ProceedDialog : public QDialog
 
 	private slots:
 
+		void symbolTextChanged(const QString& Text);
+
 		void pointStrategyChanged(int Index);
 
 	public slots:
@@ -52,7 +56,7 @@ class ProceedDialog : public QDialog
 
 	signals:
 
-		void onProceedRequest(double, bool, const QString&);
+		void onProceedRequest(double, bool, bool, const QString&);
 
 };
 

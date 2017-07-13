@@ -561,7 +561,7 @@ QHash<int, DatabaseDriver::LINE> DatabaseDriver::loadLines(int Layer, int Flags)
 	{
 		Query.value(0).toInt(),
 		Query.value(1).toInt(),
-		0,
+		0, QSet<int>(),
 		Query.value(2).toDouble(),
 		Query.value(3).toDouble(),
 		Query.value(4).toDouble(),
@@ -600,7 +600,7 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, int Type
 			"P.ID, P.OPERAT, "
 			"IIF(P.ODN_X IS NULL, P.POS_X, P.POS_X + P.ODN_X), "
 			"IIF(P.ODN_Y IS NULL, P.POS_Y, P.POS_Y + P.ODN_Y), "
-			"P.TEXT, P.TYP "
+			"P.TEXT, P.TYP, P.KAT "
 		"FROM "
 			"EW_TEXT P "
 		"WHERE "
@@ -624,18 +624,19 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, int Type
 		Query.value(2).toDouble(),
 		Query.value(3).toDouble(),
 		NAN,
+		Query.value(6).toDouble(),
 		Query.value(4).toString()
 	});
 
 	return Points;
 }
 
-QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, const QString& Expr, double Length, bool Keep)
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, const QString& Expr, double Length, bool Job, bool Keep)
 {
 	if (!Database.isOpen()) return QList<OBJECT>();
 
-	QHash<int, LINE> Lines; QHash<int, POINT> Points;
-	QList<QPointF> Cuts; QList<OBJECT> Objects;
+	QHash<int, LINE> Lines; QHash<int, POINT> Points; QMutex Locker;
+	QList<QPointF> Cuts; QList<OBJECT> Objects; QSet<int> Used;
 
 	const auto getCuts = [&Lines, &Cuts] (void) -> void
 	{
@@ -666,7 +667,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 		}
 	};
 
-	const auto getPairs = [&Lines, &Expr, Length] (POINT& P) -> void
+	const auto getPairs = [&Lines, &Expr, &Used, Length, Job] (POINT& P) -> void
 	{
 		static const auto length = [] (double x1, double y1, double x2, double y2)
 		{
@@ -676,10 +677,16 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 			return qSqrt(dx * dx + dy * dy);
 		};
 
+		if (Used.contains(P.ID)) return;
+
 		if (!Expr.isEmpty()) if (QRegExp(Expr).indexIn(P.Text) == -1) return;
 
-		for (const auto& L : Lines)
+		for (const auto& L : Lines) if (!L.Label && (!Job || !P.IDK || P.IDK == L.IDK || !L.IDK))
 		{
+			double dtg = qTan(Points[L.Label].FI) + (L.X1 - L.X2) / (L.Y1 - L.Y2);
+
+			while (dtg > 3.1415) dtg -= 3.1415; if (qAbs(dtg) > 0.15) continue;
+
 			const double a = length(P.X, P.Y, L.X1, L.Y1);
 			const double b = length(P.X, P.Y, L.X2, L.Y2);
 
@@ -699,13 +706,36 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 		}
 	};
 
-	const auto getLabel = [&Points] (LINE& L) -> void
+	const auto getLabel = [&Points, &Used, &Locker, Job] (LINE& L) -> void
 	{
+		if (L.Label) return;
+
 		for (const auto& P : Points) if (P.Match == L.ID && (qIsNaN(L.Odn) || L.Odn > P.L))
 		{			
-			if (!L.IDK && P.IDK) L.IDK = P.IDK; L.Label = P.ID; L.Odn = P.L;
+			if (!Job || !P.IDK || P.IDK == L.IDK || !L.IDK) { L.Label = P.ID; L.Odn = P.L; }
+		}
+
+		if (L.Label && !L.IDK && Points[L.Label].IDK)
+		{
+			L.IDK = Points[L.Label].IDK;
+		}
+
+		if (L.Label)
+		{
+			const QString& Label = Points[L.Label].Text; L.Labels.insert(L.Label);
+
+			for (const auto& P : Points) if (P.Match == L.ID && P.Text == Label)
+			{
+				L.Labels.insert(P.ID);
+
+				Locker.lock();
+				Used.insert(P.ID);
+				Locker.unlock();
+			}
 		}
 	};
+
+	const auto resetMatch = [] (POINT& P) -> void { P.Match = 0; P.L = NAN; };
 
 	const auto getObjects = [&Lines, &Points, &Cuts, &Objects, Keep] (void) -> void
 	{
@@ -720,7 +750,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 					O.Label = P[L.Label].Text;
 				}
 
-				O.Labels.append(L.Label);
+				O.Labels.append(L.Labels.toList());
 			}
 
 			if (First) O.Geometry.push_front(L.ID);
@@ -783,11 +813,18 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 	QFutureSynchronizer<void> Synchronizer;
 
 	Synchronizer.addFuture(QtConcurrent::run(getCuts));
-	Synchronizer.addFuture(QtConcurrent::map(Points, getPairs));
 
-	Synchronizer.waitForFinished();
+	bool Continue(true); do
+	{
+		const int Count = Used.size();
 
-	Synchronizer.addFuture(QtConcurrent::map(Lines, getLabel));
+		QtConcurrent::blockingMap(Points, resetMatch);
+		QtConcurrent::blockingMap(Points, getPairs);
+		QtConcurrent::blockingMap(Lines, getLabel);
+
+		Continue = Count != Used.size();
+	}
+	while (Continue);
 
 	Synchronizer.waitForFinished();
 
@@ -799,14 +836,14 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 }
 
 
-QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text, const QString& Expr, double Length)
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text, const QString& Expr, double Length, bool Job)
 {
 	if (!Database.isOpen()) return QList<OBJECT>();
 
-	QHash<int, POINT> Symbols, Texts;
-	QList<OBJECT> Objects;
+	QHash<int, POINT> Symbols, Texts; QMutex Locker;
+	QList<OBJECT> Objects; QSet<int> Used;
 
-	const auto getPairs = [&Symbols, &Expr, Length] (POINT& P) -> void
+	const auto getPairs = [&Symbols, &Expr, &Used, Length, Job] (POINT& P) -> void
 	{
 		static const auto length = [] (double x1, double y1, double x2, double y2)
 		{
@@ -816,9 +853,11 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text
 			return qSqrt(dx * dx + dy * dy);
 		};
 
+		if (Used.contains(P.ID)) return;
+
 		if (!Expr.isEmpty()) if (QRegExp(Expr).indexIn(P.Text) == -1) return;
 
-		for (const auto& S : Symbols)
+		for (const auto& S : Symbols) if (!S.Match && (!Job || !P.IDK || P.IDK == S.IDK || !S.IDK))
 		{
 			const double l = length(S.X, S.Y, P.X, P.Y);
 
@@ -829,21 +868,35 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text
 		}
 	};
 
-	const auto getLabel = [&Texts] (POINT& S) -> void
+	const auto getLabel = [&Texts, &Used, &Locker, Job] (POINT& S) -> void
 	{
+		if (S.Match) return;
+
 		for (const auto& P : Texts) if (P.Match == S.ID && (qIsNaN(S.L) || S.L > P.L))
 		{
-			if (!S.IDK && P.IDK) S.IDK = P.IDK; S.Match = P.ID; S.L = P.L;
+			if (!Job || !P.IDK || P.IDK == S.IDK || !S.IDK) { S.Match = P.ID; S.L = P.L; }
+		}
+
+		if (S.Match && !S.IDK && Texts[S.Match].IDK)
+		{
+			S.IDK = Texts[S.Match].IDK;
+		}
+
+		if (S.Match)
+		{
+			Locker.lock();
+			Used.insert(S.Match);
+			Locker.unlock();
 		}
 	};
 
-	const auto getObjects = [&Symbols, &Texts, &Objects] (void) -> void
+	const auto resetMatch = [] (POINT& P) -> void { P.Match = 0; P.L = NAN; };
+
+	const auto getObjects = [&Symbols, &Objects, &Texts] (void) -> void
 	{
 		for (const auto& S : Symbols)
 		{
-			OBJECT O;
-
-			O.IDK = S.IDK;
+			OBJECT O; O.IDK = S.IDK;
 			O.Geometry.append(S.ID);
 
 			if (S.Match)
@@ -861,15 +914,19 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text
 	if (Symbols.isEmpty()) return QList<OBJECT>();
 	else if (Text) Texts = loadPoints(Text);
 
+	bool Continue(true); do
+	{
+		const int Count = Used.size();
+
+		QtConcurrent::blockingMap(Texts, resetMatch);
+		QtConcurrent::blockingMap(Texts, getPairs);
+		QtConcurrent::blockingMap(Symbols, getLabel);
+
+		Continue = Count != Used.size();
+	}
+	while (Continue);
+
 	QFutureSynchronizer<void> Synchronizer;
-
-	Synchronizer.addFuture(QtConcurrent::map(Texts, getPairs));
-
-	Synchronizer.waitForFinished();
-
-	Synchronizer.addFuture(QtConcurrent::map(Symbols, getLabel));
-
-	Synchronizer.waitForFinished();
 
 	Synchronizer.addFuture(QtConcurrent::run(getObjects));
 
@@ -878,12 +935,12 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text
 	return Objects;
 }
 
-QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text, const QString& Expr, double Length)
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text, const QString& Expr, double Length, bool Job)
 {
 	if (!Database.isOpen()) return QList<OBJECT>();
 
-	QHash<int, LINE> Lines; QHash<int, POINT> Points;
-	QList<LINE> Sorted; QList<OBJECT> Objects;
+	QHash<int, LINE> Lines; QHash<int, POINT> Points; QMutex Locker;
+	QList<LINE> Sorted; QList<OBJECT> Objects; QSet<int> Used;
 
 	const auto sortLines = [] (const QHash<int, LINE>& Lines) -> QList<LINE>
 	{
@@ -934,7 +991,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 		return Sorted;
 	};
 
-	const auto getPairs = [&Sorted, &Expr, Length] (POINT& P) -> void
+	const auto getPairs = [&Sorted, &Expr, &Used, Length, Job] (POINT& P) -> void
 	{
 		static const auto length = [] (double x1, double y1, double x2, double y2)
 		{
@@ -944,9 +1001,11 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 			return qSqrt(dx * dx + dy * dy);
 		};
 
+		if (Used.contains(P.ID)) return;
+
 		if (!Expr.isEmpty()) if (QRegExp(Expr).indexIn(P.Text) == -1) return;
 
-		for (const auto& L : Sorted)
+		for (const auto& L : Sorted) if (!L.Label && (!Job || !L.IDK || P.IDK == L.IDK || !P.IDK))
 		{
 			double h(NAN); if (qIsNaN(L.Rad))
 			{
@@ -976,29 +1035,48 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 		}
 	};
 
-	const auto getLabel = [&Points] (LINE& L) -> void
+	const auto getLabel = [&Points, Job] (LINE& L) -> void
 	{
 		for (const auto& P : Points) if (P.Match == L.ID && (qIsNaN(L.Odn) || L.Odn > P.L))
 		{
-			if (!L.IDK && P.IDK) L.IDK = P.IDK; L.Label = P.ID; L.Odn = P.L;
+			if (!Job || !P.IDK || P.IDK == L.IDK || !L.IDK) { L.Label = P.ID; L.Odn = P.L; }
 		}
 	};
 
+	const auto setLabel = [&Points, &Used, &Locker] (OBJECT& O) -> void
+	{
+		if (O.Labels.size()) return;
+
+		double L = NAN; int Match = 0;
+
+		for (const auto& P : Points) if (O.Geometry.contains(P.Match) && (qIsNaN(L) || L > P.L))
+		{
+			Match = P.ID; L = P.L;
+		}
+
+		if (Match && !O.IDK && Points[Match].IDK)
+		{
+			O.IDK = Points[Match].IDK;
+		}
+
+		if (Match)
+		{
+			O.Label = Points[Match].Text;
+			O.Labels.append(Match);
+
+			Locker.lock();
+			Used.insert(Match);
+			Locker.unlock();
+		}
+	};
+
+	const auto resetMatch = [] (POINT& P) -> void { P.Match = 0; P.L = NAN; };
+
 	const auto getObjects = [&Sorted, &Points, &Objects] (void) -> void
 	{
-		const static auto append = [] (const LINE& L, OBJECT& O, const QHash<int, POINT>& P, QSet<int>& U, QList<QPointF>& G, int T) -> void
+		const static auto append = [] (const LINE& L, OBJECT& O, QSet<int>& U, QList<QPointF>& G, int T) -> void
 		{
 			if (!O.IDK && L.IDK) O.IDK = L.IDK;
-
-			if (L.Label)
-			{
-				if (O.Label.isEmpty())
-				{
-					O.Label = P[L.Label].Text;
-				}
-
-				O.Labels.append(L.Label);
-			}
 
 			switch (T)
 			{
@@ -1022,7 +1100,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 			OBJECT O; bool Continue = true;
 			QList<QPointF> Geometry;
 
-			append(S, O, Points, Used, Geometry, 0);
+			append(S, O, Used, Geometry, 0);
 
 			if (qIsNaN(S.Rad)) while (Continue)
 			{
@@ -1030,8 +1108,6 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 				for (const auto& L : Sorted) if (!Used.contains(L.ID))
 				{
-					const QString Label = L.Label ? Points[L.Label].Text : QString();
-
 					if (!L.IDK || !S.IDK || S.IDK == L.IDK)
 					{
 						QPointF L1(L.X1, L.Y1), L2(L.X2, L.Y2);
@@ -1044,9 +1120,9 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 							case 4: C = Geometry.indexOf(L1); break;
 						}
 
-						if (T && C == -1 && (O.Label.isEmpty() || Label.isEmpty() || O.Label == Label))
+						if (T && C == -1)
 						{
-							append(L, O, Points, Used, Geometry, T); switch (T)
+							append(L, O, Used, Geometry, T); switch (T)
 							{
 								case 3: P2 = L2; break; case 4: P2 = L1; break;
 							}
@@ -1083,17 +1159,22 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 	QFutureSynchronizer<void> Synchronizer;
 
-	Synchronizer.addFuture(QtConcurrent::map(Points, getPairs));
-
-	Synchronizer.waitForFinished();
-
-	Synchronizer.addFuture(QtConcurrent::map(Sorted, getLabel));
-
-	Synchronizer.waitForFinished();
-
 	Synchronizer.addFuture(QtConcurrent::run(getObjects));
 
 	Synchronizer.waitForFinished();
+
+	bool Continue(true); do
+	{
+		const int Count = Used.size();
+
+		QtConcurrent::blockingMap(Points, resetMatch);
+		QtConcurrent::blockingMap(Points, getPairs);
+		QtConcurrent::blockingMap(Sorted, getLabel);
+		QtConcurrent::blockingMap(Objects, setLabel);
+
+		Continue = Count != Used.size();
+	}
+	while (Continue);
 
 	return Objects;
 }
@@ -1165,14 +1246,14 @@ bool DatabaseDriver::closeDatabase(void)
 	}
 }
 
-void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text, double Length, bool Keep, const QString& Insert)
+void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text, double Length, bool Keep, bool Job, const QString& Insert)
 {
-	if (!Database.open()) { emit onProceedEnd(0); return; } QMap<int, QList<OBJECT>> List;
+	if (!Database.open()) { emit onProceedEnd(0); return; }
 
 	QSqlQuery indexQuery(Database), objectQuery(Database), dataQuery(Database),
 			geometryQuery(Database), symbolQuery(Database), insertQuery(Database);
 
-	QStringList Labels; int Count(0), Step(0), Added(0);
+	QStringList Labels; int Step(0), Added(0);
 
 	Terminator.lock(); Terminated = false; Terminator.unlock();
 
@@ -1326,7 +1407,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 		emit onBeginProgress(tr("Preparing surfaces"));
 		emit onSetupProgress(0, 0);
 
-		auto Objects = proceedSurfaces(Line, Text, Pattern, Length);
+		auto Objects = proceedSurfaces(Line, Text, Pattern, Length, Job);
 
 		QtConcurrent::blockingMap(Objects, getValues); insertObjects(Objects, 3);
 	}
@@ -1336,7 +1417,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 		emit onBeginProgress(tr("Preparing points"));
 		emit onSetupProgress(0, 0);
 
-		auto Objects = proceedPoints(Point, Text, Pattern, Length);
+		auto Objects = proceedPoints(Point, Text, Pattern, Length, Job);
 
 		QtConcurrent::blockingMap(Objects, getValues); insertObjects(Objects, 4);
 	}
@@ -1346,7 +1427,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 		emit onBeginProgress(tr("Preparing lines"));
 		emit onSetupProgress(0, 0);
 
-		auto Objects = proceedLines(Line, Text, Pattern, Length);
+		auto Objects = proceedLines(Line, Text, Pattern, Length, Job, Keep);
 
 		QtConcurrent::blockingMap(Objects, getValues); insertObjects(Objects, 2);
 	}
@@ -1432,7 +1513,7 @@ void DatabaseDriver::proceedJobs(const QString& Path, const QString& Sep, int xP
 		0, 0,
 		Query.value(1).toDouble(),
 		Query.value(2).toDouble(),
-		NAN, QString()
+		NAN, NAN, QString()
 	});
 
 	Query.prepare(
@@ -1458,7 +1539,7 @@ void DatabaseDriver::proceedJobs(const QString& Path, const QString& Sep, int xP
 	if (Query.exec()) while (Query.next()) Lines.append(
 	{
 		Query.value(0).toInt(),
-		0, 0,
+		0, 0, QSet<int>(),
 		Query.value(1).toDouble(),
 		Query.value(2).toDouble(),
 		Query.value(3).toDouble(),

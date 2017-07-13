@@ -57,8 +57,10 @@ void JobsDialog::dialogDataChanged(void)
 	Indexes.insert(ui->ySpin->value());
 	Indexes.insert(ui->jobSpin->value());
 
-	Accepted = !ui->fileEdit->text().isEmpty();
-	Accepted = Accepted && (Indexes.size() == 3);
+	Accepted = (!ui->separatorEdit->isEnabled() ||
+			  !ui->separatorEdit->text().isEmpty()) &&
+			 !ui->fileEdit->text().isEmpty() &&
+			 Indexes.size() == 3;
 
 	ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(Accepted);
 }

@@ -32,9 +32,16 @@ ProceedDialog::~ProceedDialog(void)
 	delete ui;
 }
 
+void ProceedDialog::symbolTextChanged(const QString& Text)
+{
+	const bool Ok = !Text.isEmpty() || !ui->symbolEdit->isEnabled();
+
+	ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(Ok);
+}
+
 void ProceedDialog::pointStrategyChanged(int Index)
 {
-	ui->symbolEdit->setEnabled(Index);
+	ui->symbolEdit->setEnabled(Index); symbolTextChanged(ui->symbolEdit->text());
 }
 
 void ProceedDialog::accept(void)
@@ -42,5 +49,6 @@ void ProceedDialog::accept(void)
 	const QString Symbol = ui->pointCombo->currentIndex() ? ui->symbolEdit->text() : QString();
 	const double Length = ui->distanceSpin->value() == 0.0 ? qInf() : ui->distanceSpin->value();
 
-	QDialog::accept(); emit onProceedRequest(Length, ui->lineCombo->currentIndex(), Symbol);
+	QDialog::accept(); emit onProceedRequest(Length, ui->lineCombo->currentIndex(),
+									 ui->jobCheck->isChecked(), Symbol);
 }

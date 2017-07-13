@@ -86,7 +86,7 @@ class MainWindow : public QMainWindow
 		void connectActionClicked(void);
 		void cancelActionClicked(void);
 
-		void proceedRequest(double Length, bool Line, const QString& Symbol);
+		void proceedRequest(double Length, bool Line, bool Job, const QString& Symbol);
 
 		void jobsRequest(const QString& Path, const QString& Sep,
 					  int xPos, int yPos, int jobPos);
@@ -110,7 +110,7 @@ class MainWindow : public QMainWindow
 
 		void onExecRequest(const QHash<int, QVariant>&,
 					    const QString&, const QString&,
-					    int, int, int, double, bool,
+					    int, int, int, double, bool, bool,
 					    const QString&);
 
 		void onJobsRequest(const QString&,

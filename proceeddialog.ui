@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>160</height>
+    <width>432</width>
+    <height>221</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -97,16 +97,6 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="0" colspan="2">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
    <item row="4" column="0" colspan="2">
     <spacer name="verticalSpacer">
      <property name="orientation">
@@ -120,6 +110,27 @@
      </property>
     </spacer>
    </item>
+   <item row="5" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QCheckBox" name="jobCheck">
+       <property name="text">
+        <string>Check label and symbol job</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
   </layout>
  </widget>
  <resources/>
@@ -131,8 +142,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>257</x>
-     <y>150</y>
+     <x>421</x>
+     <y>210</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -147,8 +158,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>325</x>
-     <y>150</y>
+     <x>421</x>
+     <y>210</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -172,8 +183,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>symbolEdit</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>ProceedDialog</receiver>
+   <slot>symbolTextChanged(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>395</x>
+     <y>104</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>649</x>
+     <y>141</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>pointStrategyChanged(int)</slot>
+  <slot>symbolTextChanged(QString)</slot>
  </slots>
 </ui>
