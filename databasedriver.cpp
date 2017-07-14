@@ -1527,6 +1527,8 @@ void DatabaseDriver::proceedJobs(const QString& Path, const QString& Sep, int xP
 
 	const bool CSV = (QFileInfo(File).suffix() == "csv");
 
+	const int Max = qMax(qMax(xPos, yPos), jobPos);
+
 	const QRegExp Exp(CSV ? "," : "\\s+");
 
 	emit onBeginProgress(tr("Loading file"));
@@ -1536,7 +1538,7 @@ void DatabaseDriver::proceedJobs(const QString& Path, const QString& Sep, int xP
 	{
 		DATA Item; const QStringList Items = Stream.readLine().split(Exp, QString::SkipEmptyParts);
 
-		if (Items.size() == 3)
+		if (Max < Items.size())
 		{
 			Item.Kerg = Items[jobPos];
 			Item.X = Items[xPos].toDouble();
