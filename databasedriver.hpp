@@ -170,7 +170,7 @@ class DatabaseDriver : public QObject
 		QList<OBJECT> proceedTexts(int Text, int Point, const QString& Expr = QString(), int Fit = 0,
 							  double Length = qInf(), const QString& Symbol = QString());
 
-		QHash<int, QVariant> proceedGeometry(const QList<QPointF>& Points, double Radius);
+		QHash<int, QVariant> proceedGeometry(const QList<QPointF>& Points, double Radius, bool Emit = false);
 
 		bool isTerminated(void) const;
 

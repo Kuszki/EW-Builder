@@ -11,7 +11,10 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Fit geometry</string>
+  </property>
+  <property name="windowIcon">
+   <iconset theme="view-fullscreen"/>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -250,9 +253,26 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>toolButton</sender>
+   <signal>clicked()</signal>
+   <receiver>FitDialog</receiver>
+   <slot>openButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>380</x>
+     <y>45</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>458</x>
+     <y>45</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>fitParametersChanged()</slot>
   <slot>actionIndexChanged(int)</slot>
+  <slot>openButtonClicked()</slot>
  </slots>
 </ui>
