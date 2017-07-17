@@ -1934,31 +1934,29 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 	}
 	else
 	{
-		QSqlQuery pointsQuery(Database); QList<QPointF> Base; QSet<QPointF*> Pool;
+		QSqlQuery pointsQuery(Database); QList<QPointF> Base; QMutex Locker;
 		QList<QPair<QPointF*, QSet<QPointF*>>> Pools; QSet<QPointF*> Rem; int Step(0);
 
-		const auto getList = [this] (QList<QPair<QPointF*, QSet<QPointF*>>>& R, QPointF* I, const QSet<QPointF*>& S, double L, int B) -> void
+		const auto getList = [this, &Pools, &Base, &Locker, &Step, Radius] (QPointF& I) -> void
 		{
-			QSet<QPointF*> List;
-
-			for (const auto& P : S) if (P != I)
+			QSet<QPointF*> List; for (auto& P : Base) if (&P != &I)
 			{
-				const double l = QLineF(*I, *P).length();
+				const double l = QLineF(I, P).length();
 
-				if (l < L) List.insert(P);
+				if (l < Radius) List.insert(&P);
 			}
 
-			for (int i = 0; i < R.size(); ++i)
+			QMutexLocker Synchronizer(&Locker); emit onUpdateProgress(++Step);
+
+			for (int i = 0; i < Pools.size(); ++i)
 			{
-				if (List.size() >= R[i].second.size())
+				if (List.size() >= Pools[i].second.size())
 				{
-					R.insert(i, qMakePair(I, List)); return;
+					Pools.insert(i, qMakePair(&I, List)); return;
 				}
 			}
 
-			R.append(qMakePair(I, List));
-
-			if (B) emit onUpdateProgress(B);
+			Pools.append(qMakePair(&I, List));
 		};
 
 		pointsQuery.prepare(
@@ -2001,9 +1999,9 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 			pointsQuery.value(1).toDouble()
 		});
 
-		for (auto& P : Base) Pool.insert(&P); emit onSetupProgress(0, Pool.size() * 2);
+		emit onSetupProgress(0, Base.size() * 2);
 
-		for (auto& I : Pool) getList(Pools, I, Pool, Radius, ++Step);
+		QtConcurrent::blockingMap(Base, getList);
 
 		for (auto P : Pools) if (!Rem.contains(P.first))
 		{
