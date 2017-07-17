@@ -131,17 +131,17 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
     <message>
         <location filename="databasedriver.cpp" line="146"/>
         <location filename="databasedriver.cpp" line="184"/>
-        <location filename="databasedriver.cpp" line="1608"/>
+        <location filename="databasedriver.cpp" line="2124"/>
         <source>Unknown</source>
         <translation>Niezdefiniowane</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1133"/>
+        <location filename="databasedriver.cpp" line="1520"/>
         <source>Loading database informations</source>
         <translation>Wczytywanie informacji o bazie danych</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1164"/>
+        <location filename="databasedriver.cpp" line="1551"/>
         <source>Database is not opened</source>
         <translation>Baza danych nie jest otwarta</translation>
     </message>
@@ -154,59 +154,184 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation type="vanished">Opracowywanie atrybutów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1201"/>
+        <location filename="databasedriver.cpp" line="1585"/>
         <source>Creating objects</source>
         <translation>Tworzenie obiektów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1326"/>
+        <location filename="databasedriver.cpp" line="1665"/>
         <source>Preparing surfaces</source>
         <translation>Generowanie powierzchni</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1336"/>
+        <location filename="databasedriver.cpp" line="1675"/>
         <source>Preparing points</source>
         <translation>Generowanie punktów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1346"/>
+        <location filename="databasedriver.cpp" line="1685"/>
         <source>Preparing lines</source>
         <translation>Generowanie linii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1356"/>
+        <location filename="databasedriver.cpp" line="1695"/>
         <source>Preparing texts</source>
         <translation>Generowanie tekstów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1380"/>
+        <location filename="databasedriver.cpp" line="1725"/>
         <source>Loading file</source>
         <translation>Wczytywanie pliku</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1392"/>
+        <location filename="databasedriver.cpp" line="1743"/>
         <source>Loading items</source>
         <translation>Wczytywanie obiektów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1464"/>
+        <location filename="databasedriver.cpp" line="1815"/>
         <source>Preparing jobs</source>
         <translation>Generowanie danych</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1494"/>
+        <location filename="databasedriver.cpp" line="1845"/>
         <source>Processing items</source>
         <translation>Przetwarzanie obiektów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1590"/>
+        <location filename="databasedriver.cpp" line="1910"/>
+        <source>Loading points</source>
+        <translation>Wczytywanie punktów</translation>
+    </message>
+    <message>
+        <location filename="databasedriver.cpp" line="2026"/>
+        <source>Fitting geometry</source>
+        <translation>Scalanie geometrii</translation>
+    </message>
+    <message>
+        <location filename="databasedriver.cpp" line="2031"/>
+        <source>Updating database</source>
+        <translation>Aktualizacja bazy danych</translation>
+    </message>
+    <message>
+        <location filename="databasedriver.cpp" line="2106"/>
         <source>Yes</source>
         <translation>Tak</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1590"/>
+        <location filename="databasedriver.cpp" line="2106"/>
         <source>No</source>
         <translation>Nie</translation>
+    </message>
+</context>
+<context>
+    <name>FitDialog</name>
+    <message>
+        <location filename="fitdialog.ui" line="14"/>
+        <source>Fit geometry</source>
+        <translation>Dopasuj geometrie</translation>
+    </message>
+    <message>
+        <location filename="fitdialog.ui" line="23"/>
+        <source>Action</source>
+        <translation>Akcja</translation>
+    </message>
+    <message>
+        <location filename="fitdialog.ui" line="31"/>
+        <source>Fit to geometry from file</source>
+        <translation>Dopasuj do współrzędnych z pliku</translation>
+    </message>
+    <message>
+        <location filename="fitdialog.ui" line="36"/>
+        <source>Unify existing geometry</source>
+        <translation>Dopasuj do istniejących współrzędnych</translation>
+    </message>
+    <message>
+        <location filename="fitdialog.ui" line="44"/>
+        <source>File</source>
+        <translation>Plik źródłowy</translation>
+    </message>
+    <message>
+        <location filename="fitdialog.ui" line="60"/>
+        <source>Open</source>
+        <translation>Wczytaj</translation>
+    </message>
+    <message>
+        <location filename="fitdialog.ui" line="73"/>
+        <source>X index</source>
+        <translation>Kolumna X</translation>
+    </message>
+    <message>
+        <location filename="fitdialog.ui" line="93"/>
+        <source>Y index</source>
+        <translation>Kolumna Y</translation>
+    </message>
+    <message>
+        <location filename="fitdialog.ui" line="113"/>
+        <source>Radius</source>
+        <translation>Promień</translation>
+    </message>
+    <message>
+        <location filename="fitdialog.ui" line="120"/>
+        <source> m</source>
+        <translation> m</translation>
+    </message>
+    <message>
+        <location filename="fitdialog.cpp" line="76"/>
+        <source>Open data file</source>
+        <translation>Otwórz plik z danymi</translation>
+    </message>
+</context>
+<context>
+    <name>JobsDialog</name>
+    <message>
+        <source>Fit geometry</source>
+        <translation type="vanished">Dopasuj geometrie</translation>
+    </message>
+    <message>
+        <location filename="jobsdialog.ui" line="14"/>
+        <source>Update job</source>
+        <translation>Aktualizuj KERG</translation>
+    </message>
+    <message>
+        <location filename="jobsdialog.ui" line="33"/>
+        <source>Open</source>
+        <translation>Wczytaj</translation>
+    </message>
+    <message>
+        <location filename="jobsdialog.ui" line="48"/>
+        <source>Truncate point index</source>
+        <translation>Obetnij numer pikiety</translation>
+    </message>
+    <message>
+        <location filename="jobsdialog.ui" line="67"/>
+        <source>File</source>
+        <translation>Plik źródłowy</translation>
+    </message>
+    <message>
+        <location filename="jobsdialog.ui" line="74"/>
+        <source>Job index</source>
+        <translation>Kolumna KERG</translation>
+    </message>
+    <message>
+        <location filename="jobsdialog.ui" line="120"/>
+        <source>Y index</source>
+        <translation>Kolumna Y</translation>
+    </message>
+    <message>
+        <location filename="jobsdialog.ui" line="127"/>
+        <source>X index</source>
+        <translation>Kolumna X</translation>
+    </message>
+    <message>
+        <location filename="jobsdialog.ui" line="147"/>
+        <source>Index separator</source>
+        <translation>Separator pikiety</translation>
+    </message>
+    <message>
+        <location filename="jobsdialog.cpp" line="47"/>
+        <source>Open data file</source>
+        <translation>Otwórz plik z danymi</translation>
     </message>
 </context>
 <context>
@@ -320,22 +445,21 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation type="vanished">Maksymalna odległość punktu od etykiety </translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="145"/>
         <source>Open data file</source>
-        <translation>Otwórz plik z danymi</translation>
+        <translation type="vanished">Otwórz plik z danymi</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="187"/>
+        <location filename="mainwindow.cpp" line="196"/>
         <source>Database connected</source>
         <translation>Baza danych podłączona</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="192"/>
+        <location filename="mainwindow.cpp" line="201"/>
         <source>Database disconnected</source>
         <translation>Baza danych odłączona</translation>
     </message>
     <message numerus="yes">
-        <location filename="mainwindow.cpp" line="246"/>
+        <location filename="mainwindow.cpp" line="255"/>
         <source>Processed %n item(s)</source>
         <translation>
             <numerusform>Przetworzono %n obiekt</numerusform>
@@ -405,9 +529,19 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Wstaw nowy symbol</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="89"/>
+        <location filename="proceeddialog.ui" line="86"/>
+        <source>Insert symbol near object</source>
+        <translation>Wstaw symol w miejscu istniejacego obiektu</translation>
+    </message>
+    <message>
+        <location filename="proceeddialog.ui" line="94"/>
         <source>Point objects symbol</source>
         <translation>Nazwa symbolu do wstawienia</translation>
+    </message>
+    <message>
+        <location filename="proceeddialog.ui" line="123"/>
+        <source>Check label and symbol job</source>
+        <translation>Sprawdzaj KERG etykiety względem symbolu</translation>
     </message>
 </context>
 <context>

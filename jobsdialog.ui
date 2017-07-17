@@ -11,10 +11,10 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Fit geometry</string>
+   <string>Update job</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="view-fullscreen">
+   <iconset theme="view-refresh">
     <normaloff>.</normaloff>.</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
