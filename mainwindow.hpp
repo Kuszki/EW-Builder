@@ -32,6 +32,7 @@
 #include "updatewidget.hpp"
 #include "aboutdialog.hpp"
 #include "jobsdialog.hpp"
+#include "fitdialog.hpp"
 
 namespace Ui
 {
@@ -63,6 +64,7 @@ class MainWindow : public QMainWindow
 		AboutDialog* About = nullptr;
 		ProceedDialog* Proceed = nullptr;
 		JobsDialog* Jobs = nullptr;
+		FitDialog* Geometry = nullptr;
 
 		QProgressBar* Progress = nullptr;
 
@@ -86,10 +88,13 @@ class MainWindow : public QMainWindow
 		void connectActionClicked(void);
 		void cancelActionClicked(void);
 
-		void proceedRequest(double Length, bool Line, bool Job, int Point, const QString& Symbol);
+		void proceedRequest(double Length, bool Line, bool Job,
+						int Point, const QString& Symbol);
 
 		void jobsRequest(const QString& Path, const QString& Sep,
 					  int xPos, int yPos, int jobPos);
+
+		void fitRequest(const QString& Path, int xPos, int yPos, double Radius);
 
 		void databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common,
 						   const QHash<QString, QHash<int, QString>>& Lines,
@@ -117,6 +122,9 @@ class MainWindow : public QMainWindow
 		void onJobsRequest(const QString&,
 					    const QString&,
 					    int, int, int);
+
+		void onFitRequest(const QString&,
+					   int, int, double);
 
 };
 

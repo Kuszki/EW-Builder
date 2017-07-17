@@ -33,7 +33,8 @@ SOURCES		+=	main.cpp \
 				databasedriver.cpp \
 				updatewidget.cpp \
 				proceeddialog.cpp \
-				jobsdialog.cpp
+				jobsdialog.cpp \
+				fitdialog.cpp
 
 HEADERS		+=	mainwindow.hpp \
 				aboutdialog.hpp \
@@ -41,14 +42,16 @@ HEADERS		+=	mainwindow.hpp \
 				databasedriver.hpp \
 				updatewidget.hpp \
 				proceeddialog.hpp \
-				jobsdialog.hpp
+				jobsdialog.hpp \
+				fitdialog.hpp
 
 FORMS		+=	mainwindow.ui \
 				aboutdialog.ui \
 				connectdialog.ui \
 				updatewidget.ui \
 				proceeddialog.ui \
-				jobsdialog.ui
+				jobsdialog.ui \
+				fitdialog.ui
 
 RESOURCES		+= 	resources.qrc
 

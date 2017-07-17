@@ -30,6 +30,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	About = new AboutDialog(this);
 	Proceed = new ProceedDialog(this);
 	Jobs = new JobsDialog(this);
+	Geometry = new FitDialog(this);
 	Progress = new QProgressBar(this);
 
 	Progress->hide();
@@ -57,16 +58,20 @@ MainWindow::MainWindow(QWidget *Parent)
 
 	connect(this, &MainWindow::onExecRequest, Driver, &DatabaseDriver::proceedClass);
 	connect(this, &MainWindow::onJobsRequest, Driver, &DatabaseDriver::proceedJobs);
+	connect(this, &MainWindow::onFitRequest, Driver, &DatabaseDriver::proceedFit);
 	connect(Driver, &DatabaseDriver::onProceedEnd, this, &MainWindow::execProcessEnd);
 
 	connect(ui->actionConnect, &QAction::triggered, this, &MainWindow::connectActionClicked);
 	connect(ui->actionDisconnect, &QAction::triggered, Driver, &DatabaseDriver::closeDatabase);
 	connect(ui->actionProceed, &QAction::triggered, Proceed, &ProceedDialog::open);
 	connect(ui->actionJobs, &QAction::triggered, Jobs, &JobsDialog::open);
+	connect(ui->actionGeometry, &QAction::triggered, Geometry, &FitDialog::open);
 	connect(ui->actionCancel, &QAction::triggered, this, &MainWindow::cancelActionClicked);
 	connect(ui->actionAbout, &QAction::triggered, About, &AboutDialog::open);
 
 	connect(Proceed, &ProceedDialog::onProceedRequest, this, &MainWindow::proceedRequest);
+	connect(Jobs, &JobsDialog::onFitRequest, this, &MainWindow::jobsRequest);
+	connect(Geometry, &FitDialog::onFitRequest, this, &MainWindow::fitRequest);
 
 	connect(Driver, SIGNAL(onBeginProgress(QString)), ui->statusBar, SLOT(showMessage(QString)));
 	connect(Driver, SIGNAL(onError(QString)), ui->statusBar, SLOT(showMessage(QString)));
@@ -120,7 +125,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 		case DONE:
 			ui->actionProceed->setEnabled(true);
 			ui->actionJobs->setEnabled(true);
-			ui->actionDisconnect->setEnabled(true);
+			ui->actionGeometry->setEnabled(true);
 			ui->actionDisconnect->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
 		break;
@@ -165,6 +170,11 @@ void MainWindow::proceedRequest(double Length, bool Line, bool Job, int Point, c
 void MainWindow::jobsRequest(const QString& Path, const QString& Sep, int xPos, int yPos, int jobPos)
 {
 	lockUi(BUSY); emit onJobsRequest(Path, Sep, xPos, yPos, jobPos);
+}
+
+void MainWindow::fitRequest(const QString& Path, int xPos, int yPos, double Radius)
+{
+	lockUi(BUSY); emit onFitRequest(Path, xPos, yPos, Radius);
 }
 
 void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common, const QHash<QString, QHash<int, QString>>& Lines, const QHash<QString, QHash<int, QString>>& Points, const QHash<QString, QHash<int, QString>>& Texts)

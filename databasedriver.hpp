@@ -170,6 +170,8 @@ class DatabaseDriver : public QObject
 		QList<OBJECT> proceedTexts(int Text, int Point, const QString& Expr = QString(), int Fit = 0,
 							  double Length = qInf(), const QString& Symbol = QString());
 
+		QHash<int, QVariant> proceedGeometry(const QList<QPointF>& Points, double Radius);
+
 		bool isTerminated(void) const;
 
 	public slots:
@@ -187,6 +189,8 @@ class DatabaseDriver : public QObject
 
 		void proceedJobs(const QString& Path, const QString& Sep,
 					  int xPos, int yPos, int jobPos);
+
+		void proceedFit(const QString& Path, int xPos, int yPos, double Radius);
 
 		void terminate(void);
 

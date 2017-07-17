@@ -1274,7 +1274,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, int Point, 
 			"EW_POLYLINE L "
 		"WHERE "
 			"L.STAN_ZMIANY = 0 AND "
-			"L.P1_FLAGS <> 4 "
+			"L.P1_FLAGS IN (0, 2) "
 		"UNION "
 		"SELECT "
 			"(C.P0_X + C.P1_X) / 2.0, "
@@ -1308,6 +1308,174 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, int Point, 
 	QtConcurrent::blockingMap(Symbols, getObjects);
 
 	return Objects;
+}
+
+QHash<int, QVariant> DatabaseDriver::proceedGeometry(const QList<QPointF>& Points, double Radius)
+{
+	if (!Database.isOpen()) return QHash<int, QVariant>(); QMutex Locker;
+
+	QList<QPair<int, QPointF>> Symbols;
+	QList<QPair<int, QLineF>> Circles;
+	QList<QPair<int, QLineF>> Lines;
+
+	QHash<int, QVariant> Updates;
+
+	QSqlQuery Query(Database); Query.setForwardOnly(true);
+
+	Query.prepare(
+		"SELECT "
+			"P.ID, P.POS_X, P.POS_Y "
+		"FROM "
+			"EW_TEXT P "
+		"WHERE "
+			"P.STAN_ZMIANY = 0 AND "
+			"P.TYP = 4");
+
+	if (Query.exec()) while (Query.next()) Symbols.append(
+	{
+		Query.value(0).toInt(),
+		{
+			Query.value(1).toDouble(),
+			Query.value(2).toDouble()
+		}
+	});
+
+	Query.prepare(
+		"SELECT "
+			"P.ID, P.P0_X, P.P0_Y, P.P1_X, P.P1_Y "
+		"FROM "
+			"EW_POLYLINE P "
+		"WHERE "
+			"P.STAN_ZMIANY = 0 AND "
+			"P.P1_FLAGS = 4");
+
+	if (Query.exec()) while (Query.next()) Circles.append(
+	{
+		Query.value(0).toInt(),
+		{
+			{
+				Query.value(1).toDouble(),
+				Query.value(2).toDouble()
+			},
+			{
+				Query.value(3).toDouble(),
+				Query.value(4).toDouble()
+			}
+		}
+	});
+
+	Query.prepare(
+		"SELECT "
+			"P.ID, P.P0_X, P.P0_Y, P.P1_X, P.P1_Y "
+		"FROM "
+			"EW_POLYLINE P "
+		"WHERE "
+			"P.STAN_ZMIANY = 0 AND "
+			"P.P1_FLAGS IN (0, 2)");
+
+	if (Query.exec()) while (Query.next()) Lines.append(
+	{
+		Query.value(0).toInt(),
+		{
+			{
+				Query.value(1).toDouble(),
+				Query.value(2).toDouble()
+			},
+			{
+				Query.value(3).toDouble(),
+				Query.value(4).toDouble()
+			}
+		}
+	});
+
+	QtConcurrent::blockingMap(Symbols, [&Points, &Updates, &Locker, Radius] (QPair<int, QPointF>& S) -> void
+	{
+		double L = NAN; QPointF Found;
+
+		for (const auto& P : Points)
+		{
+			const double l = QLineF(S.second, P).length();
+
+			if (l < Radius && (qIsNaN(L) || L > l))
+			{
+				L = l; Found = P;
+			}
+		}
+
+		if (Found != QPointF())
+		{
+			Locker.lock();
+			Updates.insert(S.first, Found);
+			Locker.unlock();
+		}
+	});
+
+	QtConcurrent::blockingMap(Circles, [&Points, &Updates, &Locker, Radius] (QPair<int, QLineF>& S) -> void
+	{
+		double L = NAN; QPointF Found; QPointF C =
+		{
+			(S.second.x1() + S.second.x2()) / 2.0,
+			(S.second.y1() + S.second.y2()) / 2.0
+		};
+
+		const double R = qAbs(S.second.x1() - S.second.x2()) / 2.0;
+
+		for (const auto& P : Points)
+		{
+			const double l = QLineF(C, P).length();
+
+			if (l < Radius && (qIsNaN(L) || L > l))
+			{
+				L = l; Found = P;
+			}
+		}
+
+		if (Found != QPointF())
+		{
+			QLineF Updated(Found.x() - R, Found.x() + R,
+						Found.y(), Found.y());
+
+			Locker.lock();
+			Updates.insert(S.first, Updated);
+			Locker.unlock();
+		}
+	});
+
+	QtConcurrent::blockingMap(Lines, [&Points, &Updates, &Locker, Radius] (QPair<int, QLineF>& S) -> void
+	{
+		double L1 = NAN, L2 = NAN; QPointF Found1, Found2;
+
+		for (const auto& P : Points)
+		{
+			const double l1 = QLineF(S.second.p1(), P).length();
+			const double l2 = QLineF(S.second.p2(), P).length();
+
+			if (l1 < Radius && (qIsNaN(L1) || L1 > l1))
+			{
+				L1 = l1; Found1 = P;
+			}
+
+			if (l2 < Radius && (qIsNaN(L2) || L2 > l2))
+			{
+				L2 = l2; Found2 = P;
+			}
+		}
+
+		if (Found1 == Found2) return;
+		else if (Found1 != QPointF() || Found2 != QPointF())
+		{
+			QLineF Updated = S.second;
+
+			if (Found1 != QPointF()) Updated.setP1(Found1);
+			if (Found2 != QPointF()) Updated.setP2(Found2);
+
+			Locker.lock();
+			Updates.insert(S.first, Updated);
+			Locker.unlock();
+		}
+	});
+
+	return Updates;
 }
 
 bool DatabaseDriver::isTerminated(void) const
@@ -1710,6 +1878,162 @@ void DatabaseDriver::proceedJobs(const QString& Path, const QString& Sep, int xP
 
 	emit onEndProgress();
 	emit onProceedEnd(Updates);
+}
+
+void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double Radius)
+{
+	if (!Database.open()) { emit onProceedEnd(0); return; } QList<QPointF> Points; int Step(0);
+
+	emit onBeginProgress(tr("Loading points"));
+	emit onSetupProgress(0, 0);
+
+	if (!Path.isEmpty())
+	{
+		QFile File(Path); File.open(QFile::ReadOnly | QFile::Text); QTextStream Stream(&File);
+
+		const bool CSV = (QFileInfo(File).suffix() == "csv");
+		const int Max = qMax(xPos, yPos);
+
+		const QRegExp Exp(CSV ? "," : "\\s+");
+
+		while (!Stream.atEnd())
+		{
+			const QStringList Items = Stream.readLine().split(Exp, QString::SkipEmptyParts);
+
+			if (Max < Items.size())
+			{
+				Points.append({ Items[xPos].toDouble(), Items[yPos].toDouble() });
+			}
+			else continue;
+		}
+	}
+	else
+	{
+		QSqlQuery pointsQuery(Database); QList<QPointF> Base; QSet<QPointF*> Pool;
+		QList<QPair<QPointF*, QSet<QPointF*>>> Pools; QSet<QPointF*> Rem;
+
+		const auto getList = [] (QList<QPair<QPointF*, QSet<QPointF*>>>& R, QPointF* I, const QSet<QPointF*>& S, double L) -> void
+		{
+			QSet<QPointF*> List;
+
+			for (const auto& P : S) if (P != I)
+			{
+				const double l = QLineF(*I, *P).length();
+
+				if (l < L) List.insert(P);
+			}
+
+			for (int i = 0; i < R.size(); ++i)
+			{
+				if (List.size() >= R[i].second.size())
+				{
+					R.insert(i, qMakePair(I, List)); return;
+				}
+			}
+
+			R.append(qMakePair(I, List));
+		};
+
+		pointsQuery.prepare(
+			"SELECT "
+				"T.POS_X, T.POS_Y "
+			"FROM "
+				"EW_TEXT T "
+			"WHERE "
+				"T.STAN_ZMIANY = 0 AND "
+				"T.TYP = 4 "
+			"UNION "
+			"SELECT "
+				"F.P0_X, F.P0_Y "
+			"FROM "
+				"EW_POLYLINE F "
+			"WHERE "
+				"F.STAN_ZMIANY = 0 AND "
+				"F.P1_FLAGS <> 4 "
+			"UNION "
+			"SELECT "
+				"L.P1_X, L.P1_Y "
+			"FROM "
+				"EW_POLYLINE L "
+			"WHERE "
+				"L.STAN_ZMIANY = 0 AND "
+				"L.P1_FLAGS IN (0, 2) "
+			"UNION "
+			"SELECT "
+				"(C.P0_X + C.P1_X) / 2.0, "
+				"(C.P0_Y + C.P1_Y) / 2.0 "
+			"FROM "
+				"EW_POLYLINE C "
+			"WHERE "
+				"C.STAN_ZMIANY = 0 AND "
+				"C.P1_FLAGS = 4");
+
+		if (pointsQuery.exec()) while (pointsQuery.next()) Base.append(
+		{
+			pointsQuery.value(0).toDouble(),
+			pointsQuery.value(1).toDouble()
+		});
+
+		for (auto& P : Base) Pool.insert(&P);
+
+		for (auto& I : Pool) getList(Pools, I, Pool, Radius);
+
+		for (auto P : Pools) if (!Rem.contains(P.first))
+		{
+			double X(0.0), Y(0.0); unsigned Count(0); Rem.insert(P.first);
+
+			for (auto O : P.second) if (!Rem.contains(O))
+			{
+				X += O->x(); Y += O->y(); ++Count; Rem.insert(O);
+			}
+
+			if (Count) Points.append({ X /= Count, Y /= Count });
+		}
+	}
+
+	emit onBeginProgress(tr("Fitting geometry"));
+	emit onSetupProgress(0, 0);
+
+	const auto Updates = proceedGeometry(Points, Radius);
+
+	emit onBeginProgress(tr("Updating database"));
+	emit onSetupProgress(0, Updates.size());
+
+	QSqlQuery lineQuery(Database), pointQuery(Database);
+
+	lineQuery.prepare("UPDATE EW_POLYLINE SET P0_X = ?, P0_Y = ?, P1_X = ?, P1_Y = ? WHERE ID = ?");
+	pointQuery.prepare("UPDATE EW_TEXT SET POS_X = ?, POS_Y = ? WHERE ID = ?");
+
+	for (auto i = Updates.constBegin(); i != Updates.constEnd(); ++i)
+	{
+		if (i.value().type() == QVariant::PointF)
+		{
+			const auto P = i.value().toPointF();
+
+			pointQuery.addBindValue(P.x());
+			pointQuery.addBindValue(P.y());
+			pointQuery.addBindValue(i.key());
+
+			pointQuery.exec();
+		}
+		else if (i.value().type() == QVariant::LineF)
+		{
+			const auto L = i.value().toLineF();
+
+			lineQuery.addBindValue(L.x1());
+			lineQuery.addBindValue(L.y1());
+			lineQuery.addBindValue(L.x2());
+			lineQuery.addBindValue(L.y2());
+			lineQuery.addBindValue(i.key());
+
+			lineQuery.exec();
+		}
+
+		emit onUpdateProgress(++Step);
+	}
+
+	emit onEndProgress();
+	emit onProceedEnd(Updates.size());
 }
 
 void DatabaseDriver::terminate(void)
