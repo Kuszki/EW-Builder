@@ -380,7 +380,9 @@ QHash<QString, QHash<int, QString> > DatabaseDriver::loadPointLayers(const QList
 				"WHERE "
 					"O.KOD = '%1' AND "
 					"T.NAZWA = O.KOD AND "
-					"G.NAZWA NOT LIKE '%_E'"
+					"G.NAZWA NOT LIKE '%#_E' "
+				"ESCAPE "
+					"'#' "
 				"ORDER BY "
 					"G.NAZWA_L")
 					    .arg(Table.Name));
@@ -391,7 +393,6 @@ QHash<QString, QHash<int, QString> > DatabaseDriver::loadPointLayers(const QList
 			}
 		}
 
-		if (P.isEmpty())
 		{
 			Query.prepare(QString(
 				"SELECT "
@@ -408,7 +409,7 @@ QHash<QString, QHash<int, QString> > DatabaseDriver::loadPointLayers(const QList
 					"G.ID = O.ID_WARSTWY "
 				"WHERE "
 					"O.KOD = '%1' AND "
-					"T.NAZWA LIKE (O.KOD || '_%') "
+					"T.NAZWA LIKE (O.KOD || '#_%') "
 				"ORDER BY "
 					"G.NAZWA_L")
 					    .arg(Table.Name));
@@ -453,7 +454,9 @@ QHash<QString, QHash<int, QString>> DatabaseDriver::loadTextLayers(const QList<T
 				"WHERE "
 					"O.KOD = '%1' AND "
 					"T.NAZWA = O.KOD AND "
-					"G.NAZWA LIKE '%_E'"
+					"G.NAZWA LIKE '%#_E' "
+				"ESCAPE "
+					    "'#' "
 				"ORDER BY "
 					"G.NAZWA_L")
 					    .arg(Table.Name));
