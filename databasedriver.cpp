@@ -410,6 +410,8 @@ QHash<QString, QHash<int, QString> > DatabaseDriver::loadPointLayers(const QList
 				"WHERE "
 					"O.KOD = '%1' AND "
 					"T.NAZWA LIKE (O.KOD || '#_%') "
+				"ESCAPE "
+					"'#' "
 				"ORDER BY "
 					"G.NAZWA_L")
 					    .arg(Table.Name));
@@ -456,7 +458,7 @@ QHash<QString, QHash<int, QString>> DatabaseDriver::loadTextLayers(const QList<T
 					"T.NAZWA = O.KOD AND "
 					"G.NAZWA LIKE '%#_E' "
 				"ESCAPE "
-					    "'#' "
+					"'#' "
 				"ORDER BY "
 					"G.NAZWA_L")
 					    .arg(Table.Name));
