@@ -149,7 +149,7 @@ class DatabaseDriver : public QObject
 		QHash<QString, QHash<int, QString>> loadTextLayers(const QList<TABLE>& Tabs);
 
 		QHash<int, LINE> loadLines(int Layer, int Flags = 0);
-		QHash<int, POINT> loadPoints(int Layer, int Type = -1);
+		QHash<int, POINT> loadPoints(int Layer, bool Symbol = true);
 
 		QList<OBJECT> proceedLines(int Line, int Text,
 							  const QString& Expr = QString(),

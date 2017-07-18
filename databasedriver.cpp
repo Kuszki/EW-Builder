@@ -594,7 +594,7 @@ QHash<int, DatabaseDriver::LINE> DatabaseDriver::loadLines(int Layer, int Flags)
 	return Lines;
 }
 
-QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, int Type)
+QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, bool Symbol)
 {
 	if (!Database.isOpen()) return QHash<int, POINT>(); QHash<int, POINT> Points;
 
@@ -621,7 +621,7 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, int Type
 
 	Query.bindValue(":layer", Layer);
 
-	if (Query.exec()) while (Query.next()) if (Type == -1 || Query.value(5).toInt() == Type) Points.insert(Query.value(0).toInt(),
+	if (Query.exec()) while (Query.next()) if (Symbol ? Query.value(5).toInt() == 4 : Query.value(5).toInt() != 4) Points.insert(Query.value(0).toInt(),
 	{
 		Query.value(0).toInt(),
 		Query.value(1).toInt(),
@@ -814,7 +814,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 	for (const auto& L : loadLines(Line, 0)) Lines.insert(L.ID, L);
 	for (const auto& L : loadLines(Line, 2)) Lines.insert(L.ID, L);
 
-	if (Text) Points = loadPoints(Text);
+	if (Text) Points = loadPoints(Text, false);
 
 	if (Lines.isEmpty()) return QList<OBJECT>();
 
@@ -917,10 +917,10 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text
 		}
 	};
 
-	Symbols = loadPoints(Symbol, 4);
+	Symbols = loadPoints(Symbol, true);
 
 	if (Symbols.isEmpty()) return QList<OBJECT>();
-	else if (Text) Texts = loadPoints(Text);
+	else if (Text) Texts = loadPoints(Text, false);
 
 	bool Continue(true); do
 	{
@@ -1163,7 +1163,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 	Sorted = sortLines(Lines);
 
 	if (Sorted.isEmpty()) return QList<OBJECT>();
-	else if (Text) Points = loadPoints(Text);
+	else if (Text) Points = loadPoints(Text, false);
 
 	QFutureSynchronizer<void> Synchronizer;
 
@@ -1191,7 +1191,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, int Point, 
 {
 	if (!Database.isOpen()) return QList<OBJECT>(); QMutex Locker; QList<QPointF> Points;
 
-	QHash<int, POINT> Texts = loadPoints(Text); QList<OBJECT> Objects; QList<POINT> Symbols;
+	QHash<int, POINT> Texts = loadPoints(Text, false); QList<OBJECT> Objects; QList<POINT> Symbols;
 
 	QSqlQuery symbolQuery(Database), insertQuery(Database), pointsQuery(Database);
 
