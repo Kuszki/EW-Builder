@@ -690,10 +690,9 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 		{
 			double dtg = P.FI + qAtan2(L.X1 - L.X2, L.Y1 - L.Y2);
 
-			while (dtg > 3.1415) dtg -= 3.1415;
-			while (dtg < 0.0) dtg += 3.1415;
+			while (dtg >= M_PI) dtg -= M_PI; while (dtg < 0.0) dtg += M_PI;
 
-			if (qAbs(dtg) > 0.15) continue;
+			if (qAbs(dtg) > 0.15 && qAbs(dtg - M_PI) > 0.15) continue;
 
 			const double a = length(P.X, P.Y, L.X1, L.Y1);
 			const double b = length(P.X, P.Y, L.X2, L.Y2);
