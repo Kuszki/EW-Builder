@@ -131,17 +131,17 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
     <message>
         <location filename="databasedriver.cpp" line="146"/>
         <location filename="databasedriver.cpp" line="184"/>
-        <location filename="databasedriver.cpp" line="2124"/>
+        <location filename="databasedriver.cpp" line="2128"/>
         <source>Unknown</source>
         <translation>Niezdefiniowane</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1520"/>
+        <location filename="databasedriver.cpp" line="1524"/>
         <source>Loading database informations</source>
         <translation>Wczytywanie informacji o bazie danych</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1551"/>
+        <location filename="databasedriver.cpp" line="1555"/>
         <source>Database is not opened</source>
         <translation>Baza danych nie jest otwarta</translation>
     </message>
@@ -154,72 +154,72 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation type="vanished">Opracowywanie atrybutów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1585"/>
+        <location filename="databasedriver.cpp" line="1589"/>
         <source>Creating objects</source>
         <translation>Tworzenie obiektów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1665"/>
+        <location filename="databasedriver.cpp" line="1669"/>
         <source>Preparing surfaces</source>
         <translation>Generowanie powierzchni</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1675"/>
+        <location filename="databasedriver.cpp" line="1679"/>
         <source>Preparing points</source>
         <translation>Generowanie punktów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1685"/>
+        <location filename="databasedriver.cpp" line="1689"/>
         <source>Preparing lines</source>
         <translation>Generowanie linii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1695"/>
+        <location filename="databasedriver.cpp" line="1699"/>
         <source>Preparing texts</source>
         <translation>Generowanie tekstów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1725"/>
+        <location filename="databasedriver.cpp" line="1729"/>
         <source>Loading file</source>
         <translation>Wczytywanie pliku</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1743"/>
+        <location filename="databasedriver.cpp" line="1747"/>
         <source>Loading items</source>
         <translation>Wczytywanie obiektów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1815"/>
+        <location filename="databasedriver.cpp" line="1819"/>
         <source>Preparing jobs</source>
         <translation>Generowanie danych</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1845"/>
+        <location filename="databasedriver.cpp" line="1849"/>
         <source>Processing items</source>
         <translation>Przetwarzanie obiektów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1910"/>
+        <location filename="databasedriver.cpp" line="1914"/>
         <source>Loading points</source>
         <translation>Wczytywanie punktów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2026"/>
+        <location filename="databasedriver.cpp" line="2030"/>
         <source>Fitting geometry</source>
         <translation>Scalanie geometrii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2031"/>
+        <location filename="databasedriver.cpp" line="2035"/>
         <source>Updating database</source>
         <translation>Aktualizacja bazy danych</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2106"/>
+        <location filename="databasedriver.cpp" line="2110"/>
         <source>Yes</source>
         <translation>Tak</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2106"/>
+        <location filename="databasedriver.cpp" line="2110"/>
         <source>No</source>
         <translation>Nie</translation>
     </message>
@@ -506,12 +506,12 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
     <message>
         <location filename="proceeddialog.ui" line="55"/>
         <source>Skip closed lines</source>
-        <translation>Obiektuj zamkniete powierzchnie</translation>
+        <translation>Opuść zamknięte powierzchnie</translation>
     </message>
     <message>
         <location filename="proceeddialog.ui" line="60"/>
         <source>Keep closed lines</source>
-        <translation>Opuść zamknięte powierzchnie</translation>
+        <translation>Obiektuj zamkniete powierzchnie</translation>
     </message>
     <message>
         <location filename="proceeddialog.ui" line="68"/>
