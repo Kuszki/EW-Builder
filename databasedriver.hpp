@@ -49,6 +49,8 @@ class DatabaseDriver : public QObject
 		double X, Y, L, FI;
 
 		QString Text;
+
+		bool Pointer;
 	};
 
 	struct LINE

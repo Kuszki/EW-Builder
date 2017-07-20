@@ -57,4 +57,4 @@ RESOURCES		+= 	resources.qrc
 
 TRANSLATIONS	+=	ew-builder_pl.ts
 
-QMAKE_CXXFLAGS	+=	-std=c++14 -march=native
+QMAKE_CXXFLAGS	+=	-std=c++14

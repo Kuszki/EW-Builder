@@ -542,8 +542,9 @@ QHash<int, DatabaseDriver::LINE> DatabaseDriver::loadLines(int Layer, int Flags)
 	Query.prepare(
 		"SELECT "
 			"P.ID, P.OPERAT, "
-			"P.P0_X, P.P0_Y,"
-			"P.P1_X, P.P1_Y, "
+			"P.P0_X, P.P0_Y, "
+			"IIF(P.PN_X IS NULL, P.P1_X, P.PN_X), "
+			"IIF(P.PN_Y IS NULL, P.P1_Y, P.PN_Y), "
 			"P.TYP_LINII "
 		"FROM "
 			"EW_POLYLINE P "
@@ -605,7 +606,8 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, bool Sym
 			"P.ID, P.OPERAT, "
 			"IIF(P.ODN_X IS NULL, P.POS_X, P.POS_X + P.ODN_X), "
 			"IIF(P.ODN_Y IS NULL, P.POS_Y, P.POS_Y + P.ODN_Y), "
-			"P.TEXT, P.TYP, P.KAT "
+			"P.TEXT, P.TYP, P.KAT, "
+			"IIF(P.ODN_X IS NOT NULL OR P.ODN_Y IS NOT NULL, 1, 0) "
 		"FROM "
 			"EW_TEXT P "
 		"WHERE "
@@ -630,7 +632,8 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, bool Sym
 		Query.value(3).toDouble(),
 		NAN,
 		Query.value(6).toDouble(),
-		Query.value(4).toString()
+		Query.value(4).toString(),
+		Query.value(7).toBool()
 	});
 
 	return Points;
@@ -692,7 +695,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 
 			while (dtg >= M_PI) dtg -= M_PI; while (dtg < 0.0) dtg += M_PI;
 
-			if (qAbs(dtg) > 0.15 && qAbs(dtg - M_PI) > 0.15) continue;
+			if (!P.Pointer && qAbs(dtg) > 0.15 && qAbs(dtg - M_PI) > 0.15) continue;
 
 			const double a = length(P.X, P.Y, L.X1, L.Y1);
 			const double b = length(P.X, P.Y, L.X2, L.Y2);
@@ -1206,7 +1209,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, int Point, 
 			{
 				const double l = QLineF(T, S).length();
 
-				if (l < Length && (qIsNaN(L) || l < L))
+				if (l <= Length && (qIsNaN(L) || l < L))
 				{
 					Found = S; L = l;
 				}
@@ -1262,7 +1265,8 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, int Point, 
 			"EW_TEXT T "
 		"WHERE "
 			"T.STAN_ZMIANY = 0 AND "
-			"T.TYP = 4 "
+			"T.TYP = 4 AND "
+			"T.TEXT <> :class "
 		"UNION "
 		"SELECT "
 			"F.P0_X, F.P0_Y "
@@ -1278,7 +1282,15 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, int Point, 
 			"EW_POLYLINE L "
 		"WHERE "
 			"L.STAN_ZMIANY = 0 AND "
-			"L.P1_FLAGS IN (0, 2) "
+			"L.P1_FLAGS = 0 "
+		"UNION "
+		"SELECT "
+			"A.PN_X, A.PN_Y "
+		"FROM "
+			"EW_POLYLINE A "
+		"WHERE "
+			"A.STAN_ZMIANY = 0 AND "
+			"A.P1_FLAGS = 2 "
 		"UNION "
 		"SELECT "
 			"(C.P0_X + C.P1_X) / 2.0, "
@@ -1288,6 +1300,8 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, int Point, 
 		"WHERE "
 			"C.STAN_ZMIANY = 0 AND "
 			"C.P1_FLAGS = 4");
+
+	pointsQuery.bindValue(":class", Symbol);
 
 	if (Fit == 2 && pointsQuery.exec()) while (pointsQuery.next()) Points.append(
 	{
@@ -1370,7 +1384,9 @@ QHash<int, QVariant> DatabaseDriver::proceedGeometry(const QList<QPointF>& Point
 
 	Query.prepare(
 		"SELECT "
-			"P.ID, P.P0_X, P.P0_Y, P.P1_X, P.P1_Y "
+			"P.ID, P.P0_X, P.P0_Y, "
+			"IIF(P.PN_X IS NULL, P.P1_X, P.PN_X), "
+			"IIF(P.PN_Y IS NULL, P.P1_Y, P.PN_Y) "
 		"FROM "
 			"EW_POLYLINE P "
 		"WHERE "
@@ -1402,7 +1418,7 @@ QHash<int, QVariant> DatabaseDriver::proceedGeometry(const QList<QPointF>& Point
 		{
 			const double l = QLineF(S.second, P).length();
 
-			if (l < Radius && (qIsNaN(L) || L > l))
+			if (l <= Radius && (qIsNaN(L) || L > l))
 			{
 				L = l; Found = P;
 			}
@@ -1437,7 +1453,7 @@ QHash<int, QVariant> DatabaseDriver::proceedGeometry(const QList<QPointF>& Point
 		{
 			const double l = QLineF(C, P).length();
 
-			if (l < Radius && (qIsNaN(L) || L > l))
+			if (l <= Radius && (qIsNaN(L) || L > l))
 			{
 				L = l; Found = P;
 			}
@@ -1470,12 +1486,12 @@ QHash<int, QVariant> DatabaseDriver::proceedGeometry(const QList<QPointF>& Point
 			const double l1 = QLineF(S.second.p1(), P).length();
 			const double l2 = QLineF(S.second.p2(), P).length();
 
-			if (l1 < Radius && (qIsNaN(L1) || L1 > l1))
+			if (l1 <= Radius && (qIsNaN(L1) || L1 > l1))
 			{
 				L1 = l1; Found1 = P;
 			}
 
-			if (l2 < Radius && (qIsNaN(L2) || L2 > l2))
+			if (l2 <= Radius && (qIsNaN(L2) || L2 > l2))
 			{
 				L2 = l2; Found2 = P;
 			}
@@ -1947,7 +1963,7 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 			{
 				const double l = QLineF(I, P).length();
 
-				if (l < Radius) List.insert(&P);
+				if (l <= Radius) List.insert(&P);
 			}
 
 			QMutexLocker Synchronizer(&Locker); emit onUpdateProgress(++Step);
@@ -1986,7 +2002,15 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 				"EW_POLYLINE L "
 			"WHERE "
 				"L.STAN_ZMIANY = 0 AND "
-				"L.P1_FLAGS IN (0, 2) "
+				"L.P1_FLAGS = 0 "
+			"UNION "
+			"SELECT "
+				"A.PN_X, A.PN_Y "
+			"FROM "
+				"EW_POLYLINE A "
+			"WHERE "
+				"A.STAN_ZMIANY = 0 AND "
+				"A.P1_FLAGS = 2 "
 			"UNION "
 			"SELECT "
 				"(C.P0_X + C.P1_X) / 2.0, "
