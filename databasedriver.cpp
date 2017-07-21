@@ -577,8 +577,8 @@ QHash<int, DatabaseDriver::LINE> DatabaseDriver::loadLines(int Layer, int Flags)
 
 	if (Flags == 4) QtConcurrent::blockingMap(Lines, [] (LINE& Line) -> void
 	{
-		const double nX = (Line.X1 - Line.X2) / 2.0;
-		const double nY = (Line.Y1 - Line.Y2) / 2.0;
+		const double nX = (Line.X1 + Line.X2) / 2.0;
+		const double nY = (Line.Y1 + Line.Y2) / 2.0;
 
 		Line.Rad = qAbs(Line.X1 - nX);
 		Line.X1 = Line.X2 = nX;
@@ -1034,11 +1034,9 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 			else
 			{
 				h = length(P.X, P.Y, L.X1, L.Y1) - L.Rad;
-
-				if (h > Length) h = NAN;
 			}
 
-			if (!qIsNaN(h) && (qIsNaN(P.L) || h < P.L))
+			if (!qIsNaN(h) && h <= Length && (qIsNaN(P.L) || h < P.L))
 			{
 				P.L = h; P.Match = L.ID;
 			};
@@ -1148,7 +1146,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 				Continue = oldSize != O.Geometry.size() && P1 != P2;
 			}
 
-			if (P1 == P2) Objects.append(O);
+			if (P1 == P2 && (O.Geometry.size() > 2 || O.Geometry.size() == 1)) Objects.append(O);
 			else
 			{
 				for (const auto& I : O.Geometry) Used.remove(I);
