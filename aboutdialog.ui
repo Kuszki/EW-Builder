@@ -27,14 +27,11 @@
    <item row="3" column="0">
     <widget class="QToolButton" name="Close">
      <property name="text">
-      <string>X</string>
+      <string>Exit</string>
      </property>
      <property name="icon">
       <iconset theme="exit">
        <normaloff>.</normaloff>.</iconset>
-     </property>
-     <property name="toolButtonStyle">
-      <enum>Qt::ToolButtonTextOnly</enum>
      </property>
     </widget>
    </item>
