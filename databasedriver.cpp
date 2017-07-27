@@ -280,7 +280,7 @@ QStringList DatabaseDriver::normalizeHeaders(QList<DatabaseDriver::TABLE>& Tabs,
 	return List;
 }
 
-QHash<QString, QHash<int, QString> > DatabaseDriver::loadLineLayers(const QList<DatabaseDriver::TABLE>& Tabs)
+QHash<QString, QHash<int, QString>> DatabaseDriver::loadLineLayers(const QList<DatabaseDriver::TABLE>& Tabs)
 {
 	if (!Database.isOpen()) return QHash<QString, QHash<int, QString>>();
 
@@ -352,7 +352,7 @@ QHash<QString, QHash<int, QString> > DatabaseDriver::loadLineLayers(const QList<
 	return lineLayers;
 }
 
-QHash<QString, QHash<int, QString> > DatabaseDriver::loadPointLayers(const QList<TABLE>& Tabs)
+QHash<QString, QHash<int, QString>> DatabaseDriver::loadPointLayers(const QList<TABLE>& Tabs)
 {
 	if (!Database.isOpen()) return QHash<QString, QHash<int, QString>>();
 
