@@ -747,7 +747,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 
 	const auto resetMatch = [] (POINT& P) -> void { P.Match = 0; P.L = NAN; };
 
-	const auto getObjects = [&Lines, &Points, &Cuts, &Objects, Keep] (void) -> void
+	const auto getObjects = [&Lines, &Points, &Cuts, &Objects, Keep, Job] (void) -> void
 	{
 		const static auto append = [] (const LINE& L, OBJECT& O, const QHash<int, POINT>& P, QSet<int>& U, bool First) -> void
 		{
@@ -784,7 +784,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 				{
 					const QString Label = L.Label ? Points[L.Label].Text : QString();
 
-					if ((S.Style == L.Style) && (!L.IDK || !S.IDK || S.IDK == L.IDK))
+					if ((S.Style == L.Style) && (!Job || !L.IDK || !S.IDK || S.IDK == L.IDK))
 					{
 						QPointF L1(L.X1, L.Y1), L2(L.X2, L.Y2);
 
@@ -1080,7 +1080,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 	const auto resetMatch = [] (POINT& P) -> void { P.Match = 0; P.L = NAN; };
 
-	const auto getObjects = [&Sorted, &Points, &Objects] (void) -> void
+	const auto getObjects = [&Sorted, &Points, &Objects, Job] (void) -> void
 	{
 		const static auto append = [] (const LINE& L, OBJECT& O, QSet<int>& U, QList<QPointF>& G, int T) -> void
 		{
@@ -1116,7 +1116,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 				for (const auto& L : Sorted) if (!Used.contains(L.ID))
 				{
-					if (!L.IDK || !S.IDK || S.IDK == L.IDK)
+					if (!Job || !L.IDK || !S.IDK || S.IDK == L.IDK)
 					{
 						QPointF L1(L.X1, L.Y1), L2(L.X2, L.Y2);
 

@@ -120,7 +120,7 @@
      <item>
       <widget class="QCheckBox" name="jobCheck">
        <property name="text">
-        <string>Check label and symbol job</string>
+        <string>Check job while merging</string>
        </property>
       </widget>
      </item>
