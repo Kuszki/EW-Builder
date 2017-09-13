@@ -24,7 +24,26 @@
 ProceedDialog::ProceedDialog(QWidget* Parent)
 : QDialog(Parent), ui(new Ui::ProceedDialog)
 {
-	ui->setupUi(this);
+	ui->setupUi(this); static const QStringList Policy = { tr("Check label job"), tr("Check segment job") };
+
+	auto Model = new QStandardItemModel(0, 1, this);
+	auto Item = new QStandardItem(tr("Job policy"));
+
+	int i(0); for (const auto& Text : Policy)
+	{
+		auto Item = new QStandardItem(Text);
+
+		Item->setData(i);
+		Item->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+		Item->setCheckState(Qt::Unchecked);
+
+		Model->insertRow(i++, Item);
+	}
+
+	Item->setFlags(Qt::ItemIsEnabled);
+	Model->insertRow(0, Item);
+
+	ui->policyCombo->setModel(Model);
 }
 
 ProceedDialog::~ProceedDialog(void)
@@ -48,10 +67,19 @@ void ProceedDialog::accept(void)
 {
 	const QString Symbol = ui->pointCombo->currentIndex() ? ui->symbolEdit->text() : QString();
 	const double Length = ui->distanceSpin->value() == 0.0 ? qInf() : ui->distanceSpin->value();
+	const double Spin = (ui->rotationSpin->value() / 180.0) * M_PI;
 
-	QDialog::accept(); emit onProceedRequest(Length,
+	int Mask(0); auto M = dynamic_cast<QStandardItemModel*>(ui->policyCombo->model());
+
+	for (int i = 1; i < M->rowCount(); ++i)
+		if (M->item(i)->checkState() == Qt::Checked)
+		{
+			Mask |= (1 << (i - 1));
+		}
+
+	QDialog::accept(); emit onProceedRequest(Length, Spin,
 									 ui->lineCombo->currentIndex(),
-									 ui->jobCheck->isChecked(),
+									 Mask,
 									 ui->pointCombo->currentIndex(),
 									 Symbol);
 }

@@ -35,8 +35,6 @@
 
 #include <QtConcurrent>
 
-#include <QDebug>
-
 class DatabaseDriver : public QObject
 {
 
@@ -156,18 +154,19 @@ class DatabaseDriver : public QObject
 		QList<OBJECT> proceedLines(int Line, int Text,
 							  const QString& Expr = QString(),
 							  double Length = qInf(),
-							  bool Job = false,
+							  double Spin = 0.15,
+							  int Job = false,
 							  bool Keep = false);
 
 		QList<OBJECT> proceedPoints(int Symbol, int Text,
 							   const QString& Expr = QString(),
 							   double Length = qInf(),
-							   bool Job = false);
+							   int Job = false);
 
 		QList<OBJECT> proceedSurfaces(int Line, int Text,
 								const QString& Expr = QString(),
 								double Length = qInf(),
-								bool Job = false);
+								int Job = false);
 
 		QList<OBJECT> proceedTexts(int Text, int Point, const QString& Expr = QString(), int Fit = 0,
 							  double Length = qInf(), const QString& Symbol = QString());
@@ -186,7 +185,7 @@ class DatabaseDriver : public QObject
 		void proceedClass(const QHash<int, QVariant>& Values,
 					   const QString& Pattern, const QString& Class,
 					   int Line, int Point, int Text, double Length,
-					   bool Keep, bool Job, int Snap,
+					   double Spin, bool Keep, int Job, int Snap,
 					   const QString& Insert);
 
 		void proceedJobs(const QString& Path, const QString& Sep,

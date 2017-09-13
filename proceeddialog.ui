@@ -18,12 +18,53 @@
     <normaloff>.</normaloff>.</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="2" column="0">
+    <widget class="QLabel" name="lineLabel">
+     <property name="text">
+      <string>Linear objects strategy</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <widget class="QLabel" name="distanceLabel">
      <property name="text">
       <string>Maximum label distance</string>
      </property>
     </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QComboBox" name="lineCombo">
+     <item>
+      <property name="text">
+       <string>Skip closed lines</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Keep closed lines</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="pointLabel">
+     <property name="text">
+      <string>Point objects strategy</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" colspan="2">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
    </item>
    <item row="0" column="1">
     <widget class="QDoubleSpinBox" name="distanceSpin">
@@ -41,35 +82,14 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="lineLabel">
-     <property name="text">
-      <string>Linear objects strategy</string>
+   <item row="4" column="1">
+    <widget class="QLineEdit" name="symbolEdit">
+     <property name="enabled">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
-    <widget class="QComboBox" name="lineCombo">
-     <item>
-      <property name="text">
-       <string>Skip closed lines</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Keep closed lines</string>
-      </property>
-     </item>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="pointLabel">
-     <property name="text">
-      <string>Point objects strategy</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1">
+   <item row="3" column="1">
     <widget class="QComboBox" name="pointCombo">
      <item>
       <property name="text">
@@ -88,39 +108,22 @@
      </item>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="4" column="0">
     <widget class="QLabel" name="symbolLabel">
      <property name="text">
       <string>Point objects symbol</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
-    <widget class="QLineEdit" name="symbolEdit">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="0" colspan="2">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="5" column="0" colspan="2">
+   <item row="6" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QCheckBox" name="jobCheck">
-       <property name="text">
-        <string>Check job while merging</string>
+      <widget class="QComboBox" name="policyCombo">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
       </widget>
      </item>
@@ -135,6 +138,26 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Rotation tolerance</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QDoubleSpinBox" name="rotationSpin">
+     <property name="suffix">
+      <string>°</string>
+     </property>
+     <property name="maximum">
+      <double>180.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

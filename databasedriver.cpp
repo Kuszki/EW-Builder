@@ -607,7 +607,10 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, bool Sym
 			"IIF(P.ODN_X IS NULL, P.POS_X, P.POS_X + P.ODN_X), "
 			"IIF(P.ODN_Y IS NULL, P.POS_Y, P.POS_Y + P.ODN_Y), "
 			"P.TEXT, P.TYP, P.KAT, "
-			"IIF(P.ODN_X IS NOT NULL OR P.ODN_Y IS NOT NULL, 1, 0) "
+			"IIF("
+				"(P.TYP <> 6 AND P.ODN_X IS NULL AND P.ODN_Y IS NULL) OR "
+				"(P.TYP = 6 AND BIN_AND(P.JUSTYFIKACJA, 32) <> 32), 0, 1"
+			")"
 		"FROM "
 			"EW_TEXT P "
 		"WHERE "
@@ -639,7 +642,7 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, bool Sym
 	return Points;
 }
 
-QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, const QString& Expr, double Length, bool Job, bool Keep)
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, const QString& Expr, double Length, double Spin, int Job, bool Keep)
 {
 	if (!Database.isOpen()) return QList<OBJECT>();
 
@@ -675,7 +678,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 		}
 	};
 
-	const auto getPairs = [&Lines, &Expr, &Used, Length, Job] (POINT& P) -> void
+	const auto getPairs = [&Lines, &Expr, &Used, Length, Spin, Job] (POINT& P) -> void
 	{
 		static const auto length = [] (double x1, double y1, double x2, double y2)
 		{
@@ -689,13 +692,13 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 
 		if (!Expr.isEmpty()) if (QRegExp(Expr).indexIn(P.Text) == -1) return;
 
-		for (const auto& L : Lines) if (!L.Label && (!Job || !P.IDK || P.IDK == L.IDK || !L.IDK))
+		for (const auto& L : Lines) if (!L.Label && (!(Job & 0b01) || !P.IDK || P.IDK == L.IDK || !L.IDK))
 		{
 			double dtg = P.FI + qAtan2(L.X1 - L.X2, L.Y1 - L.Y2);
 
 			while (dtg >= M_PI) dtg -= M_PI; while (dtg < 0.0) dtg += M_PI;
 
-			if (!P.Pointer && qAbs(dtg) > 0.15 && qAbs(dtg - M_PI) > 0.15) continue;
+			if (!P.Pointer && (qAbs(dtg) > Spin) && (qAbs(dtg - M_PI) > Spin)) continue;
 
 			const double a = length(P.X, P.Y, L.X1, L.Y1);
 			const double b = length(P.X, P.Y, L.X2, L.Y2);
@@ -722,7 +725,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 
 		for (const auto& P : Points) if (P.Match == L.ID && (qIsNaN(L.Odn) || L.Odn > P.L))
 		{			
-			if (!Job || !P.IDK || P.IDK == L.IDK || !L.IDK) { L.Label = P.ID; L.Odn = P.L; }
+			if (!(Job & 0b01) || !P.IDK || P.IDK == L.IDK || !L.IDK) { L.Label = P.ID; L.Odn = P.L; }
 		}
 
 		if (L.Label && !L.IDK && Points[L.Label].IDK)
@@ -784,7 +787,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 				{
 					const QString Label = L.Label ? Points[L.Label].Text : QString();
 
-					if ((S.Style == L.Style) && (!Job || !L.IDK || !S.IDK || S.IDK == L.IDK))
+					if ((S.Style == L.Style) && (!(Job & 0b10) || !L.IDK || !S.IDK || S.IDK == L.IDK))
 					{
 						QPointF L1(L.X1, L.Y1), L2(L.X2, L.Y2);
 
@@ -846,7 +849,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 }
 
 
-QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text, const QString& Expr, double Length, bool Job)
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text, const QString& Expr, double Length, int Job)
 {
 	if (!Database.isOpen()) return QList<OBJECT>();
 
@@ -867,7 +870,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text
 
 		if (!Expr.isEmpty()) if (QRegExp(Expr).indexIn(P.Text) == -1) return;
 
-		for (const auto& S : Symbols) if (!S.Match && (!Job || !P.IDK || P.IDK == S.IDK || !S.IDK))
+		for (const auto& S : Symbols) if (!S.Match && (!(Job & 0b01) || !P.IDK || P.IDK == S.IDK || !S.IDK))
 		{
 			const double l = length(S.X, S.Y, P.X, P.Y);
 
@@ -884,7 +887,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text
 
 		for (const auto& P : Texts) if (P.Match == S.ID && (qIsNaN(S.L) || S.L > P.L))
 		{
-			if (!Job || !P.IDK || P.IDK == S.IDK || !S.IDK) { S.Match = P.ID; S.L = P.L; }
+			if (!(Job & 0b01) || !P.IDK || P.IDK == S.IDK || !S.IDK) { S.Match = P.ID; S.L = P.L; }
 		}
 
 		if (S.Match && !S.IDK && Texts[S.Match].IDK)
@@ -945,7 +948,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedPoints(int Symbol, int Text
 	return Objects;
 }
 
-QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text, const QString& Expr, double Length, bool Job)
+QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text, const QString& Expr, double Length, int Job)
 {
 	if (!Database.isOpen()) return QList<OBJECT>();
 
@@ -1015,7 +1018,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 		if (!Expr.isEmpty()) if (QRegExp(Expr).indexIn(P.Text) == -1) return;
 
-		for (const auto& L : Sorted) if (!L.Label && (!Job || !L.IDK || P.IDK == L.IDK || !P.IDK))
+		for (const auto& L : Sorted) if (!L.Label && (!(Job & 0b01) || !L.IDK || P.IDK == L.IDK || !P.IDK))
 		{
 			double h(NAN); if (qIsNaN(L.Rad))
 			{
@@ -1047,7 +1050,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 	{
 		for (const auto& P : Points) if (P.Match == L.ID && (qIsNaN(L.Odn) || L.Odn > P.L))
 		{
-			if (!Job || !P.IDK || P.IDK == L.IDK || !L.IDK) { L.Label = P.ID; L.Odn = P.L; }
+			if (!(Job & 0b01) || !P.IDK || P.IDK == L.IDK || !L.IDK) { L.Label = P.ID; L.Odn = P.L; }
 		}
 	};
 
@@ -1116,7 +1119,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 				for (const auto& L : Sorted) if (!Used.contains(L.ID))
 				{
-					if (!Job || !L.IDK || !S.IDK || S.IDK == L.IDK)
+					if (!(Job & 0b10) || !L.IDK || !S.IDK || S.IDK == L.IDK)
 					{
 						QPointF L1(L.X1, L.Y1), L2(L.X2, L.Y2);
 
@@ -1570,7 +1573,7 @@ bool DatabaseDriver::closeDatabase(void)
 	}
 }
 
-void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text, double Length, bool Keep, bool Job, int Snap, const QString& Insert)
+void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QString& Pattern, const QString& Class, int Line, int Point, int Text, double Length, double Spin, bool Keep, int Job, int Snap, const QString& Insert)
 {
 	if (!Database.open()) { emit onProceedEnd(0); return; } QStringList Labels; int Step(0), Added(0);
 
@@ -1705,7 +1708,7 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 		emit onBeginProgress(tr("Preparing lines"));
 		emit onSetupProgress(0, 0);
 
-		auto Objects = proceedLines(Line, Text, Pattern, Length, Job, Keep);
+		auto Objects = proceedLines(Line, Text, Pattern, Length, Spin, Job, Keep);
 
 		QtConcurrent::blockingMap(Objects, getValues); insertObjects(Objects, 2);
 	}

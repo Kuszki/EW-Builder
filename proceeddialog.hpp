@@ -21,6 +21,7 @@
 #ifndef PROCEEDDIALOG_HPP
 #define PROCEEDDIALOG_HPP
 
+#include <QStandardItemModel>
 #include <QDialogButtonBox>
 #include <QPushButton>
 #include <QDialog>
@@ -56,7 +57,7 @@ class ProceedDialog : public QDialog
 
 	signals:
 
-		void onProceedRequest(double, bool, bool, int, const QString&);
+		void onProceedRequest(double, double, bool, int, int, const QString&);
 
 };
 
