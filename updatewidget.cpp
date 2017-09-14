@@ -175,7 +175,6 @@ void UpdateWidget::setParameters(int ID, const DatabaseDriver::FIELD& Field)
 			}
 
 			Combo->model()->sort(0);
-			Combo->setEditable(true);
 			Combo->setProperty("MASK", false);
 
 			connect(Combo, &QComboBox::editTextChanged, this, &UpdateWidget::textChanged);
