@@ -14,37 +14,37 @@
         <translation>Zamknij</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="71"/>
+        <location filename="aboutdialog.ui" line="74"/>
         <source>Program name:</source>
         <translation>Program:</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="88"/>
+        <location filename="aboutdialog.ui" line="91"/>
         <source>Author:</source>
         <translation>Autor:</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="105"/>
+        <location filename="aboutdialog.ui" line="108"/>
         <source>Mail:</source>
         <translation>E-mail:</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="125"/>
+        <location filename="aboutdialog.ui" line="128"/>
         <source>Project slite:</source>
         <translation>Strona projektu:</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="145"/>
+        <location filename="aboutdialog.ui" line="148"/>
         <source>License:</source>
         <translation>Licencja:</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="165"/>
+        <location filename="aboutdialog.ui" line="168"/>
         <source>Powered by:</source>
         <translation>Wsparcie:</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="187"/>
+        <location filename="aboutdialog.ui" line="190"/>
         <source>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 The program is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.</source>
@@ -53,7 +53,7 @@ The program is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE WARRAN
 Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny – jednak BEZ ŻADNEJ GWARANCJI, nawet domyślnej gwarancji PRZYDATNOŚCI HANDLOWEJ albo PRZYDATNOŚCI DO OKREŚLONYCH ZASTOSOWAŃ. Bliższe informacje na ten temat można uzyskać z Powszechnej Licencji Publicznej GNU.</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="202"/>
+        <location filename="aboutdialog.ui" line="205"/>
         <source>&lt;a href=&quot;http://www.fsf.org/&quot;&gt;See more&lt;/a&gt;</source>
         <translation>&lt;a href=&quot;http://www.fsf.org/&quot;&gt;Dowiedz się więcej&lt;/a&gt;</translation>
     </message>
@@ -94,54 +94,54 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
 <context>
     <name>DatabaseDriver</name>
     <message>
-        <location filename="databasedriver.cpp" line="41"/>
+        <location filename="databasedriver.cpp" line="46"/>
         <source>Job name</source>
         <translation>KERG</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="42"/>
+        <location filename="databasedriver.cpp" line="47"/>
         <source>Object code</source>
         <translation>Kod obiektu</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="43"/>
+        <location filename="databasedriver.cpp" line="48"/>
         <source>Object ID</source>
         <translation>Identyfikator obiektu</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="44"/>
+        <location filename="databasedriver.cpp" line="49"/>
         <source>Creation date</source>
         <translation>Data utworzenia</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="45"/>
+        <location filename="databasedriver.cpp" line="50"/>
         <source>Modification date</source>
         <translation>Data modyfikacji</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="46"/>
+        <location filename="databasedriver.cpp" line="51"/>
         <source>Created by</source>
         <translation>Utworzony przez</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="47"/>
+        <location filename="databasedriver.cpp" line="52"/>
         <source>Modified by</source>
         <translation>Zmodyfikowany przez</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="146"/>
-        <location filename="databasedriver.cpp" line="184"/>
-        <location filename="databasedriver.cpp" line="2150"/>
+        <location filename="databasedriver.cpp" line="151"/>
+        <location filename="databasedriver.cpp" line="189"/>
+        <location filename="databasedriver.cpp" line="2282"/>
         <source>Unknown</source>
         <translation>Niezdefiniowane</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1538"/>
+        <location filename="databasedriver.cpp" line="1653"/>
         <source>Loading database informations</source>
         <translation>Wczytywanie informacji o bazie danych</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1569"/>
+        <location filename="databasedriver.cpp" line="1684"/>
         <source>Database is not opened</source>
         <translation>Baza danych nie jest otwarta</translation>
     </message>
@@ -154,72 +154,72 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation type="vanished">Opracowywanie atrybutów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1603"/>
+        <location filename="databasedriver.cpp" line="1718"/>
         <source>Creating objects</source>
         <translation>Tworzenie obiektów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1683"/>
+        <location filename="databasedriver.cpp" line="1800"/>
         <source>Preparing surfaces</source>
         <translation>Generowanie powierzchni</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1693"/>
+        <location filename="databasedriver.cpp" line="1810"/>
         <source>Preparing points</source>
         <translation>Generowanie punktów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1703"/>
+        <location filename="databasedriver.cpp" line="1820"/>
         <source>Preparing lines</source>
         <translation>Generowanie linii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1713"/>
+        <location filename="databasedriver.cpp" line="1830"/>
         <source>Preparing texts</source>
         <translation>Generowanie tekstów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1743"/>
+        <location filename="databasedriver.cpp" line="1864"/>
         <source>Loading file</source>
         <translation>Wczytywanie pliku</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1761"/>
+        <location filename="databasedriver.cpp" line="1882"/>
         <source>Loading items</source>
         <translation>Wczytywanie obiektów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1833"/>
+        <location filename="databasedriver.cpp" line="1954"/>
         <source>Preparing jobs</source>
         <translation>Generowanie danych</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1863"/>
+        <location filename="databasedriver.cpp" line="1984"/>
         <source>Processing items</source>
         <translation>Przetwarzanie obiektów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1928"/>
+        <location filename="databasedriver.cpp" line="2049"/>
         <source>Loading points</source>
         <translation>Wczytywanie punktów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2052"/>
+        <location filename="databasedriver.cpp" line="2173"/>
         <source>Fitting geometry</source>
         <translation>Scalanie geometrii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2057"/>
+        <location filename="databasedriver.cpp" line="2178"/>
         <source>Updating database</source>
         <translation>Aktualizacja bazy danych</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2132"/>
+        <location filename="databasedriver.cpp" line="2264"/>
         <source>Yes</source>
         <translation>Tak</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2132"/>
+        <location filename="databasedriver.cpp" line="2264"/>
         <source>No</source>
         <translation>Nie</translation>
     </message>
@@ -449,17 +449,17 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation type="vanished">Otwórz plik z danymi</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="196"/>
+        <location filename="mainwindow.cpp" line="201"/>
         <source>Database connected</source>
         <translation>Baza danych podłączona</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="201"/>
+        <location filename="mainwindow.cpp" line="229"/>
         <source>Database disconnected</source>
         <translation>Baza danych odłączona</translation>
     </message>
     <message numerus="yes">
-        <location filename="mainwindow.cpp" line="255"/>
+        <location filename="mainwindow.cpp" line="285"/>
         <source>Processed %n item(s)</source>
         <translation>
             <numerusform>Przetworzono %n obiekt</numerusform>
@@ -484,64 +484,88 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Utwórz obiekty</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="24"/>
+        <location filename="proceeddialog.ui" line="31"/>
         <source>Maximum label distance</source>
         <translation>Maksymalna odległość etykiety</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="31"/>
+        <location filename="proceeddialog.ui" line="72"/>
         <source>Unlimited label distance</source>
         <translation>Nieograniczona odległość</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="34"/>
+        <location filename="proceeddialog.ui" line="75"/>
         <source> m</source>
         <translation> m</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="47"/>
+        <location filename="proceeddialog.ui" line="24"/>
         <source>Linear objects strategy</source>
         <translation>Podejście do obiektów liniowych</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="55"/>
+        <location filename="proceeddialog.ui" line="39"/>
         <source>Skip closed lines</source>
         <translation>Opuść zamknięte powierzchnie</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="60"/>
+        <location filename="proceeddialog.ui" line="44"/>
         <source>Keep closed lines</source>
         <translation>Obiektuj zamkniete powierzchnie</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="68"/>
+        <location filename="proceeddialog.ui" line="52"/>
         <source>Point objects strategy</source>
         <translation>Podejście do samotnych tekstów</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="76"/>
+        <location filename="proceeddialog.ui" line="96"/>
         <source>Skip text without symbol</source>
         <translation>Pomiń tekst bez symbolu</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="81"/>
+        <location filename="proceeddialog.ui" line="101"/>
         <source>Insert symbol to text</source>
         <translation>Wstaw nowy symbol</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="86"/>
+        <location filename="proceeddialog.ui" line="106"/>
         <source>Insert symbol near object</source>
         <translation>Wstaw symol w miejscu istniejacego obiektu</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="94"/>
+        <location filename="proceeddialog.ui" line="114"/>
         <source>Point objects symbol</source>
         <translation>Nazwa symbolu do wstawienia</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="123"/>
+        <location filename="proceeddialog.ui" line="145"/>
+        <source>Rotation tolerance</source>
+        <translation>Dopuszczalne odchylenie</translation>
+    </message>
+    <message>
+        <location filename="proceeddialog.ui" line="152"/>
+        <source>°</source>
+        <translation></translation>
+    </message>
+    <message>
         <source>Check label and symbol job</source>
-        <translation>Sprawdzaj KERG etykiety względem symbolu</translation>
+        <translation type="vanished">Sprawdzaj KERG etykiety względem symbolu</translation>
+    </message>
+    <message>
+        <location filename="proceeddialog.cpp" line="27"/>
+        <source>Check label job</source>
+        <translation>Sprawdzaj KERG etykiety</translation>
+    </message>
+    <message>
+        <location filename="proceeddialog.cpp" line="27"/>
+        <source>Check segment job</source>
+        <translation>Sprawdzaj KERG linii</translation>
+    </message>
+    <message>
+        <location filename="proceeddialog.cpp" line="30"/>
+        <source>Job policy</source>
+        <translation>Porównywanie operatów</translation>
     </message>
 </context>
 <context>
@@ -557,12 +581,12 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Zaznacz wartości</translation>
     </message>
     <message>
-        <location filename="updatewidget.cpp" line="201"/>
+        <location filename="updatewidget.cpp" line="200"/>
         <source>Yes</source>
         <translation>Tak</translation>
     </message>
     <message>
-        <location filename="updatewidget.cpp" line="202"/>
+        <location filename="updatewidget.cpp" line="201"/>
         <source>No</source>
         <translation>Nie</translation>
     </message>
