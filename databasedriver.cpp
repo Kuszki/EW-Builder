@@ -32,6 +32,11 @@ DatabaseDriver::DatabaseDriver(QObject* Parent)
 
 DatabaseDriver::~DatabaseDriver(void) {}
 
+bool DatabaseDriver::isConnected(void) const
+{
+	QMutexLocker Locker(&Terminator); return Database.isOpen();
+}
+
 QList<DatabaseDriver::FIELD> DatabaseDriver::loadCommon(bool Emit)
 {
 	if (!Database.isOpen()) return QList<FIELD>();
@@ -280,16 +285,42 @@ QStringList DatabaseDriver::normalizeHeaders(QList<DatabaseDriver::TABLE>& Tabs,
 	return List;
 }
 
-QHash<QString, QHash<int, QString>> DatabaseDriver::loadLineLayers(const QList<DatabaseDriver::TABLE>& Tabs)
+QHash<QString, QHash<int, QString>> DatabaseDriver::loadLineLayers(const QList<DatabaseDriver::TABLE>& Tabs, bool Hide)
 {
 	if (!Database.isOpen()) return QHash<QString, QHash<int, QString>>();
 
 	QSqlQuery Query(Database); Query.setForwardOnly(true);
-	QHash<QString, QHash<int, QString>> lineLayers;
+	QHash<QString, QHash<int, QString>> lineLayers; QSet<int> Used;
+
+	if (Hide)
+	{
+		Query.prepare(
+			"SELECT DISTINCT "
+				"P.ID_WARSTWY "
+			"FROM "
+				"EW_POLYLINE P "
+			"WHERE "
+				"P.STAN_ZMIANY = 0 AND "
+				"P.ID NOT IN ("
+					"SELECT "
+						"E.IDE "
+					"FROM "
+						"EW_OB_ELEMENTY E "
+					"INNER JOIN "
+						"EW_OBIEKTY O "
+					"ON "
+						"O.UID = E.UIDO "
+					"WHERE "
+						"O.STATUS = 0 AND "
+						"E.TYP = 0"
+				")");
+
+		if (Query.exec()) while (Query.next()) Used.insert(Query.value(0).toInt());
+	}
 
 	for (const auto& Table : Tabs)
 	{
-		QHash<int, QString> L;
+		QHash<int, QString> L, OUT;
 
 		{
 			Query.prepare(QString(
@@ -346,22 +377,58 @@ QHash<QString, QHash<int, QString>> DatabaseDriver::loadLineLayers(const QList<D
 			}
 		}
 
-		lineLayers.insert(Table.Name, L);
+		if (!Hide) lineLayers.insert(Table.Name, L);
+		else
+		{
+			for (const auto& ID : L.keys()) if (Used.contains(ID))
+			{
+				OUT.insert(ID, L.value(ID));
+			}
+
+			lineLayers.insert(Table.Name, OUT);
+		}
 	}
 
 	return lineLayers;
 }
 
-QHash<QString, QHash<int, QString>> DatabaseDriver::loadPointLayers(const QList<TABLE>& Tabs)
+QHash<QString, QHash<int, QString>> DatabaseDriver::loadPointLayers(const QList<TABLE>& Tabs, bool Hide)
 {
 	if (!Database.isOpen()) return QHash<QString, QHash<int, QString>>();
 
 	QSqlQuery Query(Database); Query.setForwardOnly(true);
-	QHash<QString, QHash<int, QString>> pointLayers;
+	QHash<QString, QHash<int, QString>> pointLayers; QSet<int> Used;
+
+	if (Hide)
+	{
+		Query.prepare(
+			"SELECT DISTINCT "
+				"P.ID_WARSTWY "
+			"FROM "
+				"EW_TEXT P "
+			"WHERE "
+				"P.STAN_ZMIANY = 0 AND "
+				"P.TYP = 4 AND "
+				"P.ID NOT IN ("
+					"SELECT "
+						"E.IDE "
+					"FROM "
+						"EW_OB_ELEMENTY E "
+					"INNER JOIN "
+						"EW_OBIEKTY O "
+					"ON "
+						"O.UID = E.UIDO "
+					"WHERE "
+						"O.STATUS = 0 AND "
+						"E.TYP = 0"
+				")");
+
+		if (Query.exec()) while (Query.next()) Used.insert(Query.value(0).toInt());
+	}
 
 	for (const auto& Table : Tabs)
 	{
-		QHash<int, QString> P;
+		QHash<int, QString> P, OUT;
 
 		{
 			Query.prepare(QString(
@@ -422,22 +489,58 @@ QHash<QString, QHash<int, QString>> DatabaseDriver::loadPointLayers(const QList<
 			}
 		}
 
-		pointLayers.insert(Table.Name, P);
+		if (!Hide) pointLayers.insert(Table.Name, P);
+		else
+		{
+			for (const auto& ID : P.keys()) if (Used.contains(ID))
+			{
+				OUT.insert(ID, P.value(ID));
+			}
+
+			pointLayers.insert(Table.Name, OUT);
+		}
 	}
 
 	return pointLayers;
 }
 
-QHash<QString, QHash<int, QString>> DatabaseDriver::loadTextLayers(const QList<TABLE>& Tabs)
+QHash<QString, QHash<int, QString>> DatabaseDriver::loadTextLayers(const QList<TABLE>& Tabs, bool Hide)
 {
 	if (!Database.isOpen()) return QHash<QString, QHash<int, QString>>();
 
 	QSqlQuery Query(Database); Query.setForwardOnly(true);
-	QHash<QString, QHash<int, QString>> textLayers;
+	QHash<QString, QHash<int, QString>> textLayers; QSet<int> Used;
+
+	if (Hide)
+	{
+		Query.prepare(
+			"SELECT DISTINCT "
+				"P.ID_WARSTWY "
+			"FROM "
+				"EW_TEXT P "
+			"WHERE "
+				"P.STAN_ZMIANY = 0 AND "
+				"P.TYP <> 4 AND "
+				"P.ID NOT IN ("
+					"SELECT "
+						"E.IDE "
+					"FROM "
+						"EW_OB_ELEMENTY E "
+					"INNER JOIN "
+						"EW_OBIEKTY O "
+					"ON "
+						"O.UID = E.UIDO "
+					"WHERE "
+						"O.STATUS = 0 AND "
+						"E.TYP = 0"
+				")");
+
+		if (Query.exec()) while (Query.next()) Used.insert(Query.value(0).toInt());
+	}
 
 	for (const auto& Table : Tabs)
 	{
-		QHash<int, QString> T;
+		QHash<int, QString> T, OUT;
 
 		{
 			Query.prepare(QString(
@@ -527,7 +630,16 @@ QHash<QString, QHash<int, QString>> DatabaseDriver::loadTextLayers(const QList<T
 			}
 		}
 
-		textLayers.insert(Table.Name, T);
+		if (!Hide) textLayers.insert(Table.Name, T);
+		else
+		{
+			for (const auto& ID : T.keys()) if (Used.contains(ID))
+			{
+				OUT.insert(ID, T.value(ID));
+			}
+
+			textLayers.insert(Table.Name, OUT);
+		}
 	}
 
 	return textLayers;
@@ -1547,9 +1659,9 @@ bool DatabaseDriver::openDatabase(const QString& Server, const QString& Base, co
 		Headers = normalizeHeaders(Tables, Common);
 
 		emit onConnect(Tables, Common.size(),
-					loadLineLayers(Tables),
-					loadPointLayers(Tables),
-					loadTextLayers(Tables));
+					loadLineLayers(Tables, Hideempty),
+					loadPointLayers(Tables, Hideempty),
+					loadTextLayers(Tables, Hideempty));
 
 		emit onEndProgress();
 	}
@@ -1722,6 +1834,10 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 
 		QtConcurrent::blockingMap(Objects, getValues); insertObjects(Objects, 4);
 	}
+
+	if (Hideempty) emit onReload(loadLineLayers(Tables, true),
+						    loadPointLayers(Tables, true),
+						    loadTextLayers(Tables, true));
 
 	emit onEndProgress();
 	emit onProceedEnd(Added);
@@ -2097,6 +2213,17 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 
 	emit onEndProgress();
 	emit onProceedEnd(Updates.size());
+}
+
+void DatabaseDriver::reloadLayers(bool Hide)
+{
+	const bool OK = Hideempty != Hide && Database.isOpen();
+
+	if (OK) emit onReload(loadLineLayers(Tables, Hide),
+					  loadPointLayers(Tables, Hide),
+					  loadTextLayers(Tables, Hide));
+
+	Hideempty = Hide;
 }
 
 void DatabaseDriver::terminate(void)

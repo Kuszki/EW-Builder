@@ -59,13 +59,16 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(this, &MainWindow::onExecRequest, Driver, &DatabaseDriver::proceedClass);
 	connect(this, &MainWindow::onJobsRequest, Driver, &DatabaseDriver::proceedJobs);
 	connect(this, &MainWindow::onFitRequest, Driver, &DatabaseDriver::proceedFit);
+	connect(this, &MainWindow::onReloadRequest, Driver, &DatabaseDriver::reloadLayers);
 	connect(Driver, &DatabaseDriver::onProceedEnd, this, &MainWindow::execProcessEnd);
+	connect(Driver, &DatabaseDriver::onReload, this, &MainWindow::layersReloaded);
 
 	connect(ui->actionConnect, &QAction::triggered, this, &MainWindow::connectActionClicked);
 	connect(ui->actionDisconnect, &QAction::triggered, Driver, &DatabaseDriver::closeDatabase);
 	connect(ui->actionProceed, &QAction::triggered, Proceed, &ProceedDialog::open);
 	connect(ui->actionJobs, &QAction::triggered, Jobs, &JobsDialog::open);
 	connect(ui->actionGeometry, &QAction::triggered, Geometry, &FitDialog::open);
+	connect(ui->actionHide, &QAction::toggled, this, &MainWindow::hideActionToggled);
 	connect(ui->actionCancel, &QAction::triggered, this, &MainWindow::cancelActionClicked);
 	connect(ui->actionAbout, &QAction::triggered, About, &AboutDialog::open);
 
@@ -104,6 +107,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionProceed->setEnabled(true);
 			ui->actionJobs->setEnabled(true);
 			ui->actionGeometry->setEnabled(true);
+			ui->actionHide->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
 		break;
 		case DISCONNECTED:
@@ -113,6 +117,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionProceed->setEnabled(false);
 			ui->actionJobs->setEnabled(false);
 			ui->actionGeometry->setEnabled(false);
+			ui->actionHide->setEnabled(false);
 			ui->actionCancel->setEnabled(false);
 		break;
 		case BUSY:
@@ -120,6 +125,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionJobs->setEnabled(false);
 			ui->actionGeometry->setEnabled(false);
 			ui->actionDisconnect->setEnabled(false);
+			ui->actionHide->setEnabled(false);
 			ui->actionCancel->setEnabled(true);
 		break;
 		case DONE:
@@ -127,7 +133,11 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionJobs->setEnabled(true);
 			ui->actionGeometry->setEnabled(true);
 			ui->actionDisconnect->setEnabled(true);
+			ui->actionHide->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
+		break;
+		case EMPTY:
+			ui->centralWidget->setEnabled(false);
 		break;
 	}
 }
@@ -149,6 +159,13 @@ void MainWindow::connectActionClicked(void)
 void MainWindow::cancelActionClicked(void)
 {
 	Driver->terminate();
+}
+
+void MainWindow::hideActionToggled(bool Hide)
+{
+	if (Driver->isConnected()) lockUi(BUSY);
+
+	emit onReloadRequest(Hide);
 }
 
 void MainWindow::proceedRequest(double Length, double Spin, bool Line, int Job, int Point, const QString& Symbol)
@@ -179,21 +196,32 @@ void MainWindow::fitRequest(const QString& Path, int xPos, int yPos, double Radi
 
 void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common, const QHash<QString, QHash<int, QString>>& Lines, const QHash<QString, QHash<int, QString>>& Points, const QHash<QString, QHash<int, QString>>& Texts)
 {
-	lineLayers = Lines; textLayers = Texts; pointLayers = Points; classesData = Classes; commonCount = Common;
-
-	ui->Class->blockSignals(true);
-
-	ui->Class->clear();
-
-	for (const auto& Code : Classes) ui->Class->addItem(Code.Label, Code.Name);
-
-	ui->Class->model()->sort(0);
-
-	ui->Class->blockSignals(false);
-
-	ui->Class->setCurrentIndex(0);
+	classesData = Classes; commonCount = Common; layersReloaded(Lines, Points, Texts);
 
 	lockUi(CONNECTED); ui->statusBar->showMessage(tr("Database connected"));
+}
+
+void MainWindow::layersReloaded(const QHash<QString, QHash<int, QString>>& Lines, const QHash<QString, QHash<int, QString>>& Points, const QHash<QString, QHash<int, QString>>& Texts)
+{
+	lineLayers = Lines; textLayers = Texts; pointLayers = Points;
+
+	ui->Class->blockSignals(true); ui->Class->clear();
+
+	for (const auto& Code : classesData)
+	{
+		const bool Empty = Lines[Code.Name].isEmpty() &&
+					    Points[Code.Name].isEmpty() &&
+					    Texts[Code.Name].isEmpty();
+
+		if (!Empty) ui->Class->addItem(Code.Label, Code.Name);
+	}
+
+	ui->Class->model()->sort(0); ui->Class->blockSignals(false);
+
+	if (ui->Class->count()) ui->Class->setCurrentIndex(0);
+	else lockUi(EMPTY);
+
+	if (ui->Class->count()) lockUi(CONNECTED); lockUi(DONE);
 }
 
 void MainWindow::databaseDisconnected(void)
@@ -203,6 +231,8 @@ void MainWindow::databaseDisconnected(void)
 
 void MainWindow::classIndexChanged(int Index)
 {
+	if (Index == -1) return;
+
 	const QString Class = ui->Class->itemData(Index).toString();
 	const QString Label = ui->Class->itemText(Index);
 

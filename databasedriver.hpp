@@ -125,6 +125,7 @@ class DatabaseDriver : public QObject
 		QList<FIELD> Common;
 
 		bool Terminated = false;
+		bool Hideempty = false;
 
 	public:
 
@@ -132,6 +133,8 @@ class DatabaseDriver : public QObject
 
 		explicit DatabaseDriver(QObject* Parent = nullptr);
 		virtual ~DatabaseDriver(void) override;
+
+		bool isConnected(void) const;
 
 	protected:
 
@@ -144,9 +147,9 @@ class DatabaseDriver : public QObject
 		QList<FIELD> normalizeFields(QList<TABLE>& Tabs, const QList<FIELD>& Base) const;
 		QStringList normalizeHeaders(QList<TABLE>& Tabs, const QList<FIELD>& Base) const;
 
-		QHash<QString, QHash<int, QString>> loadLineLayers(const QList<TABLE>& Tabs);
-		QHash<QString, QHash<int, QString>> loadPointLayers(const QList<TABLE>& Tabs);
-		QHash<QString, QHash<int, QString>> loadTextLayers(const QList<TABLE>& Tabs);
+		QHash<QString, QHash<int, QString>> loadLineLayers(const QList<TABLE>& Tabs, bool Hide);
+		QHash<QString, QHash<int, QString>> loadPointLayers(const QList<TABLE>& Tabs, bool Hide);
+		QHash<QString, QHash<int, QString>> loadTextLayers(const QList<TABLE>& Tabs, bool Hide);
 
 		QHash<int, LINE> loadLines(int Layer, int Flags = 0);
 		QHash<int, POINT> loadPoints(int Layer, bool Symbol = true);
@@ -193,6 +196,8 @@ class DatabaseDriver : public QObject
 
 		void proceedFit(const QString& Path, int xPos, int yPos, double Radius);
 
+		void reloadLayers(bool Hide);
+
 		void terminate(void);
 
 	signals:
@@ -205,6 +210,10 @@ class DatabaseDriver : public QObject
 					const QHash<QString, QHash<int, QString>>&);
 		void onDisconnect(void);
 		void onLogin(bool);
+
+		void onReload(const QHash<QString, QHash<int, QString>>&,
+				    const QHash<QString, QHash<int, QString>>&,
+				    const QHash<QString, QHash<int, QString>>&);
 
 		void onBeginProgress(const QString&);
 		void onSetupProgress(int, int);

@@ -49,7 +49,8 @@ class MainWindow : public QMainWindow
 		CONNECTED,
 		DISCONNECTED,
 		BUSY,
-		DONE
+		DONE,
+		EMPTY
 	};
 
 	private:
@@ -88,6 +89,8 @@ class MainWindow : public QMainWindow
 		void connectActionClicked(void);
 		void cancelActionClicked(void);
 
+		void hideActionToggled(bool Hide);
+
 		void proceedRequest(double Length, double Spin, bool Line, int Job,
 						int Point, const QString& Symbol);
 
@@ -100,6 +103,10 @@ class MainWindow : public QMainWindow
 						   const QHash<QString, QHash<int, QString>>& Lines,
 						   const QHash<QString, QHash<int, QString>>& Points,
 						   const QHash<QString, QHash<int, QString>>& Texts);
+
+		void layersReloaded(const QHash<QString, QHash<int, QString>>& Lines,
+						const QHash<QString, QHash<int, QString>>& Points,
+						const QHash<QString, QHash<int, QString>>& Texts);
 
 		void databaseDisconnected(void);
 
@@ -124,6 +131,8 @@ class MainWindow : public QMainWindow
 
 		void onFitRequest(const QString&,
 					   int, int, double);
+
+		void onReloadRequest(bool);
 
 };
 
