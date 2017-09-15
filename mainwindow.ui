@@ -135,6 +135,8 @@
    <addaction name="actionProceed"/>
    <addaction name="actionJobs"/>
    <addaction name="actionGeometry"/>
+   <addaction name="separator"/>
+   <addaction name="actionHide"/>
   </widget>
   <widget class="QToolBar" name="supportTool">
    <property name="windowTitle">
@@ -222,7 +224,8 @@
   </action>
   <action name="actionJobs">
    <property name="icon">
-    <iconset theme="view-refresh"/>
+    <iconset theme="view-refresh">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Update jobs</string>
@@ -230,10 +233,25 @@
   </action>
   <action name="actionGeometry">
    <property name="icon">
-    <iconset theme="view-fullscreen"/>
+    <iconset theme="view-fullscreen">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Fit geometry</string>
+   </property>
+  </action>
+  <action name="actionHide">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="tools-check-spelling"/>
+   </property>
+   <property name="text">
+    <string>Hide unused layers</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
    </property>
   </action>
  </widget>
