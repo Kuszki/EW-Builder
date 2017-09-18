@@ -61,6 +61,9 @@ class MainWindow : public QMainWindow
 
 		QList<DatabaseDriver::TABLE> classesData;
 
+		QHash<QString, QVariant> Values;
+		QHash<QString, bool> Enabled;
+
 		DatabaseDriver* Driver = nullptr;
 		AboutDialog* About = nullptr;
 		ProceedDialog* Proceed = nullptr;

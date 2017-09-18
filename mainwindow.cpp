@@ -203,7 +203,11 @@ void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, 
 
 void MainWindow::layersReloaded(const QHash<QString, QHash<int, QString>>& Lines, const QHash<QString, QHash<int, QString>>& Points, const QHash<QString, QHash<int, QString>>& Texts)
 {
-	lineLayers = Lines; textLayers = Texts; pointLayers = Points;
+	lineLayers = Lines; textLayers = Texts; pointLayers = Points; QVariant Current;
+
+	if (ui->Class->currentIndex() != -1) Current = ui->Class->currentData();
+
+	const int Last = ui->Class->currentIndex();
 
 	ui->Class->blockSignals(true); ui->Class->clear();
 
@@ -218,8 +222,13 @@ void MainWindow::layersReloaded(const QHash<QString, QHash<int, QString>>& Lines
 
 	ui->Class->model()->sort(0); ui->Class->blockSignals(false);
 
-	if (ui->Class->count()) ui->Class->setCurrentIndex(0);
+	const int Index = ui->Class->findData(Current);
+	const bool Refresh = ui->Class->currentIndex() == Last;
+
+	if (ui->Class->count()) ui->Class->setCurrentIndex(Index != -1 ? Index : 0);
 	else lockUi(EMPTY);
+
+	if (Refresh) classIndexChanged(Index != -1 ? Index : 0);
 
 	if (ui->Class->count()) lockUi(CONNECTED); lockUi(DONE);
 }
@@ -231,7 +240,7 @@ void MainWindow::databaseDisconnected(void)
 
 void MainWindow::classIndexChanged(int Index)
 {
-	if (Index == -1) return; QHash<QString, QVariant> Values; QHash<QString, bool> Enabled;
+	if (Index == -1) return;
 
 	const QString Class = ui->Class->itemData(Index).toString();
 	const QString Label = ui->Class->itemText(Index);
