@@ -58,6 +58,7 @@ class UpdateWidget : public QWidget
 
 		QVariant getValue(void) const;
 		QString getLabel(void) const;
+		QString getName(void) const;
 
 		int getIndex(void) const;
 

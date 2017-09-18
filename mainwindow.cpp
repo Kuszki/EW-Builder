@@ -231,7 +231,7 @@ void MainWindow::databaseDisconnected(void)
 
 void MainWindow::classIndexChanged(int Index)
 {
-	if (Index == -1) return;
+	if (Index == -1) return; QHash<QString, QVariant> Values; QHash<QString, bool> Enabled;
 
 	const QString Class = ui->Class->itemData(Index).toString();
 	const QString Label = ui->Class->itemText(Index);
@@ -242,7 +242,17 @@ void MainWindow::classIndexChanged(int Index)
 
 	while (ui->valuesLayout->count())
 	{
-		ui->valuesLayout->takeAt(0)->widget()->deleteLater();
+		QWidget* W = ui->valuesLayout->takeAt(0)->widget();
+
+		if (UpdateWidget* V = dynamic_cast<UpdateWidget*>(W))
+		{
+			const QString Name = V->getName();
+
+			Values.insert(Name, V->getValue());
+			Enabled.insert(Name, V->isChecked());
+		}
+
+		W->deleteLater();
 	}
 
 	for (auto i = Texts.constBegin(); i != Texts.constEnd(); ++i)
@@ -264,7 +274,14 @@ void MainWindow::classIndexChanged(int Index)
 
 	for (int i = 0; i < Fields.size(); ++i)
 	{
-		ui->valuesLayout->addWidget(new UpdateWidget(i, Fields[i], this));
+		const QString& Name = Fields[i].Name;
+
+		UpdateWidget* W = new UpdateWidget(i, Fields[i], this);
+
+		if (Values.contains(Name)) W->setValue(Values[Name]);
+		if (Enabled.contains(Name)) W->setChecked(Enabled[Name]);
+
+		ui->valuesLayout->addWidget(W);
 	}
 
 	ui->Text->model()->sort(0);

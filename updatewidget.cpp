@@ -91,6 +91,11 @@ QString UpdateWidget::getLabel(void) const
 	return ui->Field->text();
 }
 
+QString UpdateWidget::getName(void) const
+{
+	return ui->Field->toolTip();
+}
+
 int UpdateWidget::getIndex(void) const
 {
 	return Index;
