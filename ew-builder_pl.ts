@@ -464,12 +464,12 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Baza danych podłączona</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="229"/>
+        <location filename="mainwindow.cpp" line="238"/>
         <source>Database disconnected</source>
         <translation>Baza danych odłączona</translation>
     </message>
     <message numerus="yes">
-        <location filename="mainwindow.cpp" line="285"/>
+        <location filename="mainwindow.cpp" line="311"/>
         <source>Processed %n item(s)</source>
         <translation>
             <numerusform>Przetworzono %n obiekt</numerusform>
@@ -586,17 +586,17 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Wyrażenie regularne</translation>
     </message>
     <message>
-        <location filename="updatewidget.cpp" line="147"/>
+        <location filename="updatewidget.cpp" line="152"/>
         <source>Select values</source>
         <translation>Zaznacz wartości</translation>
     </message>
     <message>
-        <location filename="updatewidget.cpp" line="200"/>
+        <location filename="updatewidget.cpp" line="205"/>
         <source>Yes</source>
         <translation>Tak</translation>
     </message>
     <message>
-        <location filename="updatewidget.cpp" line="201"/>
+        <location filename="updatewidget.cpp" line="206"/>
         <source>No</source>
         <translation>Nie</translation>
     </message>
