@@ -155,6 +155,50 @@ QList<DatabaseDriver::TABLE> DatabaseDriver::loadTables(bool Emit)
 	if (Emit) emit onEndProgress(); return List;
 }
 
+QList<DatabaseDriver::LAYER> DatabaseDriver::loadLayers(unsigned Type)
+{
+	if (!Database.isOpen()) return QList<LAYER>(); QList<LAYER> Layers;
+
+	QSqlQuery Query(Database); Query.setForwardOnly(true);
+
+	if (Type == 0) Query.prepare(
+		"SELECT "
+			"G.ID, L.ID, G.NAZWA, G.NAZWA_L, L.NAZWA, L.DLUGA_NAZWA "
+		"FROM "
+			"EW_WARSTWA_LINIOWA L "
+		"INNER JOIN "
+			"EW_GRUPY_WARSTW G "
+		"ON "
+			"L.ID_GRUPY = G.ID");
+	else if (Type == 1) Query.prepare(
+		"SELECT "
+			"G.ID, L.ID, G.NAZWA, G.NAZWA_L, L.NAZWA, L.DLUGA_NAZWA "
+		"FROM "
+			"EW_WARSTWA_TEXTOWA L "
+		"INNER JOIN "
+			"EW_GRUPY_WARSTW G "
+		"ON "
+			"L.ID_GRUPY = G.ID");
+
+	if (Query.exec()) while (Query.next())
+	{
+		const int GID = Query.value(0).toInt();
+		const int LID = Query.value(1).toInt();
+
+		if (!hasItemByField(Layers, GID, &LAYER::ID)) Layers.append(
+		{
+			GID, Query.value(2).toString(), Query.value(3).toString()
+		});
+
+		LAYER& Layer = getItemByField(Layers, GID, &LAYER::ID);
+
+		if (!hasItemByField(Layer.Sublayers, LID, &SUBLAYER::ID)) Layer.Sublayers.append(
+		{
+			LID, Query.value(4).toString(), Query.value(5).toString()
+		});
+	}
+}
+
 QList<DatabaseDriver::FIELD> DatabaseDriver::loadFields(const QString& Table) const
 {
 	if (!Database.isOpen()) return QList<FIELD>();
@@ -1661,7 +1705,8 @@ bool DatabaseDriver::openDatabase(const QString& Server, const QString& Base, co
 		emit onConnect(Tables, Common.size(),
 					loadLineLayers(Tables, Hideempty),
 					loadPointLayers(Tables, Hideempty),
-					loadTextLayers(Tables, Hideempty));
+					loadTextLayers(Tables, Hideempty),
+					loadLayers(0), loadLayers(1));
 
 		emit onEndProgress();
 	}
@@ -2213,6 +2258,24 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 
 	emit onEndProgress();
 	emit onProceedEnd(Updates.size());
+}
+
+void DatabaseDriver::removeDuplicates(int Action, int Strategy, int Heurstic, int Type, int Layer, int Sublayer, double Radius)
+{
+	if (!Database.open()) { emit onProceedEnd(0); return; } int Step(0);
+
+	struct SEGMENT
+	{
+		int ID; bool Object;
+
+		QVariant Geometry;
+		QString Kerg;
+		QDateTime Mod;
+	};
+
+	QSqlQuery selectGeometry(Database); selectGeometry.setForwardOnly(true);
+
+	// TODO : rest of implementation
 }
 
 void DatabaseDriver::reloadLayers(bool Hide)

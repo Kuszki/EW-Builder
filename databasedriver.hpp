@@ -113,6 +113,24 @@ class DatabaseDriver : public QObject
 		QList<int> Headers;
 	};
 
+	public: struct SUBLAYER
+	{
+		int ID;
+
+		QString Name;
+		QString Label;
+	};
+
+	public: struct LAYER
+	{
+		int ID;
+
+		QString Name;
+		QString Label;
+
+		QList<SUBLAYER> Sublayers;
+	};
+
 	private:
 
 		mutable QMutex Terminator;
@@ -140,6 +158,8 @@ class DatabaseDriver : public QObject
 
 		QList<FIELD> loadCommon(bool Emit = false);
 		QList<TABLE> loadTables(bool Emit = false);
+
+		QList<LAYER> loadLayers(unsigned Type);
 
 		QList<FIELD> loadFields(const QString& Table) const;
 		QMap<QVariant, QString> loadDict(const QString& Field, const QString& Table) const;
@@ -196,6 +216,11 @@ class DatabaseDriver : public QObject
 
 		void proceedFit(const QString& Path, int xPos, int yPos, double Radius);
 
+		void removeDuplicates(int Action, int Strategy,
+						  int Heurstic, int Type,
+						  int Layer, int Sublayer,
+						  double Radius);
+
 		void reloadLayers(bool Hide);
 
 		void terminate(void);
@@ -207,7 +232,8 @@ class DatabaseDriver : public QObject
 		void onConnect(const QList<TABLE>&, unsigned,
 					const QHash<QString, QHash<int, QString>>&,
 					const QHash<QString, QHash<int, QString>>&,
-					const QHash<QString, QHash<int, QString>>&);
+					const QHash<QString, QHash<int, QString>>&,
+					const QList<LAYER>&, const QList<LAYER>&);
 		void onDisconnect(void);
 		void onLogin(bool);
 
