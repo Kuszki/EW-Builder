@@ -171,6 +171,9 @@ class DatabaseDriver : public QObject
 		QHash<QString, QHash<int, QString>> loadPointLayers(const QList<TABLE>& Tabs, bool Hide);
 		QHash<QString, QHash<int, QString>> loadTextLayers(const QList<TABLE>& Tabs, bool Hide);
 
+		QHash<int, QString> allLineLayers(void);
+		QHash<int, QString> allTextLayers(void);
+
 		QHash<int, LINE> loadLines(int Layer, int Flags = 0);
 		QHash<int, POINT> loadPoints(int Layer, bool Symbol = true);
 
@@ -221,6 +224,8 @@ class DatabaseDriver : public QObject
 						  int Layer, int Sublayer,
 						  double Radius);
 
+		void hideDuplicates(const QSet<int>& Layers);
+
 		void reloadLayers(bool Hide);
 
 		void terminate(void);
@@ -233,7 +238,9 @@ class DatabaseDriver : public QObject
 					const QHash<QString, QHash<int, QString>>&,
 					const QHash<QString, QHash<int, QString>>&,
 					const QHash<QString, QHash<int, QString>>&,
-					const QList<LAYER>&, const QList<LAYER>&);
+					const QList<LAYER>&, const QList<LAYER>&,
+					const QHash<int, QString>&,
+					const QHash<int, QString>&);
 		void onDisconnect(void);
 		void onLogin(bool);
 

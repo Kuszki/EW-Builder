@@ -60,6 +60,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(this, &MainWindow::onJobsRequest, Driver, &DatabaseDriver::proceedJobs);
 	connect(this, &MainWindow::onFitRequest, Driver, &DatabaseDriver::proceedFit);
 	connect(this, &MainWindow::onReloadRequest, Driver, &DatabaseDriver::reloadLayers);
+	connect(this, &MainWindow::onHideRequest, Driver, &DatabaseDriver::hideDuplicates);
 	connect(Driver, &DatabaseDriver::onProceedEnd, this, &MainWindow::execProcessEnd);
 	connect(Driver, &DatabaseDriver::onReload, this, &MainWindow::layersReloaded);
 
@@ -68,6 +69,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(ui->actionProceed, &QAction::triggered, Proceed, &ProceedDialog::open);
 	connect(ui->actionJobs, &QAction::triggered, Jobs, &JobsDialog::open);
 	connect(ui->actionGeometry, &QAction::triggered, Geometry, &FitDialog::open);
+	connect(ui->actionInvisivle, &QAction::triggered, this, &MainWindow::invisibleActionClicked);
 	connect(ui->actionHide, &QAction::toggled, this, &MainWindow::hideActionToggled);
 	connect(ui->actionCancel, &QAction::triggered, this, &MainWindow::cancelActionClicked);
 	connect(ui->actionAbout, &QAction::triggered, About, &AboutDialog::open);
@@ -107,6 +109,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionProceed->setEnabled(true);
 			ui->actionJobs->setEnabled(true);
 			ui->actionGeometry->setEnabled(true);
+			ui->actionInvisivle->setVisible(true);
 			ui->actionHide->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
 		break;
@@ -117,6 +120,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionProceed->setEnabled(false);
 			ui->actionJobs->setEnabled(false);
 			ui->actionGeometry->setEnabled(false);
+			ui->actionInvisivle->setVisible(false);
 			ui->actionHide->setEnabled(false);
 			ui->actionCancel->setEnabled(false);
 		break;
@@ -124,6 +128,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionProceed->setEnabled(false);
 			ui->actionJobs->setEnabled(false);
 			ui->actionGeometry->setEnabled(false);
+			ui->actionInvisivle->setVisible(false);
 			ui->actionDisconnect->setEnabled(false);
 			ui->actionHide->setEnabled(false);
 			ui->actionCancel->setEnabled(true);
@@ -132,6 +137,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionProceed->setEnabled(true);
 			ui->actionJobs->setEnabled(true);
 			ui->actionGeometry->setEnabled(true);
+			ui->actionInvisivle->setVisible(true);
 			ui->actionDisconnect->setEnabled(true);
 			ui->actionHide->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
@@ -159,6 +165,16 @@ void MainWindow::connectActionClicked(void)
 void MainWindow::cancelActionClicked(void)
 {
 	Driver->terminate();
+}
+
+void MainWindow::invisibleActionClicked(void)
+{
+	HideDialog* Dialog = new HideDialog(allLineLayers, this); Dialog->open();
+
+	connect(Dialog, &HideDialog::onHideRequest, this, &MainWindow::hideRequest);
+
+	connect(Dialog, &HideDialog::accepted, Dialog, &HideDialog::deleteLater);
+	connect(Dialog, &HideDialog::rejected, Dialog, &HideDialog::deleteLater);
 }
 
 void MainWindow::hideActionToggled(bool Hide)
@@ -194,9 +210,17 @@ void MainWindow::fitRequest(const QString& Path, int xPos, int yPos, double Radi
 	lockUi(BUSY); emit onFitRequest(Path, xPos, yPos, Radius);
 }
 
-void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common, const QHash<QString, QHash<int, QString>>& Lines, const QHash<QString, QHash<int, QString>>& Points, const QHash<QString, QHash<int, QString>>& Texts)
+void MainWindow::hideRequest(const QSet<int>& Hides)
+{
+	lockUi(BUSY); emit onHideRequest(Hides);
+}
+
+void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common, const QHash<QString, QHash<int, QString>>& Lines, const QHash<QString, QHash<int, QString>>& Points, const QHash<QString, QHash<int, QString>>& Texts, const QList<DatabaseDriver::LAYER>& lineGroups, const QList<DatabaseDriver::LAYER>& textGroups, const QHash<int, QString>& lineLayers, const QHash<int, QString>& textLayers)
 {
 	classesData = Classes; commonCount = Common; layersReloaded(Lines, Points, Texts);
+
+	allLineGroups = lineGroups; allTextGroups = textGroups;
+	allLineLayers = lineLayers; allTextLayers = textLayers;
 
 	lockUi(CONNECTED); ui->statusBar->showMessage(tr("Database connected"));
 }

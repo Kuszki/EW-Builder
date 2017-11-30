@@ -160,43 +160,44 @@ QList<DatabaseDriver::LAYER> DatabaseDriver::loadLayers(unsigned Type)
 	if (!Database.isOpen()) return QList<LAYER>(); QList<LAYER> Layers;
 
 	QSqlQuery Query(Database); Query.setForwardOnly(true);
+	return Layers;// FIXME
 
-	if (Type == 0) Query.prepare(
-		"SELECT "
-			"G.ID, L.ID, G.NAZWA, G.NAZWA_L, L.NAZWA, L.DLUGA_NAZWA "
-		"FROM "
-			"EW_WARSTWA_LINIOWA L "
-		"INNER JOIN "
-			"EW_GRUPY_WARSTW G "
-		"ON "
-			"L.ID_GRUPY = G.ID");
-	else if (Type == 1) Query.prepare(
-		"SELECT "
-			"G.ID, L.ID, G.NAZWA, G.NAZWA_L, L.NAZWA, L.DLUGA_NAZWA "
-		"FROM "
-			"EW_WARSTWA_TEXTOWA L "
-		"INNER JOIN "
-			"EW_GRUPY_WARSTW G "
-		"ON "
-			"L.ID_GRUPY = G.ID");
+//	if (Type == 0) Query.prepare(
+//		"SELECT "
+//			"G.ID, L.ID, G.NAZWA, G.NAZWA_L, L.NAZWA, L.DLUGA_NAZWA "
+//		"FROM "
+//			"EW_WARSTWA_LINIOWA L "
+//		"INNER JOIN "
+//			"EW_GRUPY_WARSTW G "
+//		"ON "
+//			"L.ID_GRUPY = G.ID");
+//	else if (Type == 1) Query.prepare(
+//		"SELECT "
+//			"G.ID, L.ID, G.NAZWA, G.NAZWA_L, L.NAZWA, L.DLUGA_NAZWA "
+//		"FROM "
+//			"EW_WARSTWA_TEXTOWA L "
+//		"INNER JOIN "
+//			"EW_GRUPY_WARSTW G "
+//		"ON "
+//			"L.ID_GRUPY = G.ID");
 
-	if (Query.exec()) while (Query.next())
-	{
-		const int GID = Query.value(0).toInt();
-		const int LID = Query.value(1).toInt();
+//	if (Query.exec()) while (Query.next())
+//	{
+//		const int GID = Query.value(0).toInt();
+//		const int LID = Query.value(1).toInt();
 
-		if (!hasItemByField(Layers, GID, &LAYER::ID)) Layers.append(
-		{
-			GID, Query.value(2).toString(), Query.value(3).toString()
-		});
+//		if (!hasItemByField(Layers, GID, &LAYER::ID)) Layers.append(
+//		{
+//			GID, Query.value(2).toString(), Query.value(3).toString()
+//		});
 
-		LAYER& Layer = getItemByField(Layers, GID, &LAYER::ID);
+//		LAYER& Layer = getItemByField(Layers, GID, &LAYER::ID);
 
-		if (!hasItemByField(Layer.Sublayers, LID, &SUBLAYER::ID)) Layer.Sublayers.append(
-		{
-			LID, Query.value(4).toString(), Query.value(5).toString()
-		});
-	}
+//		if (!hasItemByField(Layer.Sublayers, LID, &SUBLAYER::ID)) Layer.Sublayers.append(
+//		{
+//			LID, Query.value(4).toString(), Query.value(5).toString()
+//		});
+//	}
 }
 
 QList<DatabaseDriver::FIELD> DatabaseDriver::loadFields(const QString& Table) const
@@ -687,6 +688,38 @@ QHash<QString, QHash<int, QString>> DatabaseDriver::loadTextLayers(const QList<T
 	}
 
 	return textLayers;
+}
+
+QHash<int, QString> DatabaseDriver::allLineLayers(void)
+{
+	if (!Database.isOpen()) return QHash<int, QString>(); QHash<int, QString> List;
+
+	QSqlQuery Query(Database); Query.setForwardOnly(true);
+
+	Query.prepare("SELECT ID, DLUGA_NAZWA FROM EW_WARSTWA_LINIOWA");
+
+	if (Query.exec()) while (Query.next())
+	{
+		List.insert(Query.value(0).toInt(), Query.value(1).toString());
+	}
+
+	return List;
+}
+
+QHash<int, QString> DatabaseDriver::allTextLayers(void)
+{
+	if (!Database.isOpen()) return QHash<int, QString>(); QHash<int, QString> List;
+
+	QSqlQuery Query(Database); Query.setForwardOnly(true);
+
+	Query.prepare("SELECT ID, DLUGA_NAZWA FROM EW_WARSTWA_TEXTOWA");
+
+	if (Query.exec()) while (Query.next())
+	{
+		List.insert(Query.value(0).toInt(), Query.value(1).toString());
+	}
+
+	return List;
 }
 
 QHash<int, DatabaseDriver::LINE> DatabaseDriver::loadLines(int Layer, int Flags)
@@ -1702,11 +1735,15 @@ bool DatabaseDriver::openDatabase(const QString& Server, const QString& Base, co
 		Fields = normalizeFields(Tables, Common);
 		Headers = normalizeHeaders(Tables, Common);
 
+		loadLayers(0); loadLayers(1);
+		allLineLayers(); allTextLayers();
+
 		emit onConnect(Tables, Common.size(),
 					loadLineLayers(Tables, Hideempty),
 					loadPointLayers(Tables, Hideempty),
 					loadTextLayers(Tables, Hideempty),
-					loadLayers(0), loadLayers(1));
+					loadLayers(0), loadLayers(1),
+					allLineLayers(), allTextLayers());
 
 		emit onEndProgress();
 	}
@@ -2276,6 +2313,121 @@ void DatabaseDriver::removeDuplicates(int Action, int Strategy, int Heurstic, in
 	QSqlQuery selectGeometry(Database); selectGeometry.setForwardOnly(true);
 
 	// TODO : rest of implementation
+}
+
+void DatabaseDriver::hideDuplicates(const QSet<int>& Layers)
+{
+	if (!Database.open()) { emit onProceedEnd(0); return; } int Step(0);
+
+	struct SEGMENT { int ID; QPointF A, B; };
+
+	QList<SEGMENT> Lines; QSet<int> Hides; QMutex Synchronizer;
+
+	emit onBeginProgress(tr("Loading lines"));
+	emit onSetupProgress(0, 0);
+
+	QSqlQuery selectQuery(Database), updateQuery(Database);
+
+	selectQuery.prepare(
+		"SELECT "
+			"P.UID, P.ID_WARSTWY, "
+			"ROUND(P.P0_X, 2), "
+			"ROUND(P.P0_Y, 2), "
+			"ROUND(P.P1_X, 2), "
+			"ROUND(P.P1_Y, 2) "
+		"FROM "
+			"EW_POLYLINE P "
+		"WHERE "
+			"P.STAN_ZMIANY = 0 AND "
+			"P.P1_FLAGS = 0");
+
+	if (selectQuery.exec()) while (selectQuery.next())
+	{
+		if (Layers.contains(selectQuery.value(1).toInt()))
+		{
+			Lines.append(
+			{
+				selectQuery.value(0).toInt(),
+				{
+					selectQuery.value(2).toDouble(),
+					selectQuery.value(3).toDouble()
+				},
+				{
+					selectQuery.value(4).toDouble(),
+					selectQuery.value(5).toDouble()
+				}
+			});
+		}
+	}
+
+	selectQuery.prepare(
+		"SELECT "
+			"L.UID, L.ID_WARSTWY "
+		"FROM "
+			"EW_POLYLINE L "
+		"INNER JOIN "
+			"EW_OB_ELEMENTY E "
+		"ON "
+			"E.IDE = L.ID "
+		"INNER JOIN "
+			"EW_OBIEKTY O "
+		"ON "
+			"O.UID = E.UIDO "
+		"WHERE "
+			"L.STAN_ZMIANY = 0 AND "
+			"E.TYP = 0 AND "
+			"O.STATUS = 0 "
+		"GROUP BY "
+			"L.UID, L.ID_WARSTWY "
+		"HAVING "
+			"COUNT(O.UID) > 1");
+
+	emit onBeginProgress(tr("Computing geometry"));
+	emit onSetupProgress(0, 0);
+
+	if (selectQuery.exec()) while (selectQuery.next())
+	{
+		if (Layers.contains(selectQuery.value(1).toInt()))
+		{
+			Hides.insert(selectQuery.value(0).toInt());
+		}
+	}
+
+	QtConcurrent::blockingMap(Lines, [&Lines, &Hides, &Synchronizer] (SEGMENT& Segment) -> void
+	{
+		const auto compare = [] (const SEGMENT& A, const SEGMENT& B) -> bool
+		{
+			return (A.A == B.A && A.B == B.B) || (A.B == B.A && A.A == B.B);
+		};
+
+		for (const auto& Other : Lines) if (Other.ID != Segment.ID)
+		{
+			if (compare(Segment, Other))
+			{
+				Synchronizer.lock();
+				Hides.insert(Segment.ID);
+				Synchronizer.unlock();
+
+				return;
+			}
+		}
+	});
+
+	emit onBeginProgress(tr("Updating lines"));
+	emit onSetupProgress(0, Hides.size());
+
+	updateQuery.prepare("UPDATE EW_POLYLINE SET TYP_LINII = 14 WHERE UID = ?");
+
+	for (const auto& UID : Hides)
+	{
+		updateQuery.addBindValue(UID);
+		updateQuery.exec();
+
+		emit onUpdateProgress(++Step);
+	}
+
+	emit onEndProgress();
+	emit onProceedEnd(Hides.size());
 }
 
 void DatabaseDriver::reloadLayers(bool Hide)

@@ -32,6 +32,7 @@
 #include "updatewidget.hpp"
 #include "aboutdialog.hpp"
 #include "jobsdialog.hpp"
+#include "hidedialog.hpp"
 #include "fitdialog.hpp"
 
 namespace Ui
@@ -58,6 +59,11 @@ class MainWindow : public QMainWindow
 		QHash<QString, QHash<int, QString>> lineLayers;
 		QHash<QString, QHash<int, QString>> pointLayers;
 		QHash<QString, QHash<int, QString>> textLayers;
+
+		QList<DatabaseDriver::LAYER> allLineGroups;
+		QList<DatabaseDriver::LAYER> allTextGroups;
+		QHash<int, QString> allLineLayers;
+		QHash<int, QString> allTextLayers;
 
 		QList<DatabaseDriver::TABLE> classesData;
 
@@ -91,6 +97,7 @@ class MainWindow : public QMainWindow
 
 		void connectActionClicked(void);
 		void cancelActionClicked(void);
+		void invisibleActionClicked(void);
 
 		void hideActionToggled(bool Hide);
 
@@ -102,10 +109,16 @@ class MainWindow : public QMainWindow
 
 		void fitRequest(const QString& Path, int xPos, int yPos, double Radius);
 
+		void hideRequest(const QSet<int>& Hides);
+
 		void databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common,
 						   const QHash<QString, QHash<int, QString>>& Lines,
 						   const QHash<QString, QHash<int, QString>>& Points,
-						   const QHash<QString, QHash<int, QString>>& Texts);
+						   const QHash<QString, QHash<int, QString>>& Texts,
+						   const QList<DatabaseDriver::LAYER>& lineGroups,
+						   const QList<DatabaseDriver::LAYER>& textGroups,
+						   const QHash<int, QString>& lineLayers,
+						   const QHash<int, QString>& textLayers);
 
 		void layersReloaded(const QHash<QString, QHash<int, QString>>& Lines,
 						const QHash<QString, QHash<int, QString>>& Points,
@@ -134,6 +147,8 @@ class MainWindow : public QMainWindow
 
 		void onFitRequest(const QString&,
 					   int, int, double);
+
+		void onHideRequest(const QSet<int>&);
 
 		void onReloadRequest(bool);
 

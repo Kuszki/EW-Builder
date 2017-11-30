@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
 
 	qRegisterMetaType<QList<DatabaseDriver::FIELD>>("QList<FIELD>");
 	qRegisterMetaType<QList<DatabaseDriver::TABLE>>("QList<TABLE>");
+	qRegisterMetaType<QList<DatabaseDriver::LAYER>>("QList<LAYER>");
 
 	qRegisterMetaType<QHash<QString,QHash<int,QString>>>("QHash<QString,QHash<int,QString>>");
 	qRegisterMetaType<QList<QHash<int,QVariant>>>("QList<QHash<int,QVariant>>");
@@ -39,6 +40,7 @@ int main(int argc, char *argv[])
 	qRegisterMetaType<QModelIndexList>("QModelIndexList");
 	qRegisterMetaType<QVector<int>>("QVector<int>");
 	qRegisterMetaType<QList<int>>("QList<int>");
+	qRegisterMetaType<QSet<int>>("QSet<int>");
 
 	a.setApplicationName("EW-Builder");
 	a.setOrganizationName("Łukasz \"Kuszki\" Dróżdż");
