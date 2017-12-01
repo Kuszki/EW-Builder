@@ -11,13 +11,19 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Remove duplicates</string>
+  </property>
+  <property name="windowIcon">
+   <iconset theme="edit-delete"/>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <widget class="QLabel" name="actionLabel">
      <property name="text">
       <string>Action</string>
+     </property>
+     <property name="buddy">
+      <cstring>actionCombo</cstring>
      </property>
     </widget>
    </item>
@@ -39,6 +45,9 @@
     <widget class="QLabel" name="strategyLabel">
      <property name="text">
       <string>Strategy</string>
+     </property>
+     <property name="buddy">
+      <cstring>strategyCombo</cstring>
      </property>
     </widget>
    </item>
@@ -66,6 +75,9 @@
      <property name="text">
       <string>Heurstic</string>
      </property>
+     <property name="buddy">
+      <cstring>heursticCombo</cstring>
+     </property>
     </widget>
    </item>
    <item row="2" column="1">
@@ -86,6 +98,9 @@
     <widget class="QLabel" name="typeLabel">
      <property name="text">
       <string>Type</string>
+     </property>
+     <property name="buddy">
+      <cstring>typeCombo</cstring>
      </property>
     </widget>
    </item>
@@ -108,6 +123,9 @@
      <property name="text">
       <string>Layer</string>
      </property>
+     <property name="buddy">
+      <cstring>layerCombo</cstring>
+     </property>
     </widget>
    </item>
    <item row="4" column="1">
@@ -117,6 +135,9 @@
     <widget class="QLabel" name="sublayerLabel">
      <property name="text">
       <string>Sublayer</string>
+     </property>
+     <property name="buddy">
+      <cstring>sublayerCombo</cstring>
      </property>
     </widget>
    </item>
@@ -165,6 +186,15 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>actionCombo</tabstop>
+  <tabstop>strategyCombo</tabstop>
+  <tabstop>heursticCombo</tabstop>
+  <tabstop>typeCombo</tabstop>
+  <tabstop>layerCombo</tabstop>
+  <tabstop>sublayerCombo</tabstop>
+  <tabstop>distanceSpin</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

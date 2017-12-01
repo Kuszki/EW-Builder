@@ -66,12 +66,18 @@
      <property name="text">
       <string>File</string>
      </property>
+     <property name="buddy">
+      <cstring>toolButton</cstring>
+     </property>
     </widget>
    </item>
    <item row="3" column="0">
     <widget class="QLabel" name="jobLabel">
      <property name="text">
       <string>Job index</string>
+     </property>
+     <property name="buddy">
+      <cstring>jobSpin</cstring>
      </property>
     </widget>
    </item>
@@ -119,12 +125,18 @@
      <property name="text">
       <string>Y index</string>
      </property>
+     <property name="buddy">
+      <cstring>ySpin</cstring>
+     </property>
     </widget>
    </item>
    <item row="1" column="0">
     <widget class="QLabel" name="xLabel">
      <property name="text">
       <string>X index</string>
+     </property>
+     <property name="buddy">
+      <cstring>xSpin</cstring>
      </property>
     </widget>
    </item>
@@ -146,6 +158,9 @@
      <property name="text">
       <string>Index separator</string>
      </property>
+     <property name="buddy">
+      <cstring>separatorEdit</cstring>
+     </property>
     </widget>
    </item>
    <item row="4" column="1">
@@ -157,6 +172,15 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>fileEdit</tabstop>
+  <tabstop>toolButton</tabstop>
+  <tabstop>xSpin</tabstop>
+  <tabstop>ySpin</tabstop>
+  <tabstop>jobSpin</tabstop>
+  <tabstop>separatorEdit</tabstop>
+  <tabstop>truncateSpin</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

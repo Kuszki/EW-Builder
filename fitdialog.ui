@@ -14,13 +14,17 @@
    <string>Fit geometry</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="view-fullscreen"/>
+   <iconset theme="view-fullscreen">
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <widget class="QLabel" name="actionLabel">
      <property name="text">
       <string>Action</string>
+     </property>
+     <property name="buddy">
+      <cstring>actionBox</cstring>
      </property>
     </widget>
    </item>
@@ -42,6 +46,9 @@
     <widget class="QLabel" name="fileLabel">
      <property name="text">
       <string>File</string>
+     </property>
+     <property name="buddy">
+      <cstring>toolButton</cstring>
      </property>
     </widget>
    </item>
@@ -72,6 +79,9 @@
      <property name="text">
       <string>X index</string>
      </property>
+     <property name="buddy">
+      <cstring>xSpin</cstring>
+     </property>
     </widget>
    </item>
    <item row="2" column="1">
@@ -92,6 +102,9 @@
      <property name="text">
       <string>Y index</string>
      </property>
+     <property name="buddy">
+      <cstring>ySpin</cstring>
+     </property>
     </widget>
    </item>
    <item row="3" column="1">
@@ -111,6 +124,9 @@
     <widget class="QLabel" name="radiusLabel">
      <property name="text">
       <string>Radius</string>
+     </property>
+     <property name="buddy">
+      <cstring>radiusSpin</cstring>
      </property>
     </widget>
    </item>
@@ -155,6 +171,14 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>actionBox</tabstop>
+  <tabstop>fileEdit</tabstop>
+  <tabstop>toolButton</tabstop>
+  <tabstop>xSpin</tabstop>
+  <tabstop>ySpin</tabstop>
+  <tabstop>radiusSpin</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

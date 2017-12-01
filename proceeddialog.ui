@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>432</width>
-    <height>221</height>
+    <height>226</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,12 +23,18 @@
      <property name="text">
       <string>Linear objects strategy</string>
      </property>
+     <property name="buddy">
+      <cstring>lineCombo</cstring>
+     </property>
     </widget>
    </item>
    <item row="0" column="0">
     <widget class="QLabel" name="distanceLabel">
      <property name="text">
       <string>Maximum label distance</string>
+     </property>
+     <property name="buddy">
+      <cstring>distanceSpin</cstring>
      </property>
     </widget>
    </item>
@@ -50,6 +56,9 @@
     <widget class="QLabel" name="pointLabel">
      <property name="text">
       <string>Point objects strategy</string>
+     </property>
+     <property name="buddy">
+      <cstring>pointCombo</cstring>
      </property>
     </widget>
    </item>
@@ -113,6 +122,9 @@
      <property name="text">
       <string>Point objects symbol</string>
      </property>
+     <property name="buddy">
+      <cstring>symbolEdit</cstring>
+     </property>
     </widget>
    </item>
    <item row="6" column="0" colspan="2">
@@ -144,6 +156,9 @@
      <property name="text">
       <string>Rotation tolerance</string>
      </property>
+     <property name="buddy">
+      <cstring>rotationSpin</cstring>
+     </property>
     </widget>
    </item>
    <item row="1" column="1">
@@ -161,6 +176,14 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>distanceSpin</tabstop>
+  <tabstop>rotationSpin</tabstop>
+  <tabstop>lineCombo</tabstop>
+  <tabstop>pointCombo</tabstop>
+  <tabstop>symbolEdit</tabstop>
+  <tabstop>policyCombo</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

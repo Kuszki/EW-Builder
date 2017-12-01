@@ -14,37 +14,37 @@
         <translation>Zamknij</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="74"/>
+        <location filename="aboutdialog.ui" line="71"/>
         <source>Program name:</source>
         <translation>Program:</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="91"/>
+        <location filename="aboutdialog.ui" line="88"/>
         <source>Author:</source>
         <translation>Autor:</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="108"/>
+        <location filename="aboutdialog.ui" line="105"/>
         <source>Mail:</source>
         <translation>E-mail:</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="128"/>
+        <location filename="aboutdialog.ui" line="125"/>
         <source>Project slite:</source>
         <translation>Strona projektu:</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="148"/>
+        <location filename="aboutdialog.ui" line="145"/>
         <source>License:</source>
         <translation>Licencja:</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="168"/>
+        <location filename="aboutdialog.ui" line="165"/>
         <source>Powered by:</source>
         <translation>Wsparcie:</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="190"/>
+        <location filename="aboutdialog.ui" line="187"/>
         <source>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 The program is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.</source>
@@ -53,7 +53,7 @@ The program is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE WARRAN
 Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny – jednak BEZ ŻADNEJ GWARANCJI, nawet domyślnej gwarancji PRZYDATNOŚCI HANDLOWEJ albo PRZYDATNOŚCI DO OKREŚLONYCH ZASTOSOWAŃ. Bliższe informacje na ten temat można uzyskać z Powszechnej Licencji Publicznej GNU.</translation>
     </message>
     <message>
-        <location filename="aboutdialog.ui" line="205"/>
+        <location filename="aboutdialog.ui" line="202"/>
         <source>&lt;a href=&quot;http://www.fsf.org/&quot;&gt;See more&lt;/a&gt;</source>
         <translation>&lt;a href=&quot;http://www.fsf.org/&quot;&gt;Dowiedz się więcej&lt;/a&gt;</translation>
     </message>
@@ -71,22 +71,22 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Baza danych</translation>
     </message>
     <message>
-        <location filename="connectdialog.ui" line="31"/>
+        <location filename="connectdialog.ui" line="34"/>
         <source>Password</source>
         <translation>Hasło</translation>
     </message>
     <message>
-        <location filename="connectdialog.ui" line="74"/>
+        <location filename="connectdialog.ui" line="77"/>
         <source>User</source>
         <translation>Użytkownik</translation>
     </message>
     <message>
-        <location filename="connectdialog.ui" line="84"/>
+        <location filename="connectdialog.ui" line="87"/>
         <source>Server</source>
         <translation>Serwer</translation>
     </message>
     <message>
-        <location filename="connectdialog.cpp" line="81"/>
+        <location filename="connectdialog.cpp" line="84"/>
         <source>Error</source>
         <translation>Błąd</translation>
     </message>
@@ -130,18 +130,18 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
     </message>
     <message>
         <location filename="databasedriver.cpp" line="151"/>
-        <location filename="databasedriver.cpp" line="189"/>
-        <location filename="databasedriver.cpp" line="2282"/>
+        <location filename="databasedriver.cpp" line="234"/>
+        <location filename="databasedriver.cpp" line="2497"/>
         <source>Unknown</source>
         <translation>Niezdefiniowane</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1653"/>
+        <location filename="databasedriver.cpp" line="1730"/>
         <source>Loading database informations</source>
         <translation>Wczytywanie informacji o bazie danych</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1684"/>
+        <location filename="databasedriver.cpp" line="1766"/>
         <source>Database is not opened</source>
         <translation>Baza danych nie jest otwarta</translation>
     </message>
@@ -154,74 +154,187 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation type="vanished">Opracowywanie atrybutów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1718"/>
+        <location filename="databasedriver.cpp" line="1800"/>
         <source>Creating objects</source>
         <translation>Tworzenie obiektów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1800"/>
+        <location filename="databasedriver.cpp" line="1882"/>
         <source>Preparing surfaces</source>
         <translation>Generowanie powierzchni</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1810"/>
+        <location filename="databasedriver.cpp" line="1892"/>
         <source>Preparing points</source>
         <translation>Generowanie punktów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1820"/>
+        <location filename="databasedriver.cpp" line="1902"/>
         <source>Preparing lines</source>
         <translation>Generowanie linii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1830"/>
+        <location filename="databasedriver.cpp" line="1912"/>
         <source>Preparing texts</source>
         <translation>Generowanie tekstów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1864"/>
+        <location filename="databasedriver.cpp" line="1946"/>
         <source>Loading file</source>
         <translation>Wczytywanie pliku</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1882"/>
+        <location filename="databasedriver.cpp" line="1964"/>
         <source>Loading items</source>
         <translation>Wczytywanie obiektów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1954"/>
+        <location filename="databasedriver.cpp" line="2036"/>
         <source>Preparing jobs</source>
         <translation>Generowanie danych</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="1984"/>
+        <location filename="databasedriver.cpp" line="2066"/>
         <source>Processing items</source>
         <translation>Przetwarzanie obiektów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2049"/>
+        <location filename="databasedriver.cpp" line="2131"/>
         <source>Loading points</source>
         <translation>Wczytywanie punktów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2173"/>
+        <location filename="databasedriver.cpp" line="2255"/>
         <source>Fitting geometry</source>
         <translation>Scalanie geometrii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2178"/>
+        <location filename="databasedriver.cpp" line="2260"/>
         <source>Updating database</source>
         <translation>Aktualizacja bazy danych</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2264"/>
+        <location filename="databasedriver.cpp" line="2326"/>
+        <source>Loading lines</source>
+        <translation>Wczytywanie linii</translation>
+    </message>
+    <message>
+        <location filename="databasedriver.cpp" line="2385"/>
+        <source>Computing geometry</source>
+        <translation>Opracowywanie geometrii</translation>
+    </message>
+    <message>
+        <location filename="databasedriver.cpp" line="2416"/>
+        <source>Updating lines</source>
+        <translation>Aktualizowanie linii</translation>
+    </message>
+    <message>
+        <location filename="databasedriver.cpp" line="2479"/>
         <source>Yes</source>
         <translation>Tak</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2264"/>
+        <location filename="databasedriver.cpp" line="2479"/>
         <source>No</source>
         <translation>Nie</translation>
+    </message>
+</context>
+<context>
+    <name>DuplicatesDialog</name>
+    <message>
+        <location filename="duplicatesdialog.ui" line="14"/>
+        <source>Remove duplicates</source>
+        <translation>Usuń duplikaty</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="23"/>
+        <source>Action</source>
+        <translation>Akcja</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="34"/>
+        <source>Remove old elements on duplicates</source>
+        <translation>Usuń starsze elementy</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="39"/>
+        <source>Remove non object elements on objects</source>
+        <translation>Usuń niezaobiektowane elementy</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="47"/>
+        <source>Strategy</source>
+        <translation>Strategia</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="58"/>
+        <source>Remove from sublayer</source>
+        <translation>Usuń z podwarstwy</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="63"/>
+        <source>Remove from layer</source>
+        <translation>Usuń z warstwy</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="68"/>
+        <source>Remove everywhere</source>
+        <translation>Usuń wszystkie</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="76"/>
+        <source>Heurstic</source>
+        <translation>Heurstyka</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="87"/>
+        <source>Extract date from KERG</source>
+        <translation>Wyłuskaj datę z KERGU</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="92"/>
+        <source>Extract date from element</source>
+        <translation>Wyłuskaj datę z elementu</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="100"/>
+        <source>Type</source>
+        <translation>Rodzaj</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="111"/>
+        <source>Text layers</source>
+        <translation>Warstwy tekstowe</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="116"/>
+        <source>Line layers</source>
+        <translation>Warstwy liniowe</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="124"/>
+        <source>Layer</source>
+        <translation>Warstwa</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="137"/>
+        <source>Sublayer</source>
+        <translation>Podwarstwa</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="165"/>
+        <source>Match exactly</source>
+        <translation>Dokładne dopasowanie</translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="168"/>
+        <source>Search in </source>
+        <translation>Szukaj w promieniu </translation>
+    </message>
+    <message>
+        <location filename="duplicatesdialog.ui" line="171"/>
+        <source> m radius</source>
+        <translation> m</translation>
     </message>
 </context>
 <context>
@@ -232,47 +345,47 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Dopasuj geometrie</translation>
     </message>
     <message>
-        <location filename="fitdialog.ui" line="23"/>
+        <location filename="fitdialog.ui" line="24"/>
         <source>Action</source>
         <translation>Akcja</translation>
     </message>
     <message>
-        <location filename="fitdialog.ui" line="31"/>
+        <location filename="fitdialog.ui" line="35"/>
         <source>Fit to geometry from file</source>
         <translation>Dopasuj do współrzędnych z pliku</translation>
     </message>
     <message>
-        <location filename="fitdialog.ui" line="36"/>
+        <location filename="fitdialog.ui" line="40"/>
         <source>Unify existing geometry</source>
         <translation>Dopasuj do istniejących współrzędnych</translation>
     </message>
     <message>
-        <location filename="fitdialog.ui" line="44"/>
+        <location filename="fitdialog.ui" line="48"/>
         <source>File</source>
         <translation>Plik źródłowy</translation>
     </message>
     <message>
-        <location filename="fitdialog.ui" line="60"/>
+        <location filename="fitdialog.ui" line="67"/>
         <source>Open</source>
         <translation>Wczytaj</translation>
     </message>
     <message>
-        <location filename="fitdialog.ui" line="73"/>
+        <location filename="fitdialog.ui" line="80"/>
         <source>X index</source>
         <translation>Kolumna X</translation>
     </message>
     <message>
-        <location filename="fitdialog.ui" line="93"/>
+        <location filename="fitdialog.ui" line="103"/>
         <source>Y index</source>
         <translation>Kolumna Y</translation>
     </message>
     <message>
-        <location filename="fitdialog.ui" line="113"/>
+        <location filename="fitdialog.ui" line="126"/>
         <source>Radius</source>
         <translation>Promień</translation>
     </message>
     <message>
-        <location filename="fitdialog.ui" line="120"/>
+        <location filename="fitdialog.ui" line="136"/>
         <source> m</source>
         <translation> m</translation>
     </message>
@@ -280,6 +393,19 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <location filename="fitdialog.cpp" line="76"/>
         <source>Open data file</source>
         <translation>Otwórz plik z danymi</translation>
+    </message>
+</context>
+<context>
+    <name>HideDialog</name>
+    <message>
+        <location filename="hidedialog.ui" line="14"/>
+        <source>Hide common lines</source>
+        <translation>Ukryj wspólne segmenty</translation>
+    </message>
+    <message>
+        <location filename="hidedialog.ui" line="47"/>
+        <source>Search</source>
+        <translation>Szukaj</translation>
     </message>
 </context>
 <context>
@@ -309,22 +435,22 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Plik źródłowy</translation>
     </message>
     <message>
-        <location filename="jobsdialog.ui" line="74"/>
+        <location filename="jobsdialog.ui" line="77"/>
         <source>Job index</source>
         <translation>Kolumna KERG</translation>
     </message>
     <message>
-        <location filename="jobsdialog.ui" line="120"/>
+        <location filename="jobsdialog.ui" line="126"/>
         <source>Y index</source>
         <translation>Kolumna Y</translation>
     </message>
     <message>
-        <location filename="jobsdialog.ui" line="127"/>
+        <location filename="jobsdialog.ui" line="136"/>
         <source>X index</source>
         <translation>Kolumna X</translation>
     </message>
     <message>
-        <location filename="jobsdialog.ui" line="147"/>
+        <location filename="jobsdialog.ui" line="159"/>
         <source>Index separator</source>
         <translation>Separator pikiety</translation>
     </message>
@@ -372,79 +498,89 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Narzędzia</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="143"/>
+        <location filename="mainwindow.ui" line="145"/>
         <source>Support</source>
         <translation>Wsparcie</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="171"/>
+        <location filename="mainwindow.ui" line="173"/>
         <source>About</source>
         <translation>O programie</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="174"/>
+        <location filename="mainwindow.ui" line="176"/>
         <source>F1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="183"/>
+        <location filename="mainwindow.ui" line="185"/>
         <source>Connect</source>
         <translation>Połącz</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="186"/>
+        <location filename="mainwindow.ui" line="188"/>
         <source>Ctrl+O</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="195"/>
+        <location filename="mainwindow.ui" line="197"/>
         <source>Disconnect</source>
         <translation>Rozłącz</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="198"/>
+        <location filename="mainwindow.ui" line="200"/>
         <source>Ctrl+Q</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="207"/>
+        <location filename="mainwindow.ui" line="209"/>
         <source>Proceed</source>
         <translation>Przetwórz</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="210"/>
+        <location filename="mainwindow.ui" line="212"/>
         <source>Ctrl+R</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="219"/>
+        <location filename="mainwindow.ui" line="221"/>
         <source>Cancel</source>
         <translation>Zatrzymaj</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="222"/>
+        <location filename="mainwindow.ui" line="224"/>
         <source>Esc</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="231"/>
+        <location filename="mainwindow.ui" line="233"/>
         <source>Update jobs</source>
         <translation>Aktualizuj KERG</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="240"/>
+        <location filename="mainwindow.ui" line="242"/>
         <source>Fit geometry</source>
         <translation>Dopasuj geometrie</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="251"/>
+        <location filename="mainwindow.ui" line="254"/>
         <source>Hide unused layers</source>
         <translation>Ukryj puste warstwy</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="254"/>
+        <location filename="mainwindow.ui" line="257"/>
         <source>Ctrl+H</source>
         <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="265"/>
+        <source>Hide intersections</source>
+        <translation>Ukryj wspólne segmenty</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="273"/>
+        <source>Remove duplicates</source>
+        <translation>Usuń duplikaty</translation>
     </message>
     <message>
         <source>Unlimited label distance</source>
@@ -459,17 +595,17 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation type="vanished">Otwórz plik z danymi</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="201"/>
+        <location filename="mainwindow.cpp" line="225"/>
         <source>Database connected</source>
         <translation>Baza danych podłączona</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="238"/>
+        <location filename="mainwindow.cpp" line="262"/>
         <source>Database disconnected</source>
         <translation>Baza danych odłączona</translation>
     </message>
     <message numerus="yes">
-        <location filename="mainwindow.cpp" line="311"/>
+        <location filename="mainwindow.cpp" line="335"/>
         <source>Processed %n item(s)</source>
         <translation>
             <numerusform>Przetworzono %n obiekt</numerusform>
@@ -494,17 +630,17 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Utwórz obiekty</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="31"/>
+        <location filename="proceeddialog.ui" line="34"/>
         <source>Maximum label distance</source>
         <translation>Maksymalna odległość etykiety</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="72"/>
+        <location filename="proceeddialog.ui" line="81"/>
         <source>Unlimited label distance</source>
         <translation>Nieograniczona odległość</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="75"/>
+        <location filename="proceeddialog.ui" line="84"/>
         <source> m</source>
         <translation> m</translation>
     </message>
@@ -514,47 +650,47 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Podejście do obiektów liniowych</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="39"/>
+        <location filename="proceeddialog.ui" line="45"/>
         <source>Skip closed lines</source>
         <translation>Opuść zamknięte powierzchnie</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="44"/>
+        <location filename="proceeddialog.ui" line="50"/>
         <source>Keep closed lines</source>
         <translation>Obiektuj zamkniete powierzchnie</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="52"/>
+        <location filename="proceeddialog.ui" line="58"/>
         <source>Point objects strategy</source>
         <translation>Podejście do samotnych tekstów</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="96"/>
+        <location filename="proceeddialog.ui" line="105"/>
         <source>Skip text without symbol</source>
         <translation>Pomiń tekst bez symbolu</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="101"/>
+        <location filename="proceeddialog.ui" line="110"/>
         <source>Insert symbol to text</source>
         <translation>Wstaw nowy symbol</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="106"/>
+        <location filename="proceeddialog.ui" line="115"/>
         <source>Insert symbol near object</source>
         <translation>Wstaw symol w miejscu istniejacego obiektu</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="114"/>
+        <location filename="proceeddialog.ui" line="123"/>
         <source>Point objects symbol</source>
         <translation>Nazwa symbolu do wstawienia</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="145"/>
+        <location filename="proceeddialog.ui" line="157"/>
         <source>Rotation tolerance</source>
         <translation>Dopuszczalne odchylenie</translation>
     </message>
     <message>
-        <location filename="proceeddialog.ui" line="152"/>
+        <location filename="proceeddialog.ui" line="167"/>
         <source>°</source>
         <translation></translation>
     </message>
