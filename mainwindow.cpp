@@ -210,9 +210,9 @@ void MainWindow::fitRequest(const QString& Path, int xPos, int yPos, double Radi
 	lockUi(BUSY); emit onFitRequest(Path, xPos, yPos, Radius);
 }
 
-void MainWindow::hideRequest(const QSet<int>& Hides)
+void MainWindow::hideRequest(const QSet<int>& Hides, bool Objected)
 {
-	lockUi(BUSY); emit onHideRequest(Hides);
+	lockUi(BUSY); emit onHideRequest(Hides, Objected);
 }
 
 void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common, const QHash<QString, QHash<int, QString>>& Lines, const QHash<QString, QHash<int, QString>>& Points, const QHash<QString, QHash<int, QString>>& Texts, const QList<DatabaseDriver::LAYER>& lineGroups, const QList<DatabaseDriver::LAYER>& textGroups, const QHash<int, QString>& lineLayers, const QHash<int, QString>& textLayers)

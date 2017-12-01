@@ -14,7 +14,8 @@
    <string>Hide common lines</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="edit-cut"/>
+   <iconset theme="edit-cut">
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0" colspan="2">
@@ -41,16 +42,6 @@
      </widget>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QLineEdit" name="searchEdit">
-     <property name="placeholderText">
-      <string>Search</string>
-     </property>
-     <property name="clearButtonEnabled">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="1">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
@@ -61,11 +52,17 @@
      </property>
     </widget>
    </item>
+   <item row="1" column="0">
+    <widget class="QCheckBox" name="objectedCheck">
+     <property name="text">
+      <string>Objected segments only</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <tabstops>
   <tabstop>scrollArea</tabstop>
-  <tabstop>searchEdit</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -101,24 +98,5 @@
     </hint>
    </hints>
   </connection>
-  <connection>
-   <sender>searchEdit</sender>
-   <signal>textChanged(QString)</signal>
-   <receiver>HideDialog</receiver>
-   <slot>searchBoxEdited(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>121</x>
-     <y>286</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>112</x>
-     <y>452</y>
-    </hint>
-   </hints>
-  </connection>
  </connections>
- <slots>
-  <slot>searchBoxEdited(QString)</slot>
- </slots>
 </ui>

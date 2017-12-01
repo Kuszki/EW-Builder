@@ -45,18 +45,9 @@ QSet<int> HideDialog::getSelectedFields(void) const
 	return List;
 }
 
-void HideDialog::searchBoxEdited(const QString& Search)
-{
-	for (int i = 0; i < ui->fieldsLayout->count(); ++i)
-		if (auto W = qobject_cast<QCheckBox*>(ui->fieldsLayout->itemAt(i)->widget()))
-		{
-			W->setVisible(W->isEnabled() && W->text().contains(Search, Qt::CaseInsensitive));
-		}
-}
-
 void HideDialog::accept(void)
 {
-	QDialog::accept(); emit onHideRequest(getSelectedFields());
+	QDialog::accept(); emit onHideRequest(getSelectedFields(), ui->objectedCheck->isChecked());
 }
 
 void HideDialog::setFields(const QHash<int, QString>& List)

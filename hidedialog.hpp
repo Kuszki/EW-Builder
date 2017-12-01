@@ -46,10 +46,6 @@ class HideDialog : public QDialog
 
 		QSet<int> getSelectedFields(void) const;
 
-	private slots:
-
-		void searchBoxEdited(const QString& Search);
-
 	public slots:
 
 		virtual void accept(void) override;
@@ -60,7 +56,7 @@ class HideDialog : public QDialog
 
 	signals:
 
-		void onHideRequest(const QSet<int>&);
+		void onHideRequest(const QSet<int>&, bool);
 
 };
 

@@ -224,7 +224,7 @@ class DatabaseDriver : public QObject
 						  int Layer, int Sublayer,
 						  double Radius);
 
-		void hideDuplicates(const QSet<int>& Layers);
+		void hideDuplicates(const QSet<int>& Layers, bool Objected);
 
 		void reloadLayers(bool Hide);
 

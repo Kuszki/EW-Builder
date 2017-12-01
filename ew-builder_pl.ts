@@ -131,7 +131,7 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
     <message>
         <location filename="databasedriver.cpp" line="151"/>
         <location filename="databasedriver.cpp" line="234"/>
-        <location filename="databasedriver.cpp" line="2497"/>
+        <location filename="databasedriver.cpp" line="2523"/>
         <source>Unknown</source>
         <translation>Niezdefiniowane</translation>
     </message>
@@ -219,22 +219,22 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Wczytywanie linii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2385"/>
+        <location filename="databasedriver.cpp" line="2411"/>
         <source>Computing geometry</source>
         <translation>Opracowywanie geometrii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2416"/>
+        <location filename="databasedriver.cpp" line="2442"/>
         <source>Updating lines</source>
         <translation>Aktualizowanie linii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2479"/>
+        <location filename="databasedriver.cpp" line="2505"/>
         <source>Yes</source>
         <translation>Tak</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2479"/>
+        <location filename="databasedriver.cpp" line="2505"/>
         <source>No</source>
         <translation>Nie</translation>
     </message>
@@ -403,9 +403,13 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Ukryj wspólne segmenty</translation>
     </message>
     <message>
-        <location filename="hidedialog.ui" line="47"/>
+        <location filename="hidedialog.ui" line="58"/>
+        <source>Objected segments only</source>
+        <translation>Tylko zaobiektowane segmenty</translation>
+    </message>
+    <message>
         <source>Search</source>
-        <translation>Szukaj</translation>
+        <translation type="vanished">Szukaj</translation>
     </message>
 </context>
 <context>

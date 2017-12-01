@@ -26,6 +26,8 @@
 #include <QPushButton>
 #include <QDialog>
 
+#include <QtCore>
+
 namespace Ui
 {
 	class ProceedDialog;

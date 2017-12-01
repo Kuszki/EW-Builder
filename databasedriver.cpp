@@ -913,7 +913,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedLines(int Line, int Text, c
 		if (L.Label) return;
 
 		for (const auto& P : Points) if (P.Match == L.ID && (qIsNaN(L.Odn) || L.Odn > P.L))
-		{			
+		{
 			if (!(Job & 0b01) || !P.IDK || P.IDK == L.IDK || !L.IDK) { L.Label = P.ID; L.Odn = P.L; }
 		}
 
@@ -2315,22 +2315,46 @@ void DatabaseDriver::removeDuplicates(int Action, int Strategy, int Heurstic, in
 	// TODO : rest of implementation
 }
 
-void DatabaseDriver::hideDuplicates(const QSet<int>& Layers)
+void DatabaseDriver::hideDuplicates(const QSet<int>& Layers, bool Objected)
 {
 	if (!Database.open()) { emit onProceedEnd(0); return; } int Step(0);
 
 	struct SEGMENT { int ID; QPointF A, B; };
 
-	QList<SEGMENT> Lines; QSet<int> Hides; QMutex Synchronizer;
+	QList<SEGMENT> Lines; QSet<int> Hides, Limit; QMutex Synchronizer;
 
 	emit onBeginProgress(tr("Loading lines"));
 	emit onSetupProgress(0, 0);
 
 	QSqlQuery selectQuery(Database), updateQuery(Database);
 
+	if (Objected)
+	{
+		QSqlQuery objectedQuery(Database);
+
+		objectedQuery.setForwardOnly(true);
+		objectedQuery.prepare(
+			"SELECT "
+			"E.IDE "
+			"FROM "
+			"EW_OB_ELEMENTY E "
+			"INNER JOIN "
+			"EW_OBIEKTY O "
+			"ON "
+			"E.UIDO = O.UID "
+			"WHERE "
+			"O.STATUS = 0 AND"
+			"E.TYP = 0");
+
+		if (objectedQuery.exec()) while (objectedQuery.next())
+		{
+			Limit.insert(objectedQuery.value(0).toInt());
+		}
+	}
+
 	selectQuery.prepare(
 		"SELECT "
-			"P.UID, P.ID_WARSTWY, "
+			"P.UID, P.ID, P.ID_WARSTWY, "
 			"ROUND(P.P0_X, 2), "
 			"ROUND(P.P0_Y, 2), "
 			"ROUND(P.P1_X, 2), "
@@ -2343,18 +2367,20 @@ void DatabaseDriver::hideDuplicates(const QSet<int>& Layers)
 
 	if (selectQuery.exec()) while (selectQuery.next())
 	{
-		if (Layers.contains(selectQuery.value(1).toInt()))
+		const bool OK = !Objected || Limit.contains(selectQuery.value(1).toInt());
+
+		if (Layers.contains(selectQuery.value(2).toInt()))
 		{
-			Lines.append(
+			if (OK) Lines.append(
 			{
 				selectQuery.value(0).toInt(),
 				{
-					selectQuery.value(2).toDouble(),
-					selectQuery.value(3).toDouble()
+					selectQuery.value(3).toDouble(),
+					selectQuery.value(4).toDouble()
 				},
 				{
-					selectQuery.value(4).toDouble(),
-					selectQuery.value(5).toDouble()
+					selectQuery.value(5).toDouble(),
+					selectQuery.value(6).toDouble()
 				}
 			});
 		}
