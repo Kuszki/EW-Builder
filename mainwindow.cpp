@@ -109,7 +109,8 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionProceed->setEnabled(true);
 			ui->actionJobs->setEnabled(true);
 			ui->actionGeometry->setEnabled(true);
-			ui->actionInvisivle->setVisible(true);
+			ui->actionInvisivle->setEnabled(true);
+			ui->actionDuplicates->setEnabled(true);
 			ui->actionHide->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
 		break;
@@ -120,7 +121,8 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionProceed->setEnabled(false);
 			ui->actionJobs->setEnabled(false);
 			ui->actionGeometry->setEnabled(false);
-			ui->actionInvisivle->setVisible(false);
+			ui->actionInvisivle->setEnabled(false);
+			ui->actionDuplicates->setEnabled(false);
 			ui->actionHide->setEnabled(false);
 			ui->actionCancel->setEnabled(false);
 		break;
@@ -128,7 +130,8 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionProceed->setEnabled(false);
 			ui->actionJobs->setEnabled(false);
 			ui->actionGeometry->setEnabled(false);
-			ui->actionInvisivle->setVisible(false);
+			ui->actionInvisivle->setEnabled(false);
+			ui->actionDuplicates->setEnabled(false);
 			ui->actionDisconnect->setEnabled(false);
 			ui->actionHide->setEnabled(false);
 			ui->actionCancel->setEnabled(true);
@@ -137,7 +140,8 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionProceed->setEnabled(true);
 			ui->actionJobs->setEnabled(true);
 			ui->actionGeometry->setEnabled(true);
-			ui->actionInvisivle->setVisible(true);
+			ui->actionInvisivle->setEnabled(true);
+			ui->actionDuplicates->setEnabled(true);
 			ui->actionDisconnect->setEnabled(true);
 			ui->actionHide->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
