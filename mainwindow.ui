@@ -137,6 +137,7 @@
    <addaction name="actionGeometry"/>
    <addaction name="actionDuplicates"/>
    <addaction name="actionInvisivle"/>
+   <addaction name="actionLabels"/>
    <addaction name="separator"/>
    <addaction name="actionHide"/>
   </widget>
@@ -232,6 +233,9 @@
    <property name="text">
     <string>Update jobs</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+J</string>
+   </property>
   </action>
   <action name="actionGeometry">
    <property name="icon">
@@ -240,6 +244,9 @@
    </property>
    <property name="text">
     <string>Fit geometry</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+G</string>
    </property>
   </action>
   <action name="actionHide">
@@ -259,18 +266,37 @@
   </action>
   <action name="actionInvisivle">
    <property name="icon">
-    <iconset theme="edit-cut"/>
+    <iconset theme="edit-cut">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Hide intersections</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
+   </property>
   </action>
   <action name="actionDuplicates">
    <property name="icon">
-    <iconset theme="edit-delete"/>
+    <iconset theme="edit-delete">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Remove duplicates</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="actionLabels">
+   <property name="icon">
+    <iconset theme="format-text-italic"/>
+   </property>
+   <property name="text">
+    <string>Fit labels</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
    </property>
   </action>
  </widget>

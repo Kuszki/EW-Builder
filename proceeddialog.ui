@@ -152,7 +152,7 @@
     </layout>
    </item>
    <item row="1" column="0">
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="rotationLabel">
      <property name="text">
       <string>Rotation tolerance</string>
      </property>

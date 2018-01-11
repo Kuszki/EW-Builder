@@ -61,6 +61,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(this, &MainWindow::onFitRequest, Driver, &DatabaseDriver::proceedFit);
 	connect(this, &MainWindow::onReloadRequest, Driver, &DatabaseDriver::reloadLayers);
 	connect(this, &MainWindow::onHideRequest, Driver, &DatabaseDriver::hideDuplicates);
+	connect(this, &MainWindow::onLabelsRequest, Driver, &DatabaseDriver::fitLabels);
 	connect(Driver, &DatabaseDriver::onProceedEnd, this, &MainWindow::execProcessEnd);
 	connect(Driver, &DatabaseDriver::onReload, this, &MainWindow::layersReloaded);
 
@@ -111,6 +112,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionGeometry->setEnabled(true);
 			ui->actionInvisivle->setEnabled(true);
 			ui->actionDuplicates->setEnabled(true);
+			ui->actionLabels->setEnabled(true);
 			ui->actionHide->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
 		break;
@@ -123,6 +125,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionGeometry->setEnabled(false);
 			ui->actionInvisivle->setEnabled(false);
 			ui->actionDuplicates->setEnabled(false);
+			ui->actionLabels->setEnabled(false);
 			ui->actionHide->setEnabled(false);
 			ui->actionCancel->setEnabled(false);
 		break;
@@ -133,6 +136,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionInvisivle->setEnabled(false);
 			ui->actionDuplicates->setEnabled(false);
 			ui->actionDisconnect->setEnabled(false);
+			ui->actionLabels->setEnabled(false);
 			ui->actionHide->setEnabled(false);
 			ui->actionCancel->setEnabled(true);
 		break;
@@ -143,6 +147,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionInvisivle->setEnabled(true);
 			ui->actionDuplicates->setEnabled(true);
 			ui->actionDisconnect->setEnabled(true);
+			ui->actionLabels->setEnabled(true);
 			ui->actionHide->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
 		break;
@@ -219,12 +224,25 @@ void MainWindow::hideRequest(const QSet<int>& Hides, bool Objected)
 	lockUi(BUSY); emit onHideRequest(Hides, Objected);
 }
 
+void MainWindow::labelRequest(const QString& Class, int Source, int Dest, double Distance, double Spin, bool Info)
+{
+	lockUi(BUSY); emit onLabelsRequest(Class, Source, Dest, Distance, Spin, Info);
+}
+
 void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common, const QHash<QString, QHash<int, QString>>& Lines, const QHash<QString, QHash<int, QString>>& Points, const QHash<QString, QHash<int, QString>>& Texts, const QList<DatabaseDriver::LAYER>& lineGroups, const QList<DatabaseDriver::LAYER>& textGroups, const QHash<int, QString>& lineLayers, const QHash<int, QString>& textLayers)
 {
 	classesData = Classes; commonCount = Common; layersReloaded(Lines, Points, Texts);
 
 	allLineGroups = lineGroups; allTextGroups = textGroups;
 	allLineLayers = lineLayers; allTextLayers = textLayers;
+
+	QMap<QString, QString> Codes; for (const auto& C : Classes) Codes.insert(C.Name, C.Label);
+
+	Label = new LabelDialog(Codes, Texts, this);
+
+	connect(ui->actionLabels, &QAction::triggered, Label, &LabelDialog::open);
+	connect(Driver, &DatabaseDriver::onDisconnect, Label, &LabelDialog::deleteLater);
+	connect(Label, &LabelDialog::onLabelsRequest, this, &MainWindow::labelRequest);
 
 	lockUi(CONNECTED); ui->statusBar->showMessage(tr("Database connected"));
 }

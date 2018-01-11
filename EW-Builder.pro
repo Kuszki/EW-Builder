@@ -36,7 +36,8 @@ SOURCES		+=	main.cpp \
 				jobsdialog.cpp \
 				fitdialog.cpp \
 				duplicatesdialog.cpp \
-				hidedialog.cpp
+				hidedialog.cpp \
+				labeldialog.cpp
 
 HEADERS		+=	mainwindow.hpp \
 				aboutdialog.hpp \
@@ -47,7 +48,8 @@ HEADERS		+=	mainwindow.hpp \
 				jobsdialog.hpp \
 				fitdialog.hpp \
 				duplicatesdialog.hpp \
-				hidedialog.hpp
+				hidedialog.hpp \
+				labeldialog.hpp
 
 FORMS		+=	mainwindow.ui \
 				aboutdialog.ui \
@@ -57,7 +59,8 @@ FORMS		+=	mainwindow.ui \
 				jobsdialog.ui \
 				fitdialog.ui \
 				duplicatesdialog.ui \
-				hidedialog.ui
+				hidedialog.ui \
+				labeldialog.ui
 
 RESOURCES		+= 	resources.qrc
 

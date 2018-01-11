@@ -226,6 +226,9 @@ class DatabaseDriver : public QObject
 
 		void hideDuplicates(const QSet<int>& Layers, bool Objected);
 
+		void fitLabels(const QString& Class, int Source, int Dest,
+					double Distance, double Spin, bool Info);
+
 		void reloadLayers(bool Hide);
 
 		void terminate(void);

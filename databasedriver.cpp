@@ -2456,6 +2456,318 @@ void DatabaseDriver::hideDuplicates(const QSet<int>& Layers, bool Objected)
 	emit onProceedEnd(Hides.size());
 }
 
+void DatabaseDriver::fitLabels(const QString& Class, int Source, int Dest, double Distance, double Spin, bool Info)
+{
+	if (!Database.open()) { emit onProceedEnd(0); return; } int Step(0);
+
+	struct ITEM { int UID; QVariant Geometry; QSet<int> Appends; QString Info; };
+
+	QSqlQuery selectPoint(Database), selectLine(Database), selectSymbols(Database), selectData(Database),
+			appendLabel(Database), updateLayer(Database), updateData(Database);
+
+	selectPoint.setForwardOnly(true);
+	selectLine.setForwardOnly(true);
+	selectSymbols.setForwardOnly(true);
+	selectData.setForwardOnly(true);
+
+	emit onBeginProgress("Loading geometry");
+	emit onSetupProgress(0, 0);
+
+	QSet<int> Unlabeled, Used; QHash<int, ITEM> Items; QMutex Locker;
+	QHash<int, POINT> Texts = loadPoints(Source, false); int Inserts(0);
+
+	const auto& Table = getItemByField(Tables, Class, &TABLE::Name);
+
+	selectSymbols.prepare(
+		"SELECT DISTINCT "
+			"O.UID "
+		"FROM "
+			"EW_OBIEKTY O "
+		"INNER JOIN "
+			"EW_OB_ELEMENTY E "
+		"ON "
+			"O.UID = E.UIDO "
+		"INNER JOIN "
+			"EW_TEXT T "
+		"ON "
+			"E.IDE = T.ID "
+		"WHERE "
+			"O.STATUS = 0 AND "
+			"T.STAN_ZMIANY = 0 AND "
+			"E.TYP = 0 AND "
+			"O.KOD = ? "
+		"GROUP BY "
+			"O.UID "
+		"HAVING "
+			"COUNT(NULLIF(T.TYP, 4)) = 0");
+
+	selectPoint.prepare(
+		"SELECT "
+			"O.UID, P.POS_X, P.POS_Y "
+		"FROM "
+			"EW_OBIEKTY O "
+		"INNER JOIN "
+			"EW_OB_ELEMENTY E "
+		"ON "
+			"O.UID = E.UIDO "
+		"INNER JOIN "
+			"EW_TEXT P "
+		"ON "
+			"E.IDE = P.ID "
+		"WHERE "
+			"O.STATUS = 0 AND "
+			"P.STAN_ZMIANY = 0 AND "
+			"P.TYP = 4 AND "
+			"E.TYP = 0 AND "
+			"O.KOD = ?");
+
+	selectLine.prepare(
+		"SELECT "
+			"O.UID, "
+			"P.P1_FLAGS, P.P0_X, P.P0_Y, "
+			"IIF(P.PN_X IS NULL, P.P1_X, P.PN_X), "
+			"IIF(P.PN_Y IS NULL, P.P1_Y, P.PN_Y) "
+		"FROM "
+			"EW_OBIEKTY O "
+		"INNER JOIN "
+			"EW_OB_ELEMENTY E "
+		"ON "
+			"O.UID = E.UIDO "
+		"INNER JOIN "
+			"EW_POLYLINE P "
+		"ON "
+			"E.IDE = P.ID "
+		"WHERE "
+			"O.STATUS = 0 AND "
+			"P.STAN_ZMIANY = 0 AND "
+			"E.TYP = 0 AND "
+			"O.KOD = ? "
+		"ORDER BY "
+			"E.UIDO ASCENDING,"
+			"E.N ASCENDING");
+
+	selectData.prepare(QString("SELECT UIDO, INFORMACJA FROM %1").arg(Table.Data));
+	updateData.prepare(QString("UPDATE %1 SET INFORMACJA = ? WHERE UIDO = ?").arg(Table.Data));
+
+	appendLabel.prepare("INSERT INTO EW_OB_ELEMENTY (UIDO, TYP, IDE, N) "
+					"VALUES (?, 0, ?, "
+						"(SELECT MAX(E.N) + 1 FROM EW_OB_ELEMENTY E WHERE E.UIDO = ?)"
+					")");
+
+	updateLayer.prepare("UPDATE EW_TEXT SET ID_WARSTWY = ? WHERE ID = ? AND STAN_ZMIANY = 0");
+
+	selectSymbols.addBindValue(Class);
+	selectPoint.addBindValue(Class);
+	selectLine.addBindValue(Class);
+
+	if (selectSymbols.exec()) while (selectSymbols.next() && !isTerminated())
+	{
+		Unlabeled.insert(selectSymbols.value(0).toInt());
+	}
+
+	if (selectPoint.exec()) while (selectPoint.next() && !isTerminated())
+	{
+		const int UID = selectPoint.value(0).toInt();
+
+		if (Unlabeled.contains(UID))
+		{
+			Items.insert(UID,
+			{
+				UID, QPointF(selectPoint.value(1).toDouble(),
+						   selectPoint.value(2).toDouble())
+			});
+
+			emit onUpdateProgress(++Step);
+		}
+	}
+
+	if (selectLine.exec()) while (selectLine.next() && !isTerminated())
+	{
+		const int UID = selectLine.value(0).toInt();
+
+		const QLineF Line(selectLine.value(2).toDouble(),
+					   selectLine.value(3).toDouble(),
+					   selectLine.value(4).toDouble(),
+					   selectLine.value(5).toDouble());
+
+		if (!Items.contains(UID))
+		{
+			Items.insert(UID,
+			{
+				UID, QVariant()
+			});
+		}
+
+		ITEM& Obj = Items[UID];
+
+		if (selectLine.value(1).toInt() != 4)
+		{
+			QVariantList List = Obj.Geometry.isNull() ?
+								QVariantList() :
+								Obj.Geometry.toList();
+
+			List.append(Line); Obj.Geometry = List;
+		}
+		else Obj.Geometry = Line;
+	}
+
+	if (Info && selectData.exec()) while (selectData.next() && !isTerminated())
+	{
+		const int UID = selectData.value(0).toInt();
+		const QString Str = selectData.value(1).toString();
+
+		if (Items.contains(UID)) Items[UID].Info = Str;
+	}
+
+	if (isTerminated()) { emit onProceedEnd(0); return; }
+
+	const auto getPairs = [&Items, &Used, Distance, Spin] (POINT& P) -> void
+	{
+		static const auto length = [] (double x1, double y1, double x2, double y2)
+		{
+			const double dx = x1 - x2;
+			const double dy = y1 - y2;
+
+			return qSqrt(dx * dx + dy * dy);
+		};
+
+		if (Used.contains(P.ID)) return;
+
+		for (const auto& L : Items)
+		{
+			if (L.Geometry.type() == QVariant::PointF)
+			{
+				const auto Point = L.Geometry.value<QPointF>();
+
+				const double h = length(P.X, P.Y, Point.x(), Point.y());
+
+				if (h <= Distance && (qIsNaN(P.L) || h < P.L))
+				{
+					P.L = h; P.Match = L.UID;
+				}
+			}
+			if (L.Geometry.type() == QVariant::LineF)
+			{
+				const auto Line = L.Geometry.value<QLineF>();
+
+				const double X = (Line.x1() + Line.x2()) / 2.0;
+				const double Y = (Line.y1() + Line.y2()) / 2.0;
+				const double R = qAbs(Line.x1() - X);
+
+				const double h = length(P.X, P.Y, X, Y) - R;
+
+				if (h <= Distance && (qIsNaN(P.L) || h < P.L))
+				{
+					P.L = h; P.Match = L.UID;
+				}
+			}
+			else for (const auto G : L.Geometry.toList())
+			{
+				const auto Line = G.toLineF();
+
+				double dtg = P.FI + qAtan2(Line.x1() - Line.x2(), Line.y1() - Line.y2());
+
+				while (dtg >= M_PI) dtg -= M_PI; while (dtg < 0.0) dtg += M_PI;
+
+				if (!P.Pointer && (qAbs(dtg) > Spin) && (qAbs(dtg - M_PI) > Spin)) continue;
+
+				const double a = length(P.X, P.Y, Line.x1(), Line.y1());
+				const double b = length(P.X, P.Y, Line.x2(), Line.y2());
+
+				if ((a * a <= Line.length() * Line.length() + b * b) &&
+				    (b * b <= Line.length() * Line.length() + a * a))
+				{
+					const double A = P.X - Line.x1(); const double B = P.Y - Line.y1();
+					const double C = Line.x2() - Line.x1(); const double D = Line.y2() - Line.y1();
+
+					const double h = qAbs(A * D - C * B) / qSqrt(C * C + D * D);
+
+					if (h <= Distance && (qIsNaN(P.L) || h < P.L))
+					{
+						P.L = h; P.Match = L.UID;
+					}
+				}
+			}
+		}
+	};
+
+	const auto getLabel = [&Texts, &Used, &Locker, Info] (ITEM& I) -> void
+	{
+		const bool isSingleton = I.Geometry.type() == QVariant::LineF ||
+							I.Geometry.type() == QVariant::PointF;
+
+		if (isSingleton && !I.Appends.isEmpty()) return;
+
+		for (const auto& P : Texts) if (P.Match == I.UID && (!Info || I.Info.isEmpty() || P.Text == I.Info))
+		{
+			if (!I.Appends.contains(P.ID))
+			{
+				if (I.Info.isEmpty()) I.Info = P.Text;
+
+				Locker.lock();
+				Used.insert(P.ID);
+				Locker.unlock();
+
+				I.Appends.insert(P.ID);
+
+				if (isSingleton) return;
+			}
+		}
+	};
+
+	const auto resetMatch = [] (POINT& P) -> void { P.Match = 0; P.L = NAN; };
+
+	emit onBeginProgress("Fitting geometry");
+	emit onSetupProgress(0, 0);
+
+	bool Continue(true); do
+	{
+		const int Count = Used.size();
+
+		QtConcurrent::blockingMap(Texts, resetMatch);
+		QtConcurrent::blockingMap(Texts, getPairs);
+		QtConcurrent::blockingMap(Items, getLabel);
+
+		Continue = Count != Used.size();
+	}
+	while (Continue && !isTerminated());
+
+	emit onBeginProgress("Updating database");
+	emit onSetupProgress(0, Items.size());
+
+	for (const auto& O : Items) if (!isTerminated())
+	{
+		for (const auto& ID : O.Appends)
+		{
+			appendLabel.addBindValue(O.UID);
+			appendLabel.addBindValue(ID);
+			appendLabel.addBindValue(O.UID);
+
+			appendLabel.exec();
+
+			updateLayer.addBindValue(Dest);
+			updateLayer.addBindValue(ID);
+
+			updateLayer.exec();
+		}
+
+		if (Info)
+		{
+			updateData.addBindValue(O.Info);
+			updateData.addBindValue(O.UID);
+
+			updateData.exec();
+		}
+
+		Inserts += O.Appends.size();
+
+		emit onUpdateProgress(++Step);
+	}
+
+	emit onEndProgress();
+	emit onProceedEnd(Inserts);
+}
+
 void DatabaseDriver::reloadLayers(bool Hide)
 {
 	const bool OK = Hideempty != Hide && Database.isOpen();

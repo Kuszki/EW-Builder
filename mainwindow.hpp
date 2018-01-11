@@ -31,6 +31,7 @@
 #include "proceeddialog.hpp"
 #include "updatewidget.hpp"
 #include "aboutdialog.hpp"
+#include "labeldialog.hpp"
 #include "jobsdialog.hpp"
 #include "hidedialog.hpp"
 #include "fitdialog.hpp"
@@ -75,6 +76,7 @@ class MainWindow : public QMainWindow
 		ProceedDialog* Proceed = nullptr;
 		JobsDialog* Jobs = nullptr;
 		FitDialog* Geometry = nullptr;
+		LabelDialog* Label = nullptr;
 
 		QProgressBar* Progress = nullptr;
 
@@ -110,6 +112,9 @@ class MainWindow : public QMainWindow
 		void fitRequest(const QString& Path, int xPos, int yPos, double Radius);
 
 		void hideRequest(const QSet<int>& Hides, bool Objected);
+
+		void labelRequest(const QString& Class, int Source, int Dest,
+					   double Distance, double Spin, bool Info);
 
 		void databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common,
 						   const QHash<QString, QHash<int, QString>>& Lines,
@@ -149,6 +154,9 @@ class MainWindow : public QMainWindow
 					   int, int, double);
 
 		void onHideRequest(const QSet<int>&, bool);
+
+		void onLabelsRequest(const QString&, int, int,
+						 double, double, bool);
 
 		void onReloadRequest(bool);
 
