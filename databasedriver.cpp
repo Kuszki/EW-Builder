@@ -160,44 +160,45 @@ QList<DatabaseDriver::LAYER> DatabaseDriver::loadLayers(unsigned Type)
 	if (!Database.isOpen()) return QList<LAYER>(); QList<LAYER> Layers;
 
 	QSqlQuery Query(Database); Query.setForwardOnly(true);
-	return Layers;// FIXME
 
-//	if (Type == 0) Query.prepare(
-//		"SELECT "
-//			"G.ID, L.ID, G.NAZWA, G.NAZWA_L, L.NAZWA, L.DLUGA_NAZWA "
-//		"FROM "
-//			"EW_WARSTWA_LINIOWA L "
-//		"INNER JOIN "
-//			"EW_GRUPY_WARSTW G "
-//		"ON "
-//			"L.ID_GRUPY = G.ID");
-//	else if (Type == 1) Query.prepare(
-//		"SELECT "
-//			"G.ID, L.ID, G.NAZWA, G.NAZWA_L, L.NAZWA, L.DLUGA_NAZWA "
-//		"FROM "
-//			"EW_WARSTWA_TEXTOWA L "
-//		"INNER JOIN "
-//			"EW_GRUPY_WARSTW G "
-//		"ON "
-//			"L.ID_GRUPY = G.ID");
+	if (Type == 0) Query.prepare(
+		"SELECT "
+			"G.ID, L.ID, G.NAZWA, G.NAZWA_L, L.NAZWA, L.DLUGA_NAZWA "
+		"FROM "
+			"EW_WARSTWA_LINIOWA L "
+		"INNER JOIN "
+			"EW_GRUPY_WARSTW G "
+		"ON "
+			"L.ID_GRUPY = G.ID");
+	else if (Type == 1) Query.prepare(
+		"SELECT "
+			"G.ID, L.ID, G.NAZWA, G.NAZWA_L, L.NAZWA, L.DLUGA_NAZWA "
+		"FROM "
+			"EW_WARSTWA_TEXTOWA L "
+		"INNER JOIN "
+			"EW_GRUPY_WARSTW G "
+		"ON "
+			"L.ID_GRUPY = G.ID");
 
-//	if (Query.exec()) while (Query.next())
-//	{
-//		const int GID = Query.value(0).toInt();
-//		const int LID = Query.value(1).toInt();
+	if (Query.exec()) while (Query.next())
+	{
+		const int GID = Query.value(0).toInt();
+		const int LID = Query.value(1).toInt();
 
-//		if (!hasItemByField(Layers, GID, &LAYER::ID)) Layers.append(
-//		{
-//			GID, Query.value(2).toString(), Query.value(3).toString()
-//		});
+		if (!hasItemByField(Layers, GID, &LAYER::ID)) Layers.append(
+		{
+			GID, Query.value(2).toString(), Query.value(3).toString()
+		});
 
-//		LAYER& Layer = getItemByField(Layers, GID, &LAYER::ID);
+		LAYER& Layer = getItemByField(Layers, GID, &LAYER::ID);
 
-//		if (!hasItemByField(Layer.Sublayers, LID, &SUBLAYER::ID)) Layer.Sublayers.append(
-//		{
-//			LID, Query.value(4).toString(), Query.value(5).toString()
-//		});
-//	}
+		if (!hasItemByField(Layer.Sublayers, LID, &SUBLAYER::ID)) Layer.Sublayers.append(
+		{
+			LID, Query.value(4).toString(), Query.value(5).toString()
+		});
+	}
+
+	return Layers;
 }
 
 QList<DatabaseDriver::FIELD> DatabaseDriver::loadFields(const QString& Table) const
@@ -1750,9 +1751,6 @@ bool DatabaseDriver::openDatabase(const QString& Server, const QString& Base, co
 		Fields = normalizeFields(Tables, Common);
 		Headers = normalizeHeaders(Tables, Common);
 
-		loadLayers(0); loadLayers(1);
-		allLineLayers(); allTextLayers();
-
 		emit onConnect(Tables, Common.size(),
 					loadLineLayers(Tables, Hideempty),
 					loadPointLayers(Tables, Hideempty),
@@ -2368,16 +2366,16 @@ void DatabaseDriver::hideDuplicates(const QSet<int>& Layers, bool Objected)
 		objectedQuery.setForwardOnly(true);
 		objectedQuery.prepare(
 			"SELECT "
-			"E.IDE "
+				"E.IDE "
 			"FROM "
-			"EW_OB_ELEMENTY E "
+				"EW_OB_ELEMENTY E "
 			"INNER JOIN "
-			"EW_OBIEKTY O "
+				"EW_OBIEKTY O "
 			"ON "
-			"E.UIDO = O.UID "
+				"E.UIDO = O.UID "
 			"WHERE "
-			"O.STATUS = 0 AND"
-			"E.TYP = 0");
+				"O.STATUS = 0 AND"
+				"E.TYP = 0");
 
 		if (objectedQuery.exec()) while (objectedQuery.next())
 		{
