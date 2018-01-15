@@ -131,7 +131,7 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
     <message>
         <location filename="databasedriver.cpp" line="151"/>
         <location filename="databasedriver.cpp" line="234"/>
-        <location filename="databasedriver.cpp" line="2523"/>
+        <location filename="databasedriver.cpp" line="2853"/>
         <source>Unknown</source>
         <translation>Niezdefiniowane</translation>
     </message>
@@ -204,37 +204,37 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Wczytywanie punktów</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2255"/>
+        <location filename="databasedriver.cpp" line="2273"/>
         <source>Fitting geometry</source>
         <translation>Scalanie geometrii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2260"/>
+        <location filename="databasedriver.cpp" line="2278"/>
         <source>Updating database</source>
         <translation>Aktualizacja bazy danych</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2326"/>
+        <location filename="databasedriver.cpp" line="2344"/>
         <source>Loading lines</source>
         <translation>Wczytywanie linii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2411"/>
+        <location filename="databasedriver.cpp" line="2429"/>
         <source>Computing geometry</source>
         <translation>Opracowywanie geometrii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2442"/>
+        <location filename="databasedriver.cpp" line="2460"/>
         <source>Updating lines</source>
         <translation>Aktualizowanie linii</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2505"/>
+        <location filename="databasedriver.cpp" line="2835"/>
         <source>Yes</source>
         <translation>Tak</translation>
     </message>
     <message>
-        <location filename="databasedriver.cpp" line="2505"/>
+        <location filename="databasedriver.cpp" line="2835"/>
         <source>No</source>
         <translation>Nie</translation>
     </message>
@@ -390,7 +390,12 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation> m</translation>
     </message>
     <message>
-        <location filename="fitdialog.cpp" line="76"/>
+        <location filename="fitdialog.ui" line="167"/>
+        <source>Apply to current layers</source>
+        <translation>Zastosuj do wybranych warstw</translation>
+    </message>
+    <message>
+        <location filename="fitdialog.cpp" line="77"/>
         <source>Open data file</source>
         <translation>Otwórz plik z danymi</translation>
     </message>
@@ -465,6 +470,59 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
     </message>
 </context>
 <context>
+    <name>LabelDialog</name>
+    <message>
+        <location filename="labeldialog.ui" line="14"/>
+        <source>Fit labels</source>
+        <translation>Dopasuj etykiety</translation>
+    </message>
+    <message>
+        <location filename="labeldialog.ui" line="23"/>
+        <source>Class</source>
+        <translation>Kod obiektu</translation>
+    </message>
+    <message>
+        <location filename="labeldialog.ui" line="33"/>
+        <source>Source</source>
+        <translation>Warstwa źródłowa</translation>
+    </message>
+    <message>
+        <location filename="labeldialog.ui" line="43"/>
+        <source>Destonation</source>
+        <translation>Warstwa docelowa</translation>
+    </message>
+    <message>
+        <location filename="labeldialog.ui" line="53"/>
+        <source>Maximum label distance</source>
+        <translation>Maksymalna odległość etykiety</translation>
+    </message>
+    <message>
+        <location filename="labeldialog.ui" line="63"/>
+        <source>Unlimited label distance</source>
+        <translation>Nieograniczona odległość</translation>
+    </message>
+    <message>
+        <location filename="labeldialog.ui" line="66"/>
+        <source> m</source>
+        <translation> m</translation>
+    </message>
+    <message>
+        <location filename="labeldialog.ui" line="79"/>
+        <source>Rotation tolerance</source>
+        <translation>Dopuszczalne odchylenie</translation>
+    </message>
+    <message>
+        <location filename="labeldialog.ui" line="89"/>
+        <source>°</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="labeldialog.ui" line="104"/>
+        <source>Check label text</source>
+        <translation>Sprawdzaj informacje dodatkową</translation>
+    </message>
+</context>
+<context>
     <name>MainWindow</name>
     <message>
         <location filename="mainwindow.ui" line="14"/>
@@ -502,89 +560,119 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation>Narzędzia</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="145"/>
+        <location filename="mainwindow.ui" line="146"/>
         <source>Support</source>
         <translation>Wsparcie</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="173"/>
+        <location filename="mainwindow.ui" line="174"/>
         <source>About</source>
         <translation>O programie</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="176"/>
+        <location filename="mainwindow.ui" line="177"/>
         <source>F1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="185"/>
+        <location filename="mainwindow.ui" line="186"/>
         <source>Connect</source>
         <translation>Połącz</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="188"/>
+        <location filename="mainwindow.ui" line="189"/>
         <source>Ctrl+O</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="197"/>
+        <location filename="mainwindow.ui" line="198"/>
         <source>Disconnect</source>
         <translation>Rozłącz</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="200"/>
+        <location filename="mainwindow.ui" line="201"/>
         <source>Ctrl+Q</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="209"/>
+        <location filename="mainwindow.ui" line="210"/>
         <source>Proceed</source>
         <translation>Przetwórz</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="212"/>
+        <location filename="mainwindow.ui" line="213"/>
         <source>Ctrl+R</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="221"/>
+        <location filename="mainwindow.ui" line="222"/>
         <source>Cancel</source>
         <translation>Zatrzymaj</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="224"/>
+        <location filename="mainwindow.ui" line="225"/>
         <source>Esc</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="233"/>
+        <location filename="mainwindow.ui" line="234"/>
         <source>Update jobs</source>
         <translation>Aktualizuj KERG</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="242"/>
+        <location filename="mainwindow.ui" line="237"/>
+        <source>Ctrl+J</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="246"/>
         <source>Fit geometry</source>
         <translation>Dopasuj geometrie</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="254"/>
+        <location filename="mainwindow.ui" line="249"/>
+        <source>Ctrl+G</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="261"/>
         <source>Hide unused layers</source>
         <translation>Ukryj puste warstwy</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="257"/>
+        <location filename="mainwindow.ui" line="264"/>
         <source>Ctrl+H</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="265"/>
+        <location filename="mainwindow.ui" line="273"/>
         <source>Hide intersections</source>
         <translation>Ukryj wspólne segmenty</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="273"/>
+        <location filename="mainwindow.ui" line="276"/>
+        <source>Ctrl+I</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="285"/>
         <source>Remove duplicates</source>
         <translation>Usuń duplikaty</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="288"/>
+        <source>Ctrl+D</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="296"/>
+        <source>Fit labels</source>
+        <translation>Dopasuj etykiety</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="299"/>
+        <source>Ctrl+L</source>
+        <translation></translation>
     </message>
     <message>
         <source>Unlimited label distance</source>
@@ -599,17 +687,17 @@ Niniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny �
         <translation type="vanished">Otwórz plik z danymi</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="225"/>
+        <location filename="mainwindow.cpp" line="250"/>
         <source>Database connected</source>
         <translation>Baza danych podłączona</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="262"/>
+        <location filename="mainwindow.cpp" line="287"/>
         <source>Database disconnected</source>
         <translation>Baza danych odłączona</translation>
     </message>
     <message numerus="yes">
-        <location filename="mainwindow.cpp" line="335"/>
+        <location filename="mainwindow.cpp" line="360"/>
         <source>Processed %n item(s)</source>
         <translation>
             <numerusform>Przetworzono %n obiekt</numerusform>

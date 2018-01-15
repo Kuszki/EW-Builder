@@ -214,9 +214,12 @@ void MainWindow::jobsRequest(const QString& Path, const QString& Sep, int xPos, 
 	lockUi(BUSY); emit onJobsRequest(Path, Sep, xPos, yPos, jobPos);
 }
 
-void MainWindow::fitRequest(const QString& Path, int xPos, int yPos, double Radius)
+void MainWindow::fitRequest(const QString& Path, int xPos, int yPos, double Radius, bool Current)
 {
-	lockUi(BUSY); emit onFitRequest(Path, xPos, yPos, Radius);
+	const int Text = Current ? ui->Point->currentData().toInt() : -1;
+	const int Line = Current ? ui->Line->currentData().toInt() : -1;
+
+	lockUi(BUSY); emit onFitRequest(Path, xPos, yPos, Radius, Text, Line);
 }
 
 void MainWindow::hideRequest(const QSet<int>& Hides, bool Objected)

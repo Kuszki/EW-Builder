@@ -197,7 +197,8 @@ class DatabaseDriver : public QObject
 		QList<OBJECT> proceedTexts(int Text, int Point, const QString& Expr = QString(), int Fit = 0,
 							  double Length = qInf(), const QString& Symbol = QString());
 
-		QHash<int, QVariant> proceedGeometry(const QList<QPointF>& Points, double Radius, bool Emit = false);
+		QHash<int, QVariant> proceedGeometry(const QList<QPointF>& Points, double Radius,
+									  int Text = -1, int Line = -1, bool Emit = false);
 
 		bool isTerminated(void) const;
 
@@ -217,7 +218,8 @@ class DatabaseDriver : public QObject
 		void proceedJobs(const QString& Path, const QString& Sep,
 					  int xPos, int yPos, int jobPos);
 
-		void proceedFit(const QString& Path, int xPos, int yPos, double Radius);
+		void proceedFit(const QString& Path, int xPos, int yPos, double Radius,
+					 int textLayer = -1, int lineLayer = -1);
 
 		void removeDuplicates(int Action, int Strategy,
 						  int Heurstic, int Type,

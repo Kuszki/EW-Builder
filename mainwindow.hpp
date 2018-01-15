@@ -109,7 +109,8 @@ class MainWindow : public QMainWindow
 		void jobsRequest(const QString& Path, const QString& Sep,
 					  int xPos, int yPos, int jobPos);
 
-		void fitRequest(const QString& Path, int xPos, int yPos, double Radius);
+		void fitRequest(const QString& Path, int xPos, int yPos,
+					 double Radius, bool Current = false);
 
 		void hideRequest(const QSet<int>& Hides, bool Objected);
 
@@ -151,7 +152,8 @@ class MainWindow : public QMainWindow
 					    int, int, int);
 
 		void onFitRequest(const QString&,
-					   int, int, double);
+					   int, int, double,
+					   int, int);
 
 		void onHideRequest(const QSet<int>&, bool);
 

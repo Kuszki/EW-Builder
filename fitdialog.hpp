@@ -59,7 +59,7 @@ class FitDialog : public QDialog
 
 	signals:
 
-		void onFitRequest(const QString&, int, int, double);
+		void onFitRequest(const QString&, int, int, double, bool);
 
 };
 

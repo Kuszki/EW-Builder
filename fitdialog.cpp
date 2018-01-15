@@ -39,7 +39,8 @@ void FitDialog::accept(void)
 	QDialog::accept(); emit onFitRequest(Path,
 								  ui->xSpin->value(),
 								  ui->ySpin->value(),
-								  ui->radiusSpin->value());
+								  ui->radiusSpin->value(),
+								  ui->currentCheck->isChecked());
 }
 
 void FitDialog::actionIndexChanged(int Index)

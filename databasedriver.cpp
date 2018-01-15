@@ -1518,7 +1518,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedTexts(int Text, int Point, 
 	return Objects;
 }
 
-QHash<int, QVariant> DatabaseDriver::proceedGeometry(const QList<QPointF>& Points, double Radius, bool Emit)
+QHash<int, QVariant> DatabaseDriver::proceedGeometry(const QList<QPointF>& Points, double Radius, int Text, int Line, bool Emit)
 {
 	if (!Database.isOpen()) return QHash<int, QVariant>(); QMutex Locker; int Step(0);
 
@@ -1537,7 +1537,12 @@ QHash<int, QVariant> DatabaseDriver::proceedGeometry(const QList<QPointF>& Point
 			"EW_TEXT P "
 		"WHERE "
 			"P.STAN_ZMIANY = 0 AND "
-			"P.TYP = 4");
+			"P.TYP = 4 AND "
+			"("
+				":layer = -1 OR P.ID_WARSTWY = :layer"
+			")");
+
+	Query.bindValue(":layer", Text);
 
 	if (Query.exec()) while (Query.next()) Symbols.append(
 	{
@@ -1555,7 +1560,12 @@ QHash<int, QVariant> DatabaseDriver::proceedGeometry(const QList<QPointF>& Point
 			"EW_POLYLINE P "
 		"WHERE "
 			"P.STAN_ZMIANY = 0 AND "
-			"P.P1_FLAGS = 4");
+			"P.P1_FLAGS = 4 AND "
+			"("
+				":layer = -1 OR P.ID_WARSTWY = :layer"
+			")");
+
+	Query.bindValue(":layer", Line);
 
 	if (Query.exec()) while (Query.next()) Circles.append(
 	{
@@ -1581,7 +1591,12 @@ QHash<int, QVariant> DatabaseDriver::proceedGeometry(const QList<QPointF>& Point
 			"EW_POLYLINE P "
 		"WHERE "
 			"P.STAN_ZMIANY = 0 AND "
-			"P.P1_FLAGS IN (0, 2)");
+			"P.P1_FLAGS IN (0, 2) AND "
+			"("
+				":layer = -1 OR P.ID_WARSTWY = :layer"
+			")");
+
+	Query.bindValue(":layer", Line);
 
 	if (Query.exec()) while (Query.next()) Lines.append(
 	{
@@ -2124,7 +2139,7 @@ void DatabaseDriver::proceedJobs(const QString& Path, const QString& Sep, int xP
 	emit onProceedEnd(Updates);
 }
 
-void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double Radius)
+void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double Radius, int textLayer, int lineLayer)
 {
 	if (!Database.open()) { emit onProceedEnd(0); return; } QList<QPointF> Points; int Step(0);
 
@@ -2187,7 +2202,10 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 				"EW_TEXT T "
 			"WHERE "
 				"T.STAN_ZMIANY = 0 AND "
-				"T.TYP = 4 "
+				"T.TYP = 4 AND "
+				"( "
+					":text = -1 OR T.ID_WARSTWY = :text "
+				") "
 			"UNION "
 			"SELECT "
 				"F.P0_X, F.P0_Y "
@@ -2195,7 +2213,10 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 				"EW_POLYLINE F "
 			"WHERE "
 				"F.STAN_ZMIANY = 0 AND "
-				"F.P1_FLAGS <> 4 "
+				"F.P1_FLAGS <> 4 AND "
+				"( "
+					":line = -1 OR F.ID_WARSTWY = :line "
+				") "
 			"UNION "
 			"SELECT "
 				"L.P1_X, L.P1_Y "
@@ -2203,7 +2224,10 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 				"EW_POLYLINE L "
 			"WHERE "
 				"L.STAN_ZMIANY = 0 AND "
-				"L.P1_FLAGS = 0 "
+				"L.P1_FLAGS = 0 AND "
+				"( "
+					":line = -1 OR L.ID_WARSTWY = :line "
+				") "
 			"UNION "
 			"SELECT "
 				"A.PN_X, A.PN_Y "
@@ -2211,7 +2235,10 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 				"EW_POLYLINE A "
 			"WHERE "
 				"A.STAN_ZMIANY = 0 AND "
-				"A.P1_FLAGS = 2 "
+				"A.P1_FLAGS = 2 AND "
+				"( "
+					":line = -1 OR A.ID_WARSTWY = :line "
+				") "
 			"UNION "
 			"SELECT "
 				"(C.P0_X + C.P1_X) / 2.0, "
@@ -2220,7 +2247,13 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 				"EW_POLYLINE C "
 			"WHERE "
 				"C.STAN_ZMIANY = 0 AND "
-				"C.P1_FLAGS = 4");
+				"C.P1_FLAGS = 4 AND "
+				"( "
+					":line = -1 OR C.ID_WARSTWY = :line "
+				") ");
+
+		pointsQuery.bindValue(":text", textLayer);
+		pointsQuery.bindValue(":line", lineLayer);
 
 		if (pointsQuery.exec()) while (pointsQuery.next()) Base.append(
 		{
@@ -2255,7 +2288,7 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 	emit onBeginProgress(tr("Fitting geometry"));
 	emit onSetupProgress(0, 0);
 
-	const auto Updates = proceedGeometry(Points, Radius, true);
+	const auto Updates = proceedGeometry(Points, Radius, textLayer, lineLayer, true);
 
 	emit onBeginProgress(tr("Updating database"));
 	emit onSetupProgress(0, Updates.size());
