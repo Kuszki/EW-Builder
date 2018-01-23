@@ -14,7 +14,8 @@
    <string>Remove duplicates</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="edit-delete"/>
+   <iconset theme="edit-delete">
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -204,8 +205,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>389</x>
+     <y>288</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -220,8 +221,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>389</x>
+     <y>288</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
@@ -229,5 +230,75 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionCombo</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>DuplicatesDialog</receiver>
+   <slot>actionIndexChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>363</x>
+     <y>16</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>513</x>
+     <y>21</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>strategyCombo</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>DuplicatesDialog</receiver>
+   <slot>strategyIndexChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>372</x>
+     <y>50</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>583</x>
+     <y>47</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>typeCombo</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>DuplicatesDialog</receiver>
+   <slot>typeIndexChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>271</x>
+     <y>101</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>539</x>
+     <y>102</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>layerCombo</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>DuplicatesDialog</receiver>
+   <slot>layerIndexChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>331</x>
+     <y>134</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>540</x>
+     <y>131</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
+ <slots>
+  <slot>actionIndexChanged(int)</slot>
+  <slot>strategyIndexChanged(int)</slot>
+  <slot>typeIndexChanged(int)</slot>
+  <slot>layerIndexChanged(int)</slot>
+ </slots>
 </ui>

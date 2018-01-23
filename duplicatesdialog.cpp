@@ -66,7 +66,7 @@ void DuplicatesDialog::typeIndexChanged(int Index)
 
 void DuplicatesDialog::layerIndexChanged(int Index)
 {
-	const auto& List = Index == 0 ? textLayers : lineLayers;
+	const auto& List = ui->typeCombo->currentIndex() == 0 ? textLayers : lineLayers;
 	const int ID = ui->layerCombo->currentData().toInt();
 
 	int i(0), j(0); for (const auto& Layer : List)
@@ -91,8 +91,8 @@ void DuplicatesDialog::accept(void)
 				ui->strategyCombo->currentIndex(),
 				ui->heursticCombo->currentIndex(),
 				ui->typeCombo->currentIndex(),
-				ui->layerCombo->currentIndex(),
-				ui->sublayerCombo->currentIndex(),
+				ui->layerCombo->currentData().toInt(),
+				ui->sublayerCombo->currentData().toInt(),
 				ui->distanceSpin->value());
 }
 

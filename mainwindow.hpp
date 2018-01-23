@@ -26,6 +26,7 @@
 #include <QMainWindow>
 #include <QFileDialog>
 
+#include "duplicatesdialog.hpp"
 #include "databasedriver.hpp"
 #include "connectdialog.hpp"
 #include "proceeddialog.hpp"
@@ -77,6 +78,7 @@ class MainWindow : public QMainWindow
 		JobsDialog* Jobs = nullptr;
 		FitDialog* Geometry = nullptr;
 		LabelDialog* Label = nullptr;
+		DuplicatesDialog* Duplicates = nullptr;
 
 		QProgressBar* Progress = nullptr;
 
@@ -116,6 +118,9 @@ class MainWindow : public QMainWindow
 
 		void labelRequest(const QString& Class, int Source, int Dest,
 					   double Distance, double Spin, bool Info);
+
+		void duplicatesRequest(int Action, int Strategy, int Heurstic,
+						   int Type, int Layer, int Sublayer, double Radius);
 
 		void databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common,
 						   const QHash<QString, QHash<int, QString>>& Lines,
@@ -159,6 +164,9 @@ class MainWindow : public QMainWindow
 
 		void onLabelsRequest(const QString&, int, int,
 						 double, double, bool);
+
+		void onDuplicatesRequest(int, int, int, int,
+							int, int, double);
 
 		void onReloadRequest(bool);
 

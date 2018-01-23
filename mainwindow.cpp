@@ -62,6 +62,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(this, &MainWindow::onReloadRequest, Driver, &DatabaseDriver::reloadLayers);
 	connect(this, &MainWindow::onHideRequest, Driver, &DatabaseDriver::hideDuplicates);
 	connect(this, &MainWindow::onLabelsRequest, Driver, &DatabaseDriver::fitLabels);
+	connect(this, &MainWindow::onDuplicatesRequest, Driver, &DatabaseDriver::removeDuplicates);
 	connect(Driver, &DatabaseDriver::onProceedEnd, this, &MainWindow::execProcessEnd);
 	connect(Driver, &DatabaseDriver::onReload, this, &MainWindow::layersReloaded);
 
@@ -232,6 +233,11 @@ void MainWindow::labelRequest(const QString& Class, int Source, int Dest, double
 	lockUi(BUSY); emit onLabelsRequest(Class, Source, Dest, Distance, Spin, Info);
 }
 
+void MainWindow::duplicatesRequest(int Action, int Strategy, int Heurstic, int Type, int Layer, int Sublayer, double Radius)
+{
+	lockUi(BUSY); emit onDuplicatesRequest(Action, Strategy, Heurstic, Type, Layer, Sublayer, Radius);
+}
+
 void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, unsigned Common, const QHash<QString, QHash<int, QString>>& Lines, const QHash<QString, QHash<int, QString>>& Points, const QHash<QString, QHash<int, QString>>& Texts, const QList<DatabaseDriver::LAYER>& lineGroups, const QList<DatabaseDriver::LAYER>& textGroups, const QHash<int, QString>& lineLayers, const QHash<int, QString>& textLayers)
 {
 	classesData = Classes; commonCount = Common; layersReloaded(Lines, Points, Texts);
@@ -242,10 +248,15 @@ void MainWindow::databaseConnected(const QList<DatabaseDriver::TABLE>& Classes, 
 	QMap<QString, QString> Codes; for (const auto& C : Classes) Codes.insert(C.Name, C.Label);
 
 	Label = new LabelDialog(Codes, Texts, this);
+	Duplicates = new DuplicatesDialog(lineGroups, textGroups, this);
 
 	connect(ui->actionLabels, &QAction::triggered, Label, &LabelDialog::open);
 	connect(Driver, &DatabaseDriver::onDisconnect, Label, &LabelDialog::deleteLater);
 	connect(Label, &LabelDialog::onLabelsRequest, this, &MainWindow::labelRequest);
+
+	connect(ui->actionDuplicates, &QAction::triggered, Duplicates, &DuplicatesDialog::open);
+	connect(Driver, &DatabaseDriver::onDisconnect, Duplicates, &DuplicatesDialog::deleteLater);
+	connect(Duplicates, &DuplicatesDialog::onRemoveRequest, this, &MainWindow::duplicatesRequest);
 
 	lockUi(CONNECTED); ui->statusBar->showMessage(tr("Database connected"));
 }

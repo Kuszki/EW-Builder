@@ -1727,6 +1727,327 @@ QHash<int, QVariant> DatabaseDriver::proceedGeometry(const QList<QPointF>& Point
 	return Updates;
 }
 
+int DatabaseDriver::proceedTextDuplicates(int Action, int Strategy, int Heurstic, int Layer, int Sublayer, double Radius)
+{
+	struct SEGMENT
+	{
+		int ID; QString Text;
+
+		QPointF Geometry;
+		QString Kerg;
+		QDateTime Mod;
+
+		bool Objected = false;
+		unsigned Timestamp = 0;
+	};
+
+	if (!Database.open()) return 0; int Step = 0;
+
+	QList<SEGMENT> Segments; QSet<int> Deletes; QMutex Synchronizer;
+
+	QSqlQuery selectQuery(Database); selectQuery.setForwardOnly(true);
+	QSqlQuery deleteQuery(Database); deleteQuery.setForwardOnly(true);
+
+	emit onBeginProgress(tr("Loading elements"));
+	emit onSetupProgress(0, 0);
+
+	selectQuery.prepare(
+		"SELECT "
+			"T.UID, T.TEXT, T.POS_X, T.POS_Y, O.NUMER, T.MODIFY_TS, "
+			"IIF(T.ID IN "
+			"( "
+				"SELECT E.IDE "
+				"FROM EW_OB_ELEMENTY E "
+				"INNER JOIN EW_OBIEKTY B "
+				"ON E.UIDO = B.UID "
+				"WHERE B.STATUS = 0 "
+			"), 1, 0) "
+		"FROM "
+			"EW_TEXT T "
+		"INNER JOIN "
+			"EW_WARSTWA_TEXTOWA W "
+		"ON "
+			"T.ID_WARSTWY = W.ID "
+		"INNER JOIN "
+			"EW_GRUPY_WARSTW G "
+		"ON "
+			"W.ID_GRUPY = G.ID "
+		"LEFT JOIN "
+			"EW_OPERATY O "
+		"ON "
+			"T.OPERAT = O.UID "
+		"WHERE "
+			"T.STAN_ZMIANY = 0 AND "
+			"( "
+				":sublayer = W.ID OR :sublayer = 0 "
+			") "
+			"AND "
+			"( "
+				":layer = G.ID OR :layer = 0 "
+			")");
+
+	selectQuery.bindValue(":layer", Strategy < 2 ? Layer : 0);
+	selectQuery.bindValue(":sublayer", Strategy < 1 ? Sublayer : 0);
+
+	if (selectQuery.exec()) while (selectQuery.next())
+	{
+		const int UID = selectQuery.value(0).toInt();
+
+		Segments.append(
+		{
+			UID,
+			selectQuery.value(1).toString().trimmed(),
+			{
+				selectQuery.value(2).toDouble(),
+				selectQuery.value(3).toDouble()
+			},
+			selectQuery.value(4).toString().trimmed(),
+			selectQuery.value(5).toDateTime(),
+			selectQuery.value(6).toBool()
+		});
+	}
+
+	emit onBeginProgress(tr("Processing items"));
+	emit onSetupProgress(0, 0);
+
+	if (!Heurstic) QtConcurrent::blockingMap(Segments, [] (SEGMENT& Seg) -> void
+	{
+		QRegExp Exp("(\\d+)?[\\.\\,\\;\\/](\\d+)$");
+
+		if (Exp.indexIn(Seg.Kerg) != -1)
+		{
+			bool aOK, bOK; int A, B; unsigned Hash(0);
+
+			A = Exp.capturedTexts()[1].toInt(&aOK);
+			B = Exp.capturedTexts()[2].toInt(&bOK);
+
+			if (bOK && B < 100) B += 1900;
+
+			if (bOK) Hash += B * 10000;
+			if (aOK) Hash += A;
+
+			if (Hash) Seg.Timestamp = Hash;
+		}
+	});
+	else QtConcurrent::blockingMap(Segments, [] (SEGMENT& Seg) -> void
+	{
+		Seg.Timestamp = Seg.Mod.toSecsSinceEpoch();
+	});
+
+	if (!Action) QtConcurrent::blockingMap(Segments, [&Segments, &Deletes, &Synchronizer, Radius] (SEGMENT& Seg) -> void
+	{
+		for (const auto& Other : Segments) if (!Seg.Objected && Seg.ID != Other.ID && Seg.Timestamp <= Other.Timestamp)
+		{
+			if (QLineF(Seg.Geometry, Other.Geometry).length() <= Radius)
+			{
+				Synchronizer.lock();
+
+				if (!Deletes.contains(Other.ID)) Deletes.insert(Seg.ID);
+
+				Synchronizer.unlock();
+			}
+		}
+	});
+	else QtConcurrent::blockingMap(Segments, [&Segments, &Deletes, &Synchronizer, Radius] (SEGMENT& Seg) -> void
+	{
+		for (const auto& Other : Segments) if (!Seg.Objected && Other.Objected && Seg.ID != Other.ID)
+		{
+			if (QLineF(Seg.Geometry, Other.Geometry).length() <= Radius)
+			{
+				Synchronizer.lock();
+
+				if (!Deletes.contains(Other.ID)) Deletes.insert(Seg.ID);
+
+				Synchronizer.unlock();
+			}
+		}
+	});
+
+	emit onBeginProgress(tr("Removing items"));
+	emit onSetupProgress(0, 0);
+
+	deleteQuery.prepare("DELETE FROM EW_TEXT WHERE UID = ?");
+
+	for (const auto& ID : Deletes)
+	{
+		deleteQuery.addBindValue(ID);
+		deleteQuery.exec();
+
+		emit onUpdateProgress(++Step);
+	}
+
+	return Deletes.size();
+}
+
+int DatabaseDriver::proceedLineDuplicates(int Action, int Strategy, int Heurstic, int Layer, int Sublayer, double Radius)
+{
+	struct SEGMENT
+	{
+		int ID;
+
+		QLineF Geometry;
+		QString Kerg;
+		QDateTime Mod;
+
+		bool Objected = false;
+		unsigned Timestamp = 0;
+	};
+
+	if (!Database.open()) return 0; int Step = 0;
+
+	QList<SEGMENT> Segments; QSet<int> Deletes; QMutex Synchronizer;
+
+	QSqlQuery selectQuery(Database); selectQuery.setForwardOnly(true);
+	QSqlQuery deleteQuery(Database); deleteQuery.setForwardOnly(true);
+
+	emit onBeginProgress(tr("Loading elements"));
+	emit onSetupProgress(0, 0);
+
+	selectQuery.prepare(
+		"SELECT "
+			"T.UID, T.P0_X, T.P0_Y, "
+			"IIF(T.PN_X IS NULL, T.P1_X, T.PN_X), "
+			"IIF(T.PN_Y IS NULL, T.P1_Y, T.PN_Y), "
+			"O.NUMER, T.MODIFY_TS, IIF(T.ID IN "
+			"( "
+				"SELECT E.IDE "
+				"FROM EW_OB_ELEMENTY E "
+				"INNER JOIN EW_OBIEKTY B "
+				"ON E.UIDO = B.UID "
+				"WHERE B.STATUS = 0 "
+			"), 1, 0) "
+		"FROM "
+			"EW_POLYLINE T "
+		"INNER JOIN "
+			"EW_WARSTWA_LINIOWA W "
+		"ON "
+			"T.ID_WARSTWY = W.ID "
+		"INNER JOIN "
+			"EW_GRUPY_WARSTW G "
+		"ON "
+			"W.ID_GRUPY = G.ID "
+		"LEFT JOIN "
+			"EW_OPERATY O "
+		"ON "
+			"T.OPERAT = O.UID "
+		"WHERE "
+			"T.STAN_ZMIANY = 0 AND "
+			"( "
+				":sublayer = W.ID OR :sublayer = 0 "
+			") "
+			"AND "
+			"( "
+				":layer = G.ID OR :layer = 0 "
+			")");
+
+	selectQuery.bindValue(":layer", Strategy < 2 ? Layer : 0);
+	selectQuery.bindValue(":sublayer", Strategy < 1 ? Sublayer : 0);
+
+	if (selectQuery.exec()) while (selectQuery.next())
+	{
+		const int UID = selectQuery.value(0).toInt();
+
+		Segments.append(
+		{
+			UID,
+			{
+				selectQuery.value(1).toDouble(),
+				selectQuery.value(2).toDouble(),
+				selectQuery.value(3).toDouble(),
+				selectQuery.value(4).toDouble()
+			},
+			selectQuery.value(5).toString().trimmed(),
+			selectQuery.value(6).toDateTime(),
+			selectQuery.value(7).toBool()
+		});
+	}
+
+	emit onBeginProgress(tr("Processing items"));
+	emit onSetupProgress(0, 0);
+
+	if (!Heurstic) QtConcurrent::blockingMap(Segments, [] (SEGMENT& Seg) -> void
+	{
+		QRegExp Exp("(\\d+)?[\\.\\,\\;\\/](\\d+)$");
+
+		if (Exp.indexIn(Seg.Kerg) != -1)
+		{
+			bool aOK, bOK; int A, B; unsigned Hash(0);
+
+			A = Exp.capturedTexts()[1].toInt(&aOK);
+			B = Exp.capturedTexts()[2].toInt(&bOK);
+
+			if (bOK && B < 100) B += 1900;
+
+			if (bOK) Hash += B * 10000;
+			if (aOK) Hash += A;
+
+			if (Hash) Seg.Timestamp = Hash;
+		}
+	});
+	else QtConcurrent::blockingMap(Segments, [] (SEGMENT& Seg) -> void
+	{
+		Seg.Timestamp = Seg.Mod.toSecsSinceEpoch();
+	});
+
+	if (!Action) QtConcurrent::blockingMap(Segments, [&Segments, &Deletes, &Synchronizer, Radius] (SEGMENT& Seg) -> void
+	{
+		for (const auto& Other : Segments) if (!Seg.Objected && Seg.ID != Other.ID && Seg.Timestamp <= Other.Timestamp)
+		{
+			const double R1 = QLineF(Seg.Geometry.p1(), Other.Geometry.p1()).length();
+			const double R2 = QLineF(Seg.Geometry.p2(), Other.Geometry.p2()).length();
+			const double R3 = QLineF(Seg.Geometry.p2(), Other.Geometry.p1()).length();
+			const double R4 = QLineF(Seg.Geometry.p1(), Other.Geometry.p2()).length();
+
+			const int Count = (R1 <= Radius) + (R2 <= Radius) + (R3 <= Radius) + (R4 <= Radius);
+
+			if (Count >= 2)
+			{
+				Synchronizer.lock();
+
+				if (!Deletes.contains(Other.ID)) Deletes.insert(Seg.ID);
+
+				Synchronizer.unlock();
+			}
+		}
+	});
+	else QtConcurrent::blockingMap(Segments, [&Segments, &Deletes, &Synchronizer, Radius] (SEGMENT& Seg) -> void
+	{
+		for (const auto& Other : Segments) if (!Seg.Objected && Other.Objected && Seg.ID != Other.ID)
+		{
+			const double R1 = QLineF(Seg.Geometry.p1(), Other.Geometry.p1()).length();
+			const double R2 = QLineF(Seg.Geometry.p2(), Other.Geometry.p2()).length();
+			const double R3 = QLineF(Seg.Geometry.p2(), Other.Geometry.p1()).length();
+			const double R4 = QLineF(Seg.Geometry.p1(), Other.Geometry.p2()).length();
+
+			const int Count = (R1 <= Radius) + (R2 <= Radius) + (R3 <= Radius) + (R4 <= Radius);
+
+			if (Count >= 2)
+			{
+				Synchronizer.lock();
+
+				if (!Deletes.contains(Other.ID)) Deletes.insert(Seg.ID);
+
+				Synchronizer.unlock();
+			}
+		}
+	});
+
+	emit onBeginProgress(tr("Removing items"));
+	emit onSetupProgress(0, 0);
+
+	deleteQuery.prepare("DELETE FROM EW_POLYLINE WHERE UID = ?");
+
+	for (const auto& ID : Deletes)
+	{
+		deleteQuery.addBindValue(ID);
+		deleteQuery.exec();
+
+		emit onUpdateProgress(++Step);
+	}
+
+	return Deletes.size();
+}
+
 bool DatabaseDriver::isTerminated(void) const
 {
 	QMutexLocker Locker(&Terminator); return Terminated;
@@ -2330,20 +2651,19 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 
 void DatabaseDriver::removeDuplicates(int Action, int Strategy, int Heurstic, int Type, int Layer, int Sublayer, double Radius)
 {
-	if (!Database.open()) { emit onProceedEnd(0); return; } int Step(0);
+	if (!Database.open()) { emit onProceedEnd(0); return; } int Count(0);
 
-	struct SEGMENT
+	if (Type == 0)
 	{
-		int ID; bool Object;
+		Count = proceedTextDuplicates(Action, Strategy, Heurstic, Layer, Sublayer, Radius);
+	}
+	else
+	{
+		Count = proceedLineDuplicates(Action, Strategy, Heurstic, Layer, Sublayer, Radius);
+	}
 
-		QVariant Geometry;
-		QString Kerg;
-		QDateTime Mod;
-	};
-
-	QSqlQuery selectGeometry(Database); selectGeometry.setForwardOnly(true);
-
-	// TODO : rest of implementation
+	emit onEndProgress();
+	emit onProceedEnd(Count);
 }
 
 void DatabaseDriver::hideDuplicates(const QSet<int>& Layers, bool Objected)

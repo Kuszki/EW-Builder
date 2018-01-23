@@ -200,6 +200,12 @@ class DatabaseDriver : public QObject
 		QHash<int, QVariant> proceedGeometry(const QList<QPointF>& Points, double Radius,
 									  int Text = -1, int Line = -1, bool Emit = false);
 
+		int proceedTextDuplicates(int Action, int Strategy, int Heurstic,
+							 int Layer, int Sublayer, double Radius);
+
+		int proceedLineDuplicates(int Action, int Strategy, int Heurstic,
+							 int Layer, int Sublayer, double Radius);
+
 		bool isTerminated(void) const;
 
 	public slots:
