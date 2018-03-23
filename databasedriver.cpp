@@ -1147,7 +1147,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 	const auto sortLines = [] (const QHash<int, LINE>& Lines) -> QList<LINE>
 	{
-		QMap<int, QList<LINE>> Groups; QList<LINE> Sorted;
+		QHash<int, QList<LINE>> Groups; QList<LINE> Sorted;
 		QList<QPointF> Points; QList<int> Counts;
 
 		for (const auto& L : Lines)
@@ -1180,9 +1180,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 			const int N1 = Points.indexOf(P1);
 			const int N2 = Points.indexOf(P2);
 
-			const int N = Counts[N1] * Counts[N2];
-
-			if (!Groups.contains(N)) Groups.insert(N, QList<LINE>());
+			const int N = Counts[N1] + Counts[N2];
 
 			Groups[N].append(L);
 		}
@@ -1194,7 +1192,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 		return Sorted;
 	};
 
-	const auto getPairs = [&Sorted, &Expr, &Used, Length, Job] (POINT& P) -> void
+	const auto getPairs = [&Objects, &Lines, &Expr, &Used, Length, Job] (POINT& P) -> void
 	{
 		static const auto length = [] (double x1, double y1, double x2, double y2)
 		{
@@ -1208,31 +1206,51 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 		if (!Expr.isEmpty()) if (QRegExp(Expr).indexIn(P.Text) == -1) return;
 
-		for (const auto& L : Sorted) if (!L.Label && (!(Job & 0b01) || !L.IDK || P.IDK == L.IDK || !P.IDK))
+		for (const auto& S : Objects) if (!(Job & 0b01) || !S.IDK || P.IDK == S.IDK || !P.IDK)
 		{
-			double h(NAN); if (qIsNaN(L.Rad))
+			QPolygonF Poly; for (const auto& PID : S.Geometry)
 			{
-				const double a = length(P.X, P.Y, L.X1, L.Y1);
-				const double b = length(P.X, P.Y, L.X2, L.Y2);
+				const auto& Part = Lines[PID];
 
-				if ((a * a <= L.Len * L.Len + b * b) &&
-				    (b * b <= L.Len * L.Len + a * a))
+				const QPointF P1(Part.X1, Part.Y1);
+				const QPointF P2(Part.X1, Part.Y1);
+
+				if (!Poly.contains(P1)) Poly.append(P1);
+				if (!Poly.contains(P2)) Poly.append(P2);
+			}
+
+			if (Poly.size() > 2 && Poly.containsPoint({ P.X, P.Y }, Qt::OddEvenFill))
+			{
+				P.L = 0.0; P.Match = Lines[S.Geometry.first()].ID;
+			}
+			else for (const auto& PID: S.Geometry)
+			{
+				const auto& L = Lines[PID];
+
+				double h(NAN); if (qIsNaN(L.Rad))
 				{
-					const double A = P.X - L.X1; const double B = P.Y - L.Y1;
-					const double C = L.X2 - L.X1; const double D = L.Y2 - L.Y1;
+					const double a = length(P.X, P.Y, L.X1, L.Y1);
+					const double b = length(P.X, P.Y, L.X2, L.Y2);
 
-					h = qAbs(A * D - C * B) / qSqrt(C * C + D * D);
+					if ((a * a <= L.Len * L.Len + b * b) &&
+					    (b * b <= L.Len * L.Len + a * a))
+					{
+						const double A = P.X - L.X1; const double B = P.Y - L.Y1;
+						const double C = L.X2 - L.X1; const double D = L.Y2 - L.Y1;
+
+						h = qAbs(A * D - C * B) / qSqrt(C * C + D * D);
+					}
 				}
-			}
-			else
-			{
-				h = length(P.X, P.Y, L.X1, L.Y1) - L.Rad;
-			}
+				else
+				{
+					h = length(P.X, P.Y, L.X1, L.Y1) - L.Rad;
+				}
 
-			if (!qIsNaN(h) && h <= Length && (qIsNaN(P.L) || h < P.L))
-			{
-				P.L = h; P.Match = L.ID;
-			};
+				if (!qIsNaN(h) && h <= Length && (qIsNaN(P.L) || h < P.L))
+				{
+					P.L = h; P.Match = L.ID;
+				};
+			}
 		}
 	};
 
@@ -1273,7 +1291,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 	const auto resetMatch = [] (POINT& P) -> void { P.Match = 0; P.L = NAN; };
 
-	const auto getObjects = [&Sorted, &Points, &Objects, Job] (void) -> void
+	const auto getObjects = [&Sorted, &Objects, &Lines, &Used, Job] (void) -> int
 	{
 		const static auto append = [] (const LINE& L, OBJECT& O, QSet<int>& U, QList<QPointF>& G, int T) -> void
 		{
@@ -1295,7 +1313,9 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 			U.insert(L.ID);
 		};
 
-		QSet<int> Used; QList<int> Unused; for (const auto& S : Sorted) if (!Used.contains(S.ID))
+		QList<int> Unused; const int Now = Used.size();
+
+		for (const auto& S : Sorted) if (!Used.contains(S.ID))
 		{
 			QPointF P1(S.X1, S.Y1), P2(S.X2, S.Y2);
 			OBJECT O; bool Continue = true;
@@ -1339,14 +1359,46 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 				Continue = oldSize != O.Geometry.size() && P1 != P2;
 			}
 
-			if (P1 == P2 && (O.Geometry.size() > 2 || O.Geometry.size() == 1)) Objects.append(O);
-			else
+			if (P1 == P2 && (O.Geometry.size() > 2 || !qIsNaN(S.Rad)))
 			{
-				for (const auto& I : O.Geometry) Used.remove(I);
+				QList<QPointF> Breaks; QList<int> Counter; bool OK(true);
+
+				for (const auto& Part : O.Geometry)
+				{
+					const auto& L = Lines[Part];
+
+					QPointF P1(L.X1, L.Y1), P2(L.X2, L.Y2);
+
+					const int N1 = Breaks.indexOf(P1);
+
+					if (N1 != -1) ++Counter[N1];
+					else
+					{
+						Breaks.append(P1);
+						Counter.append(1);
+					}
+
+					const int N2 = Breaks.indexOf(P2);
+
+					if (N2 != -1) ++Counter[N2];
+					else
+					{
+						Breaks.append(P2);
+						Counter.append(1);
+					}
+				}
+
+				for (const auto& C : Counter) OK = OK && (C == 2);
+
+				if (OK || qIsNaN(S.Rad)) Objects.append(O);
+				else for (const auto& I : O.Geometry) Used.remove(I);
 			}
+			else for (const auto& I : O.Geometry) Used.remove(I);
 
 			while (Unused.size()) Used.remove(Unused.takeLast());
 		}
+
+		return Used.size() - Now;
 	};
 
 	for (const auto& L : loadLines(Line, 0)) Lines.insert(L.ID, L);
@@ -1358,13 +1410,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 	if (Sorted.isEmpty()) return QList<OBJECT>();
 	else if (Text) Points = loadPoints(Text, false);
 
-	QFutureSynchronizer<void> Synchronizer;
-
-	Synchronizer.addFuture(QtConcurrent::run(getObjects));
-
-	Synchronizer.waitForFinished();
-
-	bool Continue(true); do
+	bool Continue; while (!isTerminated() && getObjects()) do
 	{
 		const int Count = Used.size();
 
