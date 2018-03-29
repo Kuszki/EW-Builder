@@ -1208,7 +1208,24 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 		for (const auto& S : Objects) if (!(Job & 0b01) || !S.IDK || P.IDK == S.IDK || !P.IDK)
 		{
-			QPolygonF Poly; for (const auto& PID : S.Geometry)
+			QPolygonF Poly; Poly.reserve(S.Geometry.size() + 1);
+
+			const auto& LF = Lines[S.Geometry.first()];
+			const auto& LS = Lines[S.Geometry.last()];
+
+			const QLineF First = { LF.X1, LF.Y1, LF.X2, LF.Y2 };
+			const QLineF Last = { LS.X1, LS.Y1, LS.X2, LS.Y2 };
+
+			if (First.p1() == Last.p1() || First.p1() == Last.p2())
+			{
+				Poly.append({ LF.X1, LF.Y1 });
+			}
+			else
+			{
+				Poly.append({ LF.X2, LF.Y2 });
+			}
+
+			for (const auto& PID : S.Geometry)
 			{
 				const auto& Part = Lines[PID];
 
@@ -1359,11 +1376,11 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 				Continue = oldSize != O.Geometry.size() && P1 != P2;
 			}
 
-			if (P1 == P2 && (O.Geometry.size() > 2 || !qIsNaN(S.Rad)))
+			if ((P1 == P2 && O.Geometry.size() > 2) || !qIsNaN(S.Rad))
 			{
 				QList<QPointF> Breaks; QList<int> Counter; bool OK(true);
 
-				for (const auto& Part : O.Geometry)
+				if (qIsNaN(S.Rad)) for (const auto& Part : O.Geometry)
 				{
 					const auto& L = Lines[Part];
 
@@ -1390,7 +1407,7 @@ QList<DatabaseDriver::OBJECT> DatabaseDriver::proceedSurfaces(int Line, int Text
 
 				for (const auto& C : Counter) OK = OK && (C == 2);
 
-				if (OK || qIsNaN(S.Rad)) Objects.append(O);
+				if (OK || !qIsNaN(S.Rad)) Objects.append(O);
 				else for (const auto& I : O.Geometry) Used.remove(I);
 			}
 			else for (const auto& I : O.Geometry) Used.remove(I);
@@ -2857,7 +2874,7 @@ void DatabaseDriver::fitLabels(const QString& Class, int Source, int Dest, doubl
 {
 	if (!Database.open()) { emit onProceedEnd(0); return; } int Step(0);
 
-	struct ITEM { int UID; QVariant Geometry; QSet<int> Appends; QString Info; };
+	struct ITEM { int UID; int Type; QVariant Geometry; QSet<int> Appends; QString Info; };
 
 	QSqlQuery selectPoint(Database), selectLine(Database), selectSymbols(Database), selectData(Database),
 			appendLabel(Database), updateLayer(Database), updateData(Database);
@@ -2923,7 +2940,8 @@ void DatabaseDriver::fitLabels(const QString& Class, int Source, int Dest, doubl
 			"O.UID, "
 			"P.P1_FLAGS, P.P0_X, P.P0_Y, "
 			"IIF(P.PN_X IS NULL, P.P1_X, P.PN_X), "
-			"IIF(P.PN_Y IS NULL, P.P1_Y, P.PN_Y) "
+			"IIF(P.PN_Y IS NULL, P.P1_Y, P.PN_Y), "
+			"O.RODZAJ "
 		"FROM "
 			"EW_OBIEKTY O "
 		"INNER JOIN "
@@ -2970,8 +2988,9 @@ void DatabaseDriver::fitLabels(const QString& Class, int Source, int Dest, doubl
 		{
 			Items.insert(UID,
 			{
-				UID, QPointF(selectPoint.value(1).toDouble(),
-						   selectPoint.value(2).toDouble())
+				UID, 4,
+				QPointF(selectPoint.value(1).toDouble(),
+					   selectPoint.value(2).toDouble())
 			});
 
 			emit onUpdateProgress(++Step);
@@ -2991,7 +3010,7 @@ void DatabaseDriver::fitLabels(const QString& Class, int Source, int Dest, doubl
 		{
 			Items.insert(UID,
 			{
-				UID, QVariant()
+				UID, selectLine.value(6).toInt(), QVariant()
 			});
 		}
 
@@ -3032,6 +3051,36 @@ void DatabaseDriver::fitLabels(const QString& Class, int Source, int Dest, doubl
 
 		for (const auto& L : Items)
 		{
+			if (L.Type == 3 && L.Geometry.toList().size() > 2)
+			{
+				const auto Geom = L.Geometry.toList();
+
+				QPolygonF Pl; Pl.reserve(Geom.size() + 1);
+
+				if (Geom.first().toLineF().p1() == Geom.last().toLineF().p1() ||
+				    Geom.first().toLineF().p1() == Geom.last().toLineF().p2())
+				{
+					Pl.append(Geom.first().toLineF().p1());
+				}
+				else
+				{
+					Pl.append(Geom.first().toLineF().p2());
+				}
+
+				for (const auto G : L.Geometry.toList())
+				{
+					const auto Line = G.toLineF();
+
+					if (!Pl.contains(Line.p1())) Pl.append(Line.p1());
+					if (!Pl.contains(Line.p2())) Pl.append(Line.p2());
+				}
+
+				if (Pl.containsPoint({ P.X, P.Y }, Qt::OddEvenFill))
+				{
+					P.L = 0.0; P.Match = L.UID;
+				}
+			}
+
 			if (L.Geometry.type() == QVariant::PointF)
 			{
 				const auto Point = L.Geometry.value<QPointF>();
@@ -3043,7 +3092,7 @@ void DatabaseDriver::fitLabels(const QString& Class, int Source, int Dest, doubl
 					P.L = h; P.Match = L.UID;
 				}
 			}
-			if (L.Geometry.type() == QVariant::LineF)
+			else if (L.Geometry.type() == QVariant::LineF)
 			{
 				const auto Line = L.Geometry.value<QLineF>();
 
