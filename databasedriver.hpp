@@ -237,6 +237,8 @@ class DatabaseDriver : public QObject
 		void fitLabels(const QString& Class, int Source, int Dest,
 					double Distance, double Spin, bool Info);
 
+		void unifyJobs(void);
+
 		void reloadLayers(bool Hide);
 
 		void terminate(void);

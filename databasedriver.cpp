@@ -3214,6 +3214,62 @@ void DatabaseDriver::fitLabels(const QString& Class, int Source, int Dest, doubl
 	emit onProceedEnd(Inserts);
 }
 
+void DatabaseDriver::unifyJobs(void)
+{
+	if (!Database.open()) { emit onProceedEnd(0); return; } int Step(0);
+
+	emit onBeginProgress("Loading jobs");
+	emit onSetupProgress(0, 0);
+
+	QSqlQuery Query(Database); Query.setForwardOnly(true);
+
+	QHash<QString, QList<int>> Jobs; int Count(0);
+
+	Query.prepare(
+		"SELECT "
+			"UID, NUMER "
+		"FROM "
+			"EW_OPERATY "
+		"ORDER BY "
+			"OPERACJA DESC");
+
+	if (Query.exec()) while (Query.next())
+	{
+		Jobs[Query.value(1).toString()].append(Query.value(0).toInt());
+	}
+
+	emit onBeginProgress("Updating jobs");
+	emit onSetupProgress(0, Jobs.size());
+
+	for (auto& List : Jobs) if (List.size() > 1)
+	{
+		const int New = List.takeFirst(); QStringList Old;
+
+		for (const auto& ID : List)
+		{
+			Old.append(QString::number(ID));
+		}
+
+		Query.exec(QString("UPDATE EW_OBIEKTY SET OPERAT = %1 WHERE OPERAT IN (%2)")
+				 .arg(New).arg(Old.join(',')));
+		Query.exec(QString("UPDATE EW_POLYLINE SET OPERAT = %1 WHERE OPERAT IN (%2)")
+				 .arg(New).arg(Old.join(',')));
+		Query.exec(QString("UPDATE EW_TEXT SET OPERAT = %1 WHERE OPERAT IN (%2)")
+				 .arg(New).arg(Old.join(',')));
+
+		Query.exec(QString("DELETE FROM EW_OPERATY WHERE UID IN (%1)").arg(Old.join(',')));
+		Query.exec(QString("UPDATE EW_OPERATY SET "
+					    "OSOZ = NULL, DTZ = NULL, OPERACJA = 1 "
+					    "WHERE UID = %1)").arg(New));
+
+		emit onUpdateProgress(++Step); Count += 1;
+	}
+	else emit onUpdateProgress(++Step);
+
+	emit onEndProgress();
+	emit onProceedEnd(Count);
+}
+
 void DatabaseDriver::reloadLayers(bool Hide)
 {
 	const bool OK = Hideempty != Hide && Database.isOpen();

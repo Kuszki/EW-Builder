@@ -102,6 +102,7 @@ class MainWindow : public QMainWindow
 		void connectActionClicked(void);
 		void cancelActionClicked(void);
 		void invisibleActionClicked(void);
+		void unifyActionClicked(void);
 
 		void hideActionToggled(bool Hide);
 
@@ -167,6 +168,8 @@ class MainWindow : public QMainWindow
 
 		void onDuplicatesRequest(int, int, int, int,
 							int, int, double);
+
+		void onUnifyRequest(void);
 
 		void onReloadRequest(bool);
 

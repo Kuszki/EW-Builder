@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(this, &MainWindow::onHideRequest, Driver, &DatabaseDriver::hideDuplicates);
 	connect(this, &MainWindow::onLabelsRequest, Driver, &DatabaseDriver::fitLabels);
 	connect(this, &MainWindow::onDuplicatesRequest, Driver, &DatabaseDriver::removeDuplicates);
+	connect(this, &MainWindow::onUnifyRequest, Driver, &DatabaseDriver::unifyJobs);
 	connect(Driver, &DatabaseDriver::onProceedEnd, this, &MainWindow::execProcessEnd);
 	connect(Driver, &DatabaseDriver::onReload, this, &MainWindow::layersReloaded);
 
@@ -75,6 +76,7 @@ MainWindow::MainWindow(QWidget *Parent)
 	connect(ui->actionHide, &QAction::toggled, this, &MainWindow::hideActionToggled);
 	connect(ui->actionCancel, &QAction::triggered, this, &MainWindow::cancelActionClicked);
 	connect(ui->actionAbout, &QAction::triggered, About, &AboutDialog::open);
+	connect(ui->actionUnifyjobs, &QAction::triggered, this, &MainWindow::unifyActionClicked);
 
 	connect(Proceed, &ProceedDialog::onProceedRequest, this, &MainWindow::proceedRequest);
 	connect(Jobs, &JobsDialog::onFitRequest, this, &MainWindow::jobsRequest);
@@ -114,6 +116,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionInvisivle->setEnabled(true);
 			ui->actionDuplicates->setEnabled(true);
 			ui->actionLabels->setEnabled(true);
+			ui->actionUnifyjobs->setEnabled(true);
 			ui->actionHide->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
 		break;
@@ -127,6 +130,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionInvisivle->setEnabled(false);
 			ui->actionDuplicates->setEnabled(false);
 			ui->actionLabels->setEnabled(false);
+			ui->actionUnifyjobs->setEnabled(false);
 			ui->actionHide->setEnabled(false);
 			ui->actionCancel->setEnabled(false);
 		break;
@@ -138,6 +142,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionDuplicates->setEnabled(false);
 			ui->actionDisconnect->setEnabled(false);
 			ui->actionLabels->setEnabled(false);
+			ui->actionUnifyjobs->setEnabled(false);
 			ui->actionHide->setEnabled(false);
 			ui->actionCancel->setEnabled(true);
 		break;
@@ -149,6 +154,7 @@ void MainWindow::lockUi(MainWindow::STATUS Status)
 			ui->actionDuplicates->setEnabled(true);
 			ui->actionDisconnect->setEnabled(true);
 			ui->actionLabels->setEnabled(true);
+			ui->actionUnifyjobs->setEnabled(true);
 			ui->actionHide->setEnabled(true);
 			ui->actionCancel->setEnabled(false);
 		break;
@@ -185,6 +191,11 @@ void MainWindow::invisibleActionClicked(void)
 
 	connect(Dialog, &HideDialog::accepted, Dialog, &HideDialog::deleteLater);
 	connect(Dialog, &HideDialog::rejected, Dialog, &HideDialog::deleteLater);
+}
+
+void MainWindow::unifyActionClicked(void)
+{
+	lockUi(BUSY); emit onUnifyRequest();
 }
 
 void MainWindow::hideActionToggled(bool Hide)

@@ -134,6 +134,7 @@
    <addaction name="separator"/>
    <addaction name="actionProceed"/>
    <addaction name="actionJobs"/>
+   <addaction name="actionUnifyjobs"/>
    <addaction name="actionGeometry"/>
    <addaction name="actionDuplicates"/>
    <addaction name="actionInvisivle"/>
@@ -290,13 +291,25 @@
   </action>
   <action name="actionLabels">
    <property name="icon">
-    <iconset theme="format-text-italic"/>
+    <iconset theme="format-text-italic">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Fit labels</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="actionUnifyjobs">
+   <property name="icon">
+    <iconset theme="edit-clear"/>
+   </property>
+   <property name="text">
+    <string>Unify jobs</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+U</string>
    </property>
   </action>
  </widget>
