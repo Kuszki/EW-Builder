@@ -2203,7 +2203,9 @@ void DatabaseDriver::proceedClass(const QHash<int, QVariant>& Values, const QStr
 			{
 				const QVariant ID = indexQuery.value(0); int n(0);
 
-				const QString Numer = QString::number(qHash(qMakePair(ID.toInt(), QDateTime::currentDateTimeUtc())), 16);
+				const QString Numer = QString("%1%2")
+								  .arg(qHash(QDateTime::currentMSecsSinceEpoch()), 0, 16)
+								  .arg(qHash(ID.toInt()), 0, 16);
 
 				objectQuery.addBindValue(ID);
 				objectQuery.addBindValue(Numer);
