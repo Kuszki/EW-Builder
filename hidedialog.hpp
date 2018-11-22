@@ -24,6 +24,7 @@
 #include <QCheckBox>
 #include <QDialog>
 #include <QHash>
+#include <QSet>
 
 namespace Ui
 {
