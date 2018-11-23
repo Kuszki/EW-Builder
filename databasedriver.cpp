@@ -2677,9 +2677,10 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 	emit onBeginProgress(tr("Updating database"));
 	emit onSetupProgress(0, Updates.size());
 
-	QSqlQuery lineQuery(Database), pointQuery(Database);
+	QSqlQuery lineQuery(Database), roundQuery(Database), pointQuery(Database);
 
-	lineQuery.prepare("UPDATE EW_POLYLINE SET P0_X = ?, P0_Y = ?, P1_X = ?, P1_Y = ? WHERE ID = ?");
+	lineQuery.prepare("UPDATE EW_POLYLINE SET P0_X = ?, P0_Y = ?, P1_X = ?, P1_Y = ? WHERE ID = ? AND P1_FLAGS IN (0, 4)");
+	roundQuery.prepare("UPDATE EW_POLYLINE SET P0_X = ?, P0_Y = ?, PN_X = ?, PN_Y = ? WHERE ID = ? AND P1_FLAGS IN (2)");
 	pointQuery.prepare("UPDATE EW_TEXT SET POS_X = ?, POS_Y = ? WHERE ID = ?");
 
 	for (auto i = Updates.constBegin(); i != Updates.constEnd(); ++i) if (!isTerminated())
@@ -2705,6 +2706,14 @@ void DatabaseDriver::proceedFit(const QString& Path, int xPos, int yPos, double 
 			lineQuery.addBindValue(i.key());
 
 			lineQuery.exec();
+
+			roundQuery.addBindValue(L.x1());
+			roundQuery.addBindValue(L.y1());
+			roundQuery.addBindValue(L.x2());
+			roundQuery.addBindValue(L.y2());
+			roundQuery.addBindValue(i.key());
+
+			roundQuery.exec();
 		}
 
 		emit onUpdateProgress(++Step);
