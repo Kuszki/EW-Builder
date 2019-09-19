@@ -785,11 +785,12 @@ QHash<int, DatabaseDriver::LINE> DatabaseDriver::loadLines(int Layer, int Flags)
 	return Lines;
 }
 
-QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, bool Symbol)
+QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, bool Symbol, const QString& Expr)
 {
 	if (!Database.isOpen()) return QHash<int, POINT>(); QHash<int, POINT> Points;
 
 	QSqlQuery Query(Database); Query.setForwardOnly(true);
+	QRegExp Reg(Expr);
 
 	Query.prepare(
 		"SELECT "
@@ -816,7 +817,10 @@ QHash<int, DatabaseDriver::POINT> DatabaseDriver::loadPoints(int Layer, bool Sym
 
 	Query.bindValue(":layer", Layer);
 
-	if (Query.exec()) while (Query.next()) if (Symbol ? Query.value(5).toInt() == 4 : Query.value(5).toInt() != 4) Points.insert(Query.value(0).toInt(),
+	if (Query.exec()) while (Query.next()) if (
+		Symbol ? Query.value(5).toInt() == 4 : Query.value(5).toInt() != 4 &&
+		(Expr.isEmpty() || Reg.indexIn(Query.value(4).toString()) != -1))
+	Points.insert(Query.value(0).toInt(),
 	{
 		Query.value(0).toInt(),
 		Query.value(1).toInt(),
@@ -2881,7 +2885,7 @@ void DatabaseDriver::hideDuplicates(const QSet<int>& Layers, bool Objected)
 	emit onProceedEnd(Hides.size());
 }
 
-void DatabaseDriver::fitLabels(const QString& Class, int Source, int Dest, double Distance, double Spin, bool Info)
+void DatabaseDriver::fitLabels(const QString& Class, const QString& Pattern, int Source, int Dest, double Distance, double Spin, bool Info)
 {
 	if (!Database.open()) { emit onProceedEnd(0); return; } int Step(0);
 
@@ -2899,7 +2903,7 @@ void DatabaseDriver::fitLabels(const QString& Class, int Source, int Dest, doubl
 	emit onSetupProgress(0, 0);
 
 	QSet<int> Unlabeled, Used; QHash<int, ITEM> Items; QMutex Locker;
-	QHash<int, POINT> Texts = loadPoints(Source, false); int Inserts(0);
+	QHash<int, POINT> Texts = loadPoints(Source, false, Pattern); int Inserts(0);
 
 	const auto& Table = getItemByField(Tables, Class, &TABLE::Name);
 

@@ -239,9 +239,9 @@ void MainWindow::hideRequest(const QSet<int>& Hides, bool Objected)
 	lockUi(BUSY); emit onHideRequest(Hides, Objected);
 }
 
-void MainWindow::labelRequest(const QString& Class, int Source, int Dest, double Distance, double Spin, bool Info)
+void MainWindow::labelRequest(const QString& Class, const QString& Expr, int Source, int Dest, double Distance, double Spin, bool Info)
 {
-	lockUi(BUSY); emit onLabelsRequest(Class, Source, Dest, Distance, Spin, Info);
+	lockUi(BUSY); emit onLabelsRequest(Class, Expr, Source, Dest, Distance, Spin, Info);
 }
 
 void MainWindow::duplicatesRequest(int Action, int Strategy, int Heurstic, int Type, int Layer, int Sublayer, double Radius)

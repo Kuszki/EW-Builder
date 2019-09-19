@@ -61,8 +61,11 @@ class LabelDialog : public QDialog
 
 	signals:
 
-		void onLabelsRequest(const QString&, int, int,
-						 double, double, bool);
+		void onLabelsRequest(const QString&,
+						 const QString&,
+						 int, int,
+						 double, double,
+						 bool);
 
 };
 

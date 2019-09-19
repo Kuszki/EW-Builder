@@ -175,7 +175,8 @@ class DatabaseDriver : public QObject
 		QHash<int, QString> allTextLayers(void);
 
 		QHash<int, LINE> loadLines(int Layer, int Flags = 0);
-		QHash<int, POINT> loadPoints(int Layer, bool Symbol = true);
+		QHash<int, POINT> loadPoints(int Layer, bool Symbol = true,
+							    const QString& Expr = QString());
 
 		QList<OBJECT> proceedLines(int Line, int Text,
 							  const QString& Expr = QString(),
@@ -234,8 +235,11 @@ class DatabaseDriver : public QObject
 
 		void hideDuplicates(const QSet<int>& Layers, bool Objected);
 
-		void fitLabels(const QString& Class, int Source, int Dest,
-					double Distance, double Spin, bool Info);
+		void fitLabels(const QString& Class,
+					const QString& Pattern,
+					int Source, int Dest,
+					double Distance, double Spin,
+					bool Info);
 
 		void unifyJobs(void);
 

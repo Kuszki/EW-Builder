@@ -117,7 +117,8 @@ class MainWindow : public QMainWindow
 
 		void hideRequest(const QSet<int>& Hides, bool Objected);
 
-		void labelRequest(const QString& Class, int Source, int Dest,
+		void labelRequest(const QString& Class, const QString& Expr,
+					   int Source, int Dest,
 					   double Distance, double Spin, bool Info);
 
 		void duplicatesRequest(int Action, int Strategy, int Heurstic,
@@ -163,8 +164,8 @@ class MainWindow : public QMainWindow
 
 		void onHideRequest(const QSet<int>&, bool);
 
-		void onLabelsRequest(const QString&, int, int,
-						 double, double, bool);
+		void onLabelsRequest(const QString&, const QString&,
+						 int, int, double, double, bool);
 
 		void onDuplicatesRequest(int, int, int, int,
 							int, int, double);

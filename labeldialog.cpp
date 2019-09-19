@@ -52,6 +52,7 @@ void LabelDialog::accept(void)
 	QDialog::accept();
 
 	emit onLabelsRequest(ui->classCombo->currentData().toString(),
+					 ui->patternEdit->text(),
 					 ui->sourceCombo->currentData().toInt(),
 					 ui->destonationCombo->currentData().toInt(),
 					 ui->distanceSpin->value(),
