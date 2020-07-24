@@ -1,7 +1,7 @@
 #* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 #*                                                                         *
 #*  Generate objects from layers for EWMAPA software                       *
-#*  Copyright (C) 2016  Łukasz "Kuszki" Dróżdż  l.drozdz@openmailbox.org   *
+#*  Copyright (C) 2016  Łukasz "Kuszki" Dróżdż  l.drozdz@o2.pl             *
 #*                                                                         *
 #*  This program is free software: you can redistribute it and/or modify   *
 #*  it under the terms of the GNU General Public License as published by   *
@@ -23,7 +23,7 @@ QT			+=	core gui widgets concurrent sql network
 TARGET		=	EW-Builder
 TEMPLATE		=	app
 
-CONFIG		+=	c++14
+CONFIG		+=	c++19
 
 
 SOURCES		+=	main.cpp \
